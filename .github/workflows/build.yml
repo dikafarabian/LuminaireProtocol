@@ -101,7 +101,7 @@ on:
         type: boolean
         default: false
       mglru:
-        description: "MGLRU Force-Enable (may cause bootloop on some devices, e.g. MediaTek)"
+        description: "MGLRU"
         type: boolean
         default: false
       lto_mode:
