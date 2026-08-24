@@ -28,15 +28,12 @@ VARIANT_DISPLAY = {
 
 
 ADDON_DISPLAY_NAMES = {
-    "bbrv3":       "BBRv3",
-    "bbg":         "BBG",
     "rekernel":    "Re:Kernel",
     "droidspaces": "Droidspaces",
     "zeromount":   "ZeroMount",
     "nomount":     "NoMount",
     "kasumi":      "Kasumi",
     "ntsync":      "NTSync",
-    "wireguard":   "WireGuard",
     "lz4zstd":     "LZ4+ZSTD",
     "lz4kd":       "LZ4KD",
     "mglru":       "MGLRU Force-Enable",
@@ -104,6 +101,9 @@ TUNING_DISPLAY_NAMES = {
     "workqueue_catchup":        "Workqueue Catch-up",
     "schedutil_catchup":        "Schedutil Catch-up",
     "ufs_writebooster_catchup": "UFS WriteBooster Catch-up",
+    "bbrv3":                    "BBRv3",
+    "bbg":                      "BBG",
+    "wireguard":                "WireGuard",
 }
 
 

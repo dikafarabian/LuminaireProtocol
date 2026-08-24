@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # ======================================================
-# 🚀 ADDON — BBRv3
+# 🚀 TUNING — BBRv3
 # TCP congestion control backport by fatalcoder524
 # Patch source: https://github.com/WildKernels/kernel_patches
 # ======================================================
@@ -60,7 +60,7 @@ if [ "${KERNEL_VERSION}" = "5.10" ]; then
     fi
 fi
 
-python3 "${LUMINAIRE_PATCH_DIR}/kernel/addons/bbrv3/enforcer.py" "${KERNEL_SRC}/net/ipv4/tcp_cong.c" \
+python3 "${LUMINAIRE_PATCH_DIR}/kernel/tuning/bbrv3/enforcer.py" "${KERNEL_SRC}/net/ipv4/tcp_cong.c" \
     || error "BBRv3: enforcer injection into tcp_cong.c failed!"
 
 cd "${ROOT_DIR}"

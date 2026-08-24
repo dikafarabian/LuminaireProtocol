@@ -29,6 +29,18 @@ on:
         description: "Kernel Branch Override"
         type: string
         default: ""
+      localversion_override:
+        description: "Custom Local Version (empty = stock)"
+        type: string
+        default: "-android14-11-Luminaire"
+      build_user_override:
+        description: "Custom Build User (empty = stock)"
+        type: string
+        default: "chainonyourdoor"
+      build_host_override:
+        description: "Custom Build Host (empty = stock)"
+        type: string
+        default: "LuminaireCI"
       ksunext:
         description: "KernelSU-Next"
         type: boolean
@@ -64,14 +76,6 @@ on:
           - "none"
           - "nomount"
           - "zeromount"
-      bbrv3:
-        description: "BBRv3"
-        type: boolean
-        default: true
-      bbg:
-        description: "BBG"
-        type: boolean
-        default: true
       rekernel:
         description: "Re:Kernel"
         type: boolean
@@ -82,10 +86,6 @@ on:
         default: true
       ntsync:
         description: "NTSync"
-        type: boolean
-        default: true
-      wireguard:
-        description: "WireGuard"
         type: boolean
         default: true
       lz4zstd:
@@ -191,7 +191,7 @@ jobs:
           # Single source of truth for the ADDONS list — reused by Start-Build
           # and notify-channel via this job's output, instead of each job
           # rebuilding the same string from inputs independently.
-          ADDONS="${{ inputs.bbrv3 && 'bbrv3,' || '' }}${{ inputs.bbg && 'bbg,' || '' }}${{ inputs.rekernel && 'rekernel,' || '' }}${{ inputs.droidspaces && 'droidspaces,' || '' }}${{ inputs.ntsync && 'ntsync,' || '' }}${{ inputs.wireguard && 'wireguard,' || '' }}${{ inputs.lz4zstd && 'lz4zstd,' || '' }}${{ inputs.lz4kd && 'lz4kd,' || '' }}${{ inputs.mountless_engine != 'none' && format('{0},', inputs.mountless_engine) || '' }}${{ inputs.kasumi && 'kasumi,' || '' }}${{ inputs.mglru && 'mglru,' || '' }}"
+          ADDONS="${{ inputs.rekernel && 'rekernel,' || '' }}${{ inputs.droidspaces && 'droidspaces,' || '' }}${{ inputs.ntsync && 'ntsync,' || '' }}${{ inputs.lz4zstd && 'lz4zstd,' || '' }}${{ inputs.lz4kd && 'lz4kd,' || '' }}${{ inputs.mountless_engine != 'none' && format('{0},', inputs.mountless_engine) || '' }}${{ inputs.kasumi && 'kasumi,' || '' }}${{ inputs.mglru && 'mglru,' || '' }}"
           echo "addons=${ADDONS}" >> $GITHUB_OUTPUT
 
           # "/" -> "-" so this is safe to use as a filesystem path component
@@ -244,6 +244,9 @@ jobs:
       SUSFS_ENABLED:               ${{ matrix.susfs }}
       KERNEL_VERSION:              ${{ inputs.kernel_version }}
       KERNEL_BRANCH_OVERRIDE:      ${{ inputs.kernel_branch_override }}
+      LOCALVERSION_OVERRIDE:      ${{ inputs.localversion_override }}
+      BUILD_USER_OVERRIDE:      ${{ inputs.build_user_override }}
+      BUILD_HOST_OVERRIDE:      ${{ inputs.build_host_override }}
       LTO_MODE:                  ${{ inputs.lto_mode }}
       RUN_MODE:                    ${{ inputs.run_mode }}
       DRY_RUN:                     ${{ inputs.run_mode == 'Dry Run' }}

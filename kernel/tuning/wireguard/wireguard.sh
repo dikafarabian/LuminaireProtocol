@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # ======================================================
-# 🔒 ADDON — WireGuard (kernel-level VPN)
+# 🔒 TUNING — WireGuard (kernel-level VPN)
 # ======================================================
 # Upstream: https://www.wireguard.com/
 # ======================================================

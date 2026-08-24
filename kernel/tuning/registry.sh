@@ -8,9 +8,12 @@ declare -A TUNING_SUPPORTED_VERSIONS=(
     [workqueue_catchup]="6.1"
     [schedutil_catchup]="6.1"
     [ufs_writebooster_catchup]="6.1"
+    [bbrv3]="5.10 5.15 6.1 6.6 6.6-konoha"
+    [bbg]="5.10 5.15 6.1 6.6 6.12 6.6-konoha"
+    [wireguard]="5.10 5.15 6.1 6.6 6.12 6.6-konoha"
 )
 
-TUNING_FEATURE_ORDER=(bore adios le9uo kcompressd workqueue_catchup schedutil_catchup ufs_writebooster_catchup)
+TUNING_FEATURE_ORDER=(bore adios le9uo kcompressd workqueue_catchup schedutil_catchup ufs_writebooster_catchup bbrv3 bbg wireguard)
 
 run_tuning() {
     echo "::group::✨ Tuning Features"

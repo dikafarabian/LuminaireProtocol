@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # ======================================================
-# 📦 ADDON — BBG (Baseband Guard LSM)
+# 📦 TUNING — BBG (Baseband Guard LSM)
 # ======================================================
 # Repo: https://github.com/vc-teahouse/Baseband-guard
 
@@ -16,7 +16,7 @@ echo "$BBG_SETUP" | bash || error "BBG: setup.sh failed!"
 [ -L "${KERNEL_SRC}/security/baseband-guard" ] \
     || error "BBG: inject failed — security/baseband-guard symlink not found!"
 
-PATCHER="${LUMINAIRE_PATCH_DIR}/kernel/addons/bbg/kconfig_inject.py"
+PATCHER="${LUMINAIRE_PATCH_DIR}/kernel/tuning/bbg/kconfig_inject.py"
 python3 "$PATCHER" "${KERNEL_SRC}/security/Kconfig" \
     || error "BBG: Kconfig inject failed!"
 

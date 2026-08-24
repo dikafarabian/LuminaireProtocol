@@ -9,13 +9,25 @@ KMI_GENERATION="$(grep '^KMI_GENERATION=' \
 export SUBLEVEL KMI_GENERATION
 echo "SUBLEVEL=${SUBLEVEL}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
 
-export KERNEL_NAME="Luminaire"
-export BUILD_USER="chainonyourdoor"
-export BUILD_HOST="LuminaireCI"
+if [ -n "$BUILD_USER_OVERRIDE" ]; then
+    export BUILD_USER="$BUILD_USER_OVERRIDE"
+    export KBUILD_BUILD_USER="$BUILD_USER"
+else
+    unset BUILD_USER KBUILD_BUILD_USER
+fi
+if [ -n "$BUILD_HOST_OVERRIDE" ]; then
+    export BUILD_HOST="$BUILD_HOST_OVERRIDE"
+    export KBUILD_BUILD_HOST="$BUILD_HOST"
+else
+    unset BUILD_HOST KBUILD_BUILD_HOST
+fi
 
-export KBUILD_BUILD_USER="$BUILD_USER"
-export KBUILD_BUILD_HOST="$BUILD_HOST"
-export LOCALVERSION="-${ANDROID_VERSION}-${KMI_GENERATION}-${KERNEL_NAME}"
+if [ -n "$LOCALVERSION_OVERRIDE" ]; then
+    export LOCALVERSION="$LOCALVERSION_OVERRIDE"
+else
+    unset LOCALVERSION
+    log "LOCALVERSION_OVERRIDE empty — using stock kernel versioning (no custom tag)"
+fi
 export KBUILD_BUILD_TIMESTAMP="$(date '+%a %b %d %T %Z %Y')"
 
-log "Branding: ${BUILD_USER}@${BUILD_HOST} | ${LOCALVERSION} ✅"
+log "Branding: ${BUILD_USER:-(stock)}@${BUILD_HOST:-(stock)} | ${LOCALVERSION:-(stock, no LOCALVERSION)} ✅"

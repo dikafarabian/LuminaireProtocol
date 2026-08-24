@@ -3,9 +3,6 @@
 declare -A ADDON_SUPPORTED_VERSIONS=(
     [nomount]="5.10 5.15 6.1 6.6 6.12 6.6-konoha"
     [zeromount]="5.10 5.15 6.1 6.6 6.12 6.6-konoha"
-    [bbrv3]="5.10 5.15 6.1 6.6 6.6-konoha"
-    [bbg]="5.10 5.15 6.1 6.6 6.12 6.6-konoha"
-    [wireguard]="5.10 5.15 6.1 6.6 6.12 6.6-konoha"
     [droidspaces]="5.10 5.15 6.1 6.6 6.12 6.6-konoha"
     [rekernel]="5.10 5.15 6.1 6.6 6.12 6.6-konoha"
     [ntsync]="5.10 5.15 6.1 6.6 6.6-konoha"
@@ -15,7 +12,7 @@ declare -A ADDON_SUPPORTED_VERSIONS=(
     [mglru]="6.1 6.6 6.12 6.6-konoha"
 )
 
-ADDON_ORDER=(nomount zeromount bbrv3 bbg wireguard droidspaces rekernel ntsync lz4zstd lz4kd kasumi mglru)
+ADDON_ORDER=(nomount zeromount droidspaces rekernel ntsync lz4zstd lz4kd kasumi mglru)
 
 ADDON_MOUNTLESS_TOKENS=(nomount zeromount)
 
