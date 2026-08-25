@@ -36,7 +36,7 @@ ADDON_DISPLAY_NAMES = {
     "ntsync":      "NTSync",
     "lz4zstd":     "LZ4+ZSTD",
     "lz4kd":       "LZ4KD",
-    "mglru":       "MGLRU Force-Enable",
+    "mglru":       "MGLRU",
 }
 
 
@@ -50,7 +50,6 @@ def addon_order(env):
     order = [t for t in raw.split(",") if t]
     if order:
         return order
-    # Fallback if ADDON_ORDER wasn't exported (older workflow run). See CODEX.md.
     applied = [t for t in env.get("APPLIED_ADDONS", "").split(",") if t]
     skipped = [t for t in env.get("SKIPPED_ADDONS", "").split(",") if t]
     return applied + skipped
@@ -116,7 +115,6 @@ def tuning_order(env):
     order = [t for t in raw.split(",") if t]
     if order:
         return order
-    # Fallback if TUNING_FEATURE_ORDER wasn't exported. See CODEX.md.
     applied = [t for t in env.get("APPLIED_TUNING", "").split(",") if t]
     skipped = [t for t in env.get("SKIPPED_TUNING", "").split(",") if t]
     return applied + skipped
@@ -244,7 +242,6 @@ def build_blocks(env):
     skipped_tokens = [t for t in env.get("SKIPPED_ADDONS", "").split(",") if t]
     mountless = mdv2_code_escape(resolve_mountless_engine(env))
     toggle_order = toggle_addon_order(env)
-    # Column width for this block — see CODEX.md.
     addon_name_width = max(
         [len(addon_display_name(t)) for t in toggle_order] + [len("Mountless Engine")]
     ) + 1
