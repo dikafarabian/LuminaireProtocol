@@ -29,18 +29,6 @@ on:
         description: "Kernel Branch Override"
         type: string
         default: ""
-      localversion_override:
-        description: "Custom Local Version (empty = stock)"
-        type: string
-        default: "-android14-11-Luminaire"
-      build_user_override:
-        description: "Custom Build User (empty = stock)"
-        type: string
-        default: "chainonyourdoor"
-      build_host_override:
-        description: "Custom Build Host (empty = stock)"
-        type: string
-        default: "LuminaireCI"
       ksunext:
         description: "KernelSU-Next"
         type: boolean
@@ -132,6 +120,18 @@ on:
         options:
           - "yes"
           - "no"
+      localversion_override:
+        description: "Custom Local Version"
+        type: string
+        default: "-android14-11-Luminaire"
+      build_user_override:
+        description: "Custom Build User"
+        type: string
+        default: "chainonyourdoor"
+      build_host_override:
+        description: "Custom Build Host"
+        type: string
+        default: "LuminaireCI"
 
 env:
   DEBIAN_FRONTEND: noninteractive
