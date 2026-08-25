@@ -278,9 +278,14 @@ jobs:
           wait
 
       - name: "Setup Swap Space"
-        uses: thejerrybao/setup-swap-space@v1
-        with:
-          swap-size-gb: 24
+        run: |
+          sudo swapoff /mnt/swapfile 2>/dev/null || true
+          sudo rm -f /mnt/swapfile
+          sudo fallocate -l 24G /mnt/swapfile
+          sudo chmod 600 /mnt/swapfile
+          sudo mkswap /mnt/swapfile
+          sudo swapon /mnt/swapfile
+          free -h
 
       - name: "Tune Swappiness"  # push pages to swap earlier, before the OOM killer
         run: sudo sysctl -w vm.swappiness=80
