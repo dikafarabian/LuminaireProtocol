@@ -13,7 +13,7 @@ declare -A TUNING_SUPPORTED_VERSIONS=(
     [wireguard]="5.10 5.15 6.1 6.6 6.12 6.6-konoha"
 )
 
-TUNING_FEATURE_ORDER=(bore adios le9uo kcompressd workqueue_catchup schedutil_catchup ufs_writebooster_catchup bbrv3 bbg wireguard)
+TUNING_FEATURE_ORDER=(bore bbrv3 bbg wireguard adios le9uo kcompressd workqueue_catchup schedutil_catchup ufs_writebooster_catchup)
 
 run_tuning() {
     echo "::group::✨ Tuning Features"
