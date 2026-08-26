@@ -4,58 +4,45 @@
 # 📦 ADDON — NoMount (VFS path injection framework)
 # ======================================================
 # Repo: https://github.com/maxsteeel/nomount
-# Status: Beta
+# Integration: upstream automatic built-in setup.sh (Method 1)
+# ======================================================
 
-NOMOUNT_REPO="https://github.com/maxsteeel/nomount"
-NOMOUNT_DIR="/tmp/nomount_src"
-NOMOUNT_PATCH_NAME="nomount_${KERNEL_VERSION}_kernel_integration.patch"
+NOMOUNT_SETUP_URL="https://raw.githubusercontent.com/maxsteeel/nomount/refs/heads/dev/kernel/setup.sh"
+NOMOUNT_SETUP="/tmp/nomount_setup.sh"
 
-log "Integrating NoMount..."
+log "Fetching NoMount setup script..."
+retry 3 run_quiet curl -fSL "$NOMOUNT_SETUP_URL" -o "$NOMOUNT_SETUP" \
+    || { warn "NoMount setup script download failed — skipping"; return 0; }
 
-[ -d "$NOMOUNT_DIR" ] && rm -rf "$NOMOUNT_DIR"
-git config --global http.connectTimeout 30
-git config --global http.lowSpeedLimit 1000
-git config --global http.lowSpeedTime 30
-retry 3 run_quiet git clone -q --depth=1 "$NOMOUNT_REPO" "$NOMOUNT_DIR" \
-    || { warn "NoMount clone failed — skipping"; return 0; }
-
-NOMOUNT_PATCH="${NOMOUNT_DIR}/kernel/patches/${NOMOUNT_PATCH_NAME}"
-if [ ! -f "$NOMOUNT_PATCH" ]; then
-    warn "NoMount patch not found for kernel ${KERNEL_VERSION} — skipping"
-    rm -rf "$NOMOUNT_DIR"
-    return 0
-fi
-
-log "Copying NoMount source files..."
-cp "${NOMOUNT_DIR}/kernel/src/nomount.c" "${KERNEL_SRC}/fs/nomount.c"
-cp "${NOMOUNT_DIR}/kernel/src/nomount.h" "${KERNEL_SRC}/fs/nomount.h"
-log "NoMount source files copied ✅"
-
-log "Applying NoMount kernel patch..."
-if patch -p1 --fuzz=10 --dry-run --reverse -d "$KERNEL_SRC" < "$NOMOUNT_PATCH" > /dev/null 2>&1; then
-    log "NoMount patch already applied, skipping."
+if [ -d "${KERNEL_SRC}/fs" ]; then
+    NOMOUNT_FS_DIR="${KERNEL_SRC}/fs"
+elif [ -d "${KERNEL_SRC}/common/fs" ]; then
+    NOMOUNT_FS_DIR="${KERNEL_SRC}/common/fs"
 else
-    patch -p1 --fuzz=10 --forward -d "$KERNEL_SRC" < "$NOMOUNT_PATCH" \
-        && log "NoMount patch applied ✅" \
-        || warn "NoMount patch: some hunks failed — continuing"
-    find "$KERNEL_SRC" -name "*.rej" -delete 2>/dev/null || true
-fi
-
-if ! grep -rlF '#include "nomount.h"' "${KERNEL_SRC}/fs/" 2>/dev/null \
-        | grep -qv '/nomount\.c$'; then
-    warn "NoMount: no caller includes nomount.h after patch — integration may have failed entirely"
-    warn "NoMount integration incomplete — kernel will build without NoMount"
-    rm -rf "$NOMOUNT_DIR"
+    warn "NoMount: fs/ directory not found under ${KERNEL_SRC} — skipping"
+    rm -f "$NOMOUNT_SETUP"
     return 0
 fi
 
-rm -rf "$NOMOUNT_DIR"
+log "Integrating NoMount (built-in)..."
+( cd "$KERNEL_SRC" && bash "$NOMOUNT_SETUP" ) \
+    || { warn "NoMount setup script failed — skipping"; rm -f "$NOMOUNT_SETUP"; return 0; }
+rm -f "$NOMOUNT_SETUP"
+
+if [ ! -L "${NOMOUNT_FS_DIR}/nomount" ] \
+        || ! grep -q "nomount" "${NOMOUNT_FS_DIR}/Makefile" \
+        || ! grep -q 'source "fs/nomount/Kconfig"' "${NOMOUNT_FS_DIR}/Kconfig"; then
+    warn "NoMount integration incomplete — kernel will build without NoMount"
+    return 0
+fi
+log "NoMount integrated ✅"
 
 log "Enabling NoMount config..."
-if ! grep -q "^CONFIG_NOMOUNT=y" "${KERNEL_SRC}/arch/arm64/configs/gki_defconfig"; then
-    cat >> "${KERNEL_SRC}/arch/arm64/configs/gki_defconfig" << 'CONFIGS'
+GKI_DEFCONFIG="${KERNEL_SRC}/arch/arm64/configs/gki_defconfig"
+if ! grep -q "^CONFIG_NOMOUNT=y" "$GKI_DEFCONFIG"; then
+    cat >> "$GKI_DEFCONFIG" << 'CONFIGS'
 CONFIG_NOMOUNT=y
 CONFIGS
 fi
 
-log "NoMount integrated ✅"
+log "NoMount setup done ✅"
