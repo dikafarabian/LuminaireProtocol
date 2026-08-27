@@ -1,3 +1,9 @@
+# ======================================================
+# 🧩 Luminaire Kernel Fragment
+# ======================================================
+# Base kernel configuration applied to every LuminaireProtocol build.
+# ======================================================
+
 # Mountify / OverlayFS
 CONFIG_OVERLAY_FS=y
 CONFIG_TMPFS_XATTR=y
@@ -78,3 +84,23 @@ CONFIG_DEBUG_INFO_BTF=n
 
 CONFIG_LRU_GEN=y
 CONFIG_LRU_GEN_ENABLED=y
+
+# Swap (ZRAM writeback dependency)
+CONFIG_SWAP=y
+
+# Persistent crash/panic logging
+CONFIG_PSTORE=y
+CONFIG_PSTORE_CONSOLE=y
+CONFIG_PSTORE_RAM=y
+
+# Removable storage filesystems
+CONFIG_VFAT_FS=y
+CONFIG_MSDOS_FS=y
+CONFIG_EXFAT_FS=y
+
+# Incremental APK installation (Play Store)
+CONFIG_INCREMENTAL_FS=y
+
+# ZSTD compression
+CONFIG_ZSTD_COMPRESS=y
+CONFIG_ZSTD_DECOMPRESS=y
