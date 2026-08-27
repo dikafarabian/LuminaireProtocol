@@ -1,8 +1,6 @@
 # ======================================================
 # 🧩 Luminaire Kernel Fragment
 # ======================================================
-# Base kernel configuration applied to every LuminaireProtocol build.
-# ======================================================
 
 # Mountify / OverlayFS
 CONFIG_OVERLAY_FS=y
