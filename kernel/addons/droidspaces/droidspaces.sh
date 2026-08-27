@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-# Addon — Droidspaces (LXC container runtime). See CODEX.md for the
-# KaBI-patch-per-kernel-version selection logic and 5.10 note.
-
 log "Enabling Droidspaces support..."
 
 case "${KERNEL_VERSION}" in
@@ -22,12 +19,7 @@ elif patch -p1 --fuzz=3 --dry-run --forward -d "$KERNEL_SRC" < "$KABI_PATCH" > /
 else
     warn "Droidspaces: KaBI patch does not apply cleanly — skipping, KaBI violations possible"
 fi
-# Per-config idempotent check — some kernel sources (e.g. 6.1 after the
-# upstream catch-up merge) may already carry a subset of these in
-# gki_defconfig directly. A single-flag guard (checking only one config)
-# would either skip the whole block once that one config is already present
-# — silently leaving the rest missing — or duplicate entries that are
-# already there. Checking each config individually avoids both.
+
 GKI_DEFCONFIG="${KERNEL_SRC}/arch/arm64/configs/gki_defconfig"
 DROIDSPACES_CONFIGS=(
     CONFIG_SYSVIPC
@@ -41,6 +33,7 @@ DROIDSPACES_CONFIGS=(
     CONFIG_NETFILTER_XT_MATCH_RECENT
     CONFIG_BINFMT_ELF
     CONFIG_BINFMT_SCRIPT
+    CONFIG_USER_NS
 )
 MISSING_CONFIGS=()
 for cfg in "${DROIDSPACES_CONFIGS[@]}"; do
