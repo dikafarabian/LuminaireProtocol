@@ -28,4 +28,16 @@ for _file in \
 done
 log "Re:Kernel hook markers verified ✅"
 
+grep -q "^#define REKERNEL_DEFINE_STATE$" "${KERNEL_SRC}/kernel/signal.c" \
+    || error "Re:Kernel: signal.c is missing REKERNEL_DEFINE_STATE — shared state would be duplicated per translation unit!"
+
+for _file in \
+    "${KERNEL_SRC}/drivers/android/binder.c" \
+    "${KERNEL_SRC}/drivers/android/binder_alloc.c"; do
+    if grep -q "^#define REKERNEL_DEFINE_STATE$" "$_file"; then
+        error "Re:Kernel: ${_file##*/} defines REKERNEL_DEFINE_STATE — state must be defined in exactly one translation unit!"
+    fi
+done
+log "Re:Kernel shared state owner verified ✅"
+
 log "Re:Kernel integrated ✅"

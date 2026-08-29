@@ -33,11 +33,21 @@ REKERNEL_HEADER = """\
 #define RESERVE_ORDER           17
 #define WARN_AHEAD_SPACE        (1 << RESERVE_ORDER)
 
-static struct sock *rekernel_netlink;
 extern struct net init_net;
-static int netlink_unit = NETLINK_REKERNEL_MIN;
-static struct work_struct rekernel_start_work;
-static atomic_t rekernel_start_requested = ATOMIC_INIT(0);
+
+#ifdef REKERNEL_DEFINE_STATE
+struct sock *rekernel_netlink;
+int rekernel_netlink_unit = NETLINK_REKERNEL_MIN;
+struct work_struct rekernel_start_work;
+atomic_t rekernel_start_requested = ATOMIC_INIT(0);
+struct proc_dir_entry *rekernel_dir, *rekernel_unit_entry;
+#else
+extern struct sock *rekernel_netlink;
+extern int rekernel_netlink_unit;
+extern struct work_struct rekernel_start_work;
+extern atomic_t rekernel_start_requested;
+extern struct proc_dir_entry *rekernel_dir, *rekernel_unit_entry;
+#endif
 
 static inline bool line_is_frozen(struct task_struct *task)
 {
@@ -54,7 +64,7 @@ static int send_netlink_message(char *msg, uint16_t len)
 \t\tprintk("rekernel: nlmsg_new failed\\n");
 \t\treturn -1;
 \t}
-\tnlhdr = nlmsg_put(skbuffer, 0, 0, netlink_unit, len, 0);
+\tnlhdr = nlmsg_put(skbuffer, 0, 0, rekernel_netlink_unit, len, 0);
 \tif (!nlhdr) {
 \t\tprintk("rekernel: nlmsg_put failed\\n");
 \t\tnlmsg_free(skbuffer);
@@ -73,7 +83,7 @@ static struct netlink_kernel_cfg rekernel_cfg = {
 
 static int rekernel_unit_show(struct seq_file *m, void *v)
 {
-\tseq_printf(m, "%d\\n", netlink_unit);
+\tseq_printf(m, "%d\\n", rekernel_netlink_unit);
 \treturn 0;
 }
 
@@ -89,8 +99,6 @@ static const struct proc_ops rekernel_unit_fops = {
 \t.proc_release = single_release,
 };
 
-static struct proc_dir_entry *rekernel_dir, *rekernel_unit_entry;
-
 /*
  * Re:Kernel: the actual netlink_kernel_create() call can sleep (GFP_KERNEL
  * allocations, mutex locks). This function must therefore NEVER be invoked
@@ -99,10 +107,10 @@ static struct proc_dir_entry *rekernel_dir, *rekernel_unit_entry;
  */
 static void rekernel_start_work_fn(struct work_struct *work)
 {
-\tfor (netlink_unit = NETLINK_REKERNEL_MIN;
-\t     netlink_unit < NETLINK_REKERNEL_MAX; netlink_unit++) {
+\tfor (rekernel_netlink_unit = NETLINK_REKERNEL_MIN;
+\t     rekernel_netlink_unit < NETLINK_REKERNEL_MAX; rekernel_netlink_unit++) {
 \t\trekernel_netlink = (struct sock *)netlink_kernel_create(
-\t\t\t&init_net, netlink_unit, &rekernel_cfg);
+\t\t\t&init_net, rekernel_netlink_unit, &rekernel_cfg);
 \t\tif (rekernel_netlink != NULL)
 \t\t\tbreak;
 \t}
@@ -110,14 +118,14 @@ static void rekernel_start_work_fn(struct work_struct *work)
 \t\tprintk("rekernel: failed to create netlink server!\\n");
 \t\treturn;
 \t}
-\tprintk("rekernel: netlink server created, unit=%d\\n", netlink_unit);
+\tprintk("rekernel: netlink server created, unit=%d\\n", rekernel_netlink_unit);
 \trekernel_dir = proc_mkdir("rekernel", NULL);
 \tif (!rekernel_dir) {
 \t\tprintk("rekernel: create /proc/rekernel failed\\n");
 \t} else {
 \t\tchar buff[32];
 
-\t\tsprintf(buff, "%d", netlink_unit);
+\t\tsprintf(buff, "%d", rekernel_netlink_unit);
 \t\trekernel_unit_entry = proc_create(buff, 0644, rekernel_dir,
 \t\t\t\t\t\t  &rekernel_unit_fops);
 \t\tif (!rekernel_unit_entry)
@@ -248,6 +256,7 @@ SIGNAL_HOOK = """\
 """
 
 MARKER = "Re:Kernel"
+DEFINE_STATE = "REKERNEL_DEFINE_STATE"
 
 
 def read(path):
@@ -394,6 +403,11 @@ def patch_signal_c(src):
     path = os.path.join(src, "kernel", "signal.c")
     content = read(path)
     if already_patched(content):
+        if DEFINE_STATE not in content:
+            print(f"  [ERROR] signal.c: already patched but '{DEFINE_STATE}' is "
+                  "missing — stale pre-shared-state tree, wipe the kernel source "
+                  "and re-run!")
+            sys.exit(1)
         print("  signal.c: already patched, skipping")
         return
     include_anchors = [
@@ -403,6 +417,7 @@ def patch_signal_c(src):
     ]
     content, ok_include = inject_include(
         content, include_anchors,
+        f'#define {DEFINE_STATE}\n'
         '#include "../drivers/android/rekernel.h"',
         "signal.c include"
     )
@@ -436,11 +451,9 @@ def patch_signal_c(src):
 
 def write_header(src):
     path = os.path.join(src, "drivers", "android", "rekernel.h")
-    if os.path.exists(path):
-        print("  rekernel.h: already exists, skipping")
-        return
+    existed = os.path.exists(path)
     write(path, REKERNEL_HEADER)
-    print("  rekernel.h: created ✅")
+    print("  rekernel.h: rewritten ✅" if existed else "  rekernel.h: created ✅")
 
 
 def main():
