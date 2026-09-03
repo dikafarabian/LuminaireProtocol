@@ -317,6 +317,17 @@ jobs:
         if: always() && env.IS_MAKE == 'true'
         run: ~/ccache-bin/ccache --show-stats
 
+      - name: "Upload Module.symvers"  # KMI gate: CRC of every exported symbol
+        if: always() && env.IS_MAKE == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: symvers-${{ needs.prepare-matrix.outputs.resolved_kernel_branch }}-${{ matrix.kernel_variant }}${{ matrix.susfs && '-susfs' || '' }}-${{ needs.prepare-matrix.outputs.safe_ref }}
+          path: |
+            workspace/out/Module.symvers
+            workspace/out/include/config/kernel.release
+          if-no-files-found: warn
+          retention-days: 90
+
       - name: "Checkpoint (Promote/Blacklist)"  # updates manifest.json, files an issue on failed candidates
         if: always() && matrix.kernel_variant != 'VANILLA' && inputs.run_mode != 'Dry Run'
         env:
