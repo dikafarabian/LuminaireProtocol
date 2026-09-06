@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 
+# shellcheck source=functions.sh
+source "${LUMINAIRE_PATCH_DIR:-.}/functions.sh"
+
 TELEGRAM_API_TIMEOUT="${TELEGRAM_API_TIMEOUT:-60}"
 TELEGRAM_MAX_RETRIES="${TELEGRAM_MAX_RETRIES:-3}"
 TELEGRAM_MAX_FILE_BYTES=$((50 * 1024 * 1024))
-CAPTION_BUILDER="${LUMINAIRE_PATCH_DIR}/release/telegram/caption.py"
+GROUP_CARD_BUILDER="${LUMINAIRE_PATCH_DIR}/release/telegram/group_card.py"
 
 # shellcheck source=release/telegram/config.sh
 source "${LUMINAIRE_PATCH_DIR}/release/telegram/config.sh"
@@ -45,7 +48,7 @@ if [ "$ZIP_SIZE_BYTES" -eq 0 ]; then
 fi
 if [ "$ZIP_SIZE_BYTES" -gt "$TELEGRAM_MAX_FILE_BYTES" ]; then
     ZIP_SIZE_MB=$(( ZIP_SIZE_BYTES / 1024 / 1024 ))
-    warn "Skipping Telegram: ${ZIP_NAME} is ${ZIP_SIZE_MB}MB, exceeds Telegram's 50MB sendDocument limit"
+    warn "Skipping Telegram: ${ZIP_NAME} is ${ZIP_SIZE_MB}MB, exceeds Telegram's 50MB upload limit"
     return 0
 fi
 
@@ -82,8 +85,7 @@ if [ "$SUSFS_ENABLED" = "true" ] && [ "$KERNEL_VARIANT" != "VANILLA" ]; then
     fi
 fi
 
-CAPTION_GROUP_FILE="/tmp/telegram_caption_group.txt"
-CAPTION_CHANNEL_FILE="/tmp/telegram_caption_channel.txt"
+GROUP_CARD_FILE="/tmp/telegram_group_card.json"
 
 LINUX_VER="$LINUX_VER" \
 KERNEL_BRANCH="${KERNEL_BRANCH:-N/A}" \
@@ -102,21 +104,20 @@ GITHUB_SHA="${GITHUB_SHA:-}" \
 GITHUB_SERVER_URL="${GITHUB_SERVER_URL:-https://github.com}" \
 GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}" \
 GITHUB_RUN_ID="${GITHUB_RUN_ID:-}" \
-python3 "$CAPTION_BUILDER" "$CAPTION_GROUP_FILE" "$CAPTION_CHANNEL_FILE" \
-    || error "Telegram: caption builder failed!"
+python3 "$GROUP_CARD_BUILDER" "$GROUP_CARD_FILE" \
+    || error "Telegram: rich group card builder failed!"
 
-CAPTION="$(cat "$CAPTION_GROUP_FILE")"
-rm -f "$CAPTION_GROUP_FILE" "$CAPTION_CHANNEL_FILE"
+python3 "${LUMINAIRE_PATCH_DIR}/release/telegram/embed_zip.py" "$ZIP_PATH" "$GROUP_CARD_FILE" \
+    || error "Telegram: zip embed failed!"
 
 log "📤 Sending ${ZIP_NAME} to Telegram (${RUN_MODE_UPPER} topic)..."
 
 GROUP_MESSAGE_ID=""
-if telegram_api_call "sendDocument" /tmp/telegram_response.json "Telegram group send" \
+if telegram_api_call "sendRichMessage" /tmp/telegram_response.json "Telegram group send" \
         -F "chat_id=${TELEGRAM_CHAT_ID}" \
         -F "message_thread_id=${TARGET_THREAD_ID}" \
-        -F "parse_mode=MarkdownV2" \
-        -F "document=@${ZIP_PATH};filename=${ZIP_NAME}" \
-        -F "caption=${CAPTION}"; then
+        -F "rich_message=<${GROUP_CARD_FILE}" \
+        -F "zip_file=@${ZIP_PATH};filename=${ZIP_NAME}"; then
     GROUP_MESSAGE_ID=$(echo "$TG_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['message_id'])" 2>/dev/null || echo "")
     log "Group topic sent ✅ (message_id=${GROUP_MESSAGE_ID})"
 fi
@@ -140,6 +141,6 @@ if [ "$RUN_MODE_UPPER" = "RELEASE" ] && [ -n "${TELEGRAM_CHANNEL_ID:-}" ]; then
     fi
 fi
 
-rm -f /tmp/telegram_response.json
+rm -f /tmp/telegram_response.json "$GROUP_CARD_FILE"
 
 return 0

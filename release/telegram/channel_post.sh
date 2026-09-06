@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-CAPTION_BUILDER="${LUMINAIRE_PATCH_DIR}/release/telegram/caption.py"
-TELEGRAPH_BUILDER="${LUMINAIRE_PATCH_DIR}/release/telegram/telegraph_page.py"
-BANNER_DIR="${LUMINAIRE_PATCH_DIR}/release/telegram"
+TELEGRAM_DIR="${LUMINAIRE_PATCH_DIR}/release/telegram"
+RICH_BUILDER="${TELEGRAM_DIR}/rich_message.py"
+BANNER_DIR="${TELEGRAM_DIR}"
 
 # shellcheck source=functions.sh
 source "${LUMINAIRE_PATCH_DIR}/functions.sh"
@@ -127,8 +127,9 @@ if [ "$MISSING_VARIANTS_JSON" != "[]" ]; then
     error "Aborting channel post: variant(s) selected but missing a download link — ${MISSING_VARIANTS_JSON}. Check the Start-Build job for that variant before re-running Release."
 fi
 
-FEATURES_URL=$(
-    LINUX_VER="${LINUX_VER:-N/A}" \
+RICH_PAYLOAD="/tmp/channel_post_rich.json"
+
+LINUX_VER="${LINUX_VER:-N/A}" \
     KERNEL_VERSION="${KERNEL_VERSION:-}" \
     ADDONS="${ADDONS:-}" \
     ADDON_ORDER="${ADDON_ORDER:-}" \
@@ -137,45 +138,25 @@ FEATURES_URL=$(
     SKIPPED_TUNING="${SKIPPED_TUNING:-}" \
     COMPILER_STRING="${COMPILER_STRING:-}" \
     LTO_MODE="${LTO_MODE:-}" \
-    TELEGRAPH_TOKEN="${TELEGRAPH_TOKEN:-}" \
-    python3 "$TELEGRAPH_BUILDER"
-)
-
-if [ -n "$FEATURES_URL" ]; then
-    log "Features page: $FEATURES_URL"
-else
-    warn "No Features page this run — channel caption will fall back to the zip's Add-ons block"
-fi
-
-CAPTION_GROUP_DUMMY="/tmp/channel_post_group_dummy.txt"
-CAPTION_CHANNEL_FILE="/tmp/channel_post_caption.txt"
-
-LINUX_VER="${LINUX_VER:-N/A}" \
-KERNEL_VERSION="${KERNEL_VERSION:-}" \
-ADDONS="${ADDONS:-}" \
-CHANGELOG="${CHANGELOG:-}" \
-TELEGRAM_GROUP="${TELEGRAM_GROUP:-}" \
-GITHUB_SHA="${GITHUB_SHA:-}" \
-GITHUB_SERVER_URL="${GITHUB_SERVER_URL:-https://github.com}" \
-GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}" \
-GITHUB_RUN_ID="${GITHUB_RUN_ID:-}" \
-VARIANT_LINKS_JSON="$VARIANT_LINKS_JSON" \
-VARIANT_VERSIONS_JSON="$VARIANT_VERSIONS_JSON" \
-FEATURES_URL="$FEATURES_URL" \
-RUN_MODE="Release" \
-python3 "$CAPTION_BUILDER" "$CAPTION_GROUP_DUMMY" "$CAPTION_CHANNEL_FILE" \
-    || error "Caption builder failed"
-
-CAPTION_CHANNEL="$(cat "$CAPTION_CHANNEL_FILE")"
-rm -f "$CAPTION_CHANNEL_FILE" "$CAPTION_GROUP_DUMMY"
+    CHANGELOG="${CHANGELOG:-}" \
+    TELEGRAM_GROUP="${TELEGRAM_GROUP:-}" \
+    GITHUB_SERVER_URL="${GITHUB_SERVER_URL:-https://github.com}" \
+    GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}" \
+    VARIANT_LINKS_JSON="$VARIANT_LINKS_JSON" \
+    VARIANT_VERSIONS_JSON="$VARIANT_VERSIONS_JSON" \
+    RICH_HAS_BANNER="1" \
+    python3 "$RICH_BUILDER" "$RICH_PAYLOAD" \
+    || error "Rich message builder failed"
 
 log "📸 Sending channel post..."
-if telegram_api_call "sendPhoto" /tmp/tg_channel_response.json "Channel send" \
+if telegram_api_call "sendRichMessage" /tmp/tg_channel_response.json "Channel send" \
         -F "chat_id=${TELEGRAM_CHANNEL_ID}" \
-        -F "parse_mode=MarkdownV2" \
-        -F "photo=@${BANNER_PATH}" \
-        -F "caption=${CAPTION_CHANNEL}"; then
+        -F "rich_message=<${RICH_PAYLOAD}" \
+        -F "banner_file=@${BANNER_PATH}"; then
     log "Channel post sent ✅"
+else
+    rm -f "$RICH_PAYLOAD" /tmp/tg_channel_response.json
+    error "Channel post failed"
 fi
 
-rm -f /tmp/tg_channel_response.json
+rm -f "$RICH_PAYLOAD" /tmp/tg_channel_response.json

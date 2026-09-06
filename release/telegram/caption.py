@@ -1,6 +1,5 @@
 import os
 import sys
-import json
 
 
 CAPTION_LIMIT = 1024
@@ -13,17 +12,6 @@ KERNEL_VERSION_TO_ANDROID = {
     "6.1":  "14",
     "6.6":  "15",
     "6.12": "16",
-}
-
-VARIANT_DISPLAY = {
-    "VANILLA":        "Vanilla",
-    "RESUKISU":       "ReSukiSU",
-    "RESUKISU_SUSFS": "ReSukiSU\\+SUSFS",
-    "SUKISU":         "SukiSU\\-Ultra",
-    "SUKISU_SUSFS":   "SukiSU\\-Ultra\\+SUSFS",
-    "KSUNEXT":        "KernelSU\\-Next",
-    "KSUNEXT_SUSFS":  "KernelSU\\-Next\\+SUSFS",
-    "KOWSU":          "KowSU",
 }
 
 
@@ -78,11 +66,10 @@ def addon_display_name(token):
 def resolve_mountless_engine(env):
     """Which mountless-engine addon (if any) is active this build, as
     its display name, or 'None'. Shared by build_blocks() (group
-    caption's dedicated "Mountless Engine" line) and
-    build_telegraph_content() (same info, as a row in the Optional
-    Add-ons table — see that function for why it needs its own row
-    instead of relying on toggle_addon_order(), which deliberately
-    excludes mountless tokens from the regular Enable/Disable rows)."""
+    caption's dedicated "Mountless Engine" line) and the rich channel
+    post's Add-ons table, both of which need it as its own row instead
+    of relying on toggle_addon_order(), which deliberately excludes
+    mountless tokens from the regular Enable/Disable rows."""
     addon_tokens = [t for t in env.get("ADDONS", "").split(",") if t]
     skipped_tokens = [t for t in env.get("SKIPPED_ADDONS", "").split(",") if t]
     mountless_tokens = addon_mountless_tokens(env)
@@ -129,12 +116,11 @@ def tuning_display_name(token):
 def tuning_active_line(env, token):
     """Display text for an ACTIVE tuning feature only — caller is
     expected to have already skipped inactive/skipped tokens, since
-    both the zip caption and the Telegraph page only list features
-    that are actually on. Appends the patch version (e.g.
-    'v6.8.0-rc1') when the feature's .sh script exported one via
-    f"{TOKEN}_VERSION" (see BORE_VERSION in kernel/tuning/bore/bore.sh)
-    — for versioned features like BORE, which version is running is
-    the actually useful information."""
+    the zip caption only lists features that are actually on. Appends
+    the patch version (e.g. 'v6.8.0-rc1') when the feature's .sh script
+    exported one via f"{TOKEN}_VERSION" (see BORE_VERSION in
+    kernel/tuning/bore/bore.sh) — for versioned features like BORE,
+    which version is running is the actually useful information."""
     name = tuning_display_name(token)
     version = env.get(f"{token.upper()}_VERSION", "").strip()
     return f"{name} {version}" if version else name
@@ -173,23 +159,17 @@ FRAGMENT_FEATURES = {
 
 
 LTO_DISPLAY = {
-    "NONE": "None",
+    "NONE": "NoLTO",
     "THIN": "ThinLTO",
     "FULL": "FullLTO",
 }
 
 
-def mdv2_escape(s):
-    special = r"\_*[]()~`>#+-=|{}.!"
-    for ch in special:
-        s = s.replace(ch, "\\" + ch)
-    return s
-
-
-def mdv2_escape_url(s):
-    s = s.replace("\\", "\\\\")
-    s = s.replace(")", "\\)")
-    return s
+LTO_CHIP_STYLE = {
+    "NONE": "danger",
+    "THIN": "success",
+    "FULL": "primary",
+}
 
 
 def html_escape(s):
@@ -302,101 +282,6 @@ def build_blocks(env):
     return block_luminaire, block_root, block_tuning, block_addons
 
 
-def build_telegraph_content(env):
-    addon_tokens = [t for t in env.get("ADDONS", "").split(",") if t]
-    skipped_tokens = [t for t in env.get("SKIPPED_ADDONS", "").split(",") if t]
-    tuning_skipped_tokens = [t for t in env.get("SKIPPED_TUNING", "").split(",") if t]
-    kernel_ver  = env.get("KERNEL_VERSION", "")
-    linux_ver   = env.get("LINUX_VER", "N/A")
-    source_str  = kernel_source_repo(kernel_ver)
-    compiler_string = env.get("COMPILER_STRING", "") or "N/A"
-    lto_raw         = env.get("LTO_MODE", "")
-    lto_display     = LTO_DISPLAY.get(lto_raw, lto_raw or "N/A")
-    intro = (
-        f"Luminaire Protocol \u2014 an Android GKI kernel build. This page "
-        f"lists every feature and addon available as of this release; "
-        f"addon status reflects this specific build."
-    )
-    overview_lines = [
-        f"Kernel    : Linux {linux_ver}",
-        f"Source    : {source_str}",
-        f"Toolchain : {compiler_string}",
-        f"LTO       : {lto_display}",
-    ]
-    overview_children = []
-    for i, line in enumerate(overview_lines):
-        if i > 0:
-            overview_children.append({"tag": "br"})
-        overview_children.append(line)
-    overview_block = {
-        "tag": "pre",
-        "children": [{"tag": "code", "children": overview_children}],
-    }
-    content = [
-        {"tag": "p", "children": [intro]},
-        {"tag": "h3", "children": ["Overview"]},
-        overview_block,
-        {"tag": "h3", "children": ["Core Features"]},
-        {"tag": "p", "children": ["Always available on every Luminaire build."]},
-    ]
-    for category, items in FRAGMENT_FEATURES.items():
-        content.append({"tag": "h4", "children": [category]})
-        li_nodes = []
-        for item in items:
-            if isinstance(item, tuple):
-                if li_nodes:
-                    content.append({"tag": "ul", "children": li_nodes})
-                    li_nodes = []
-                label, sub_items = item
-                content.append({"tag": "ul", "children": [
-                    {"tag": "li", "children": [{"tag": "b", "children": [f"{label}:"]}]},
-                ]})
-                content.append({"tag": "ul", "children": [
-                    {"tag": "li", "children": [sub]} for sub in sub_items
-                ]})
-            else:
-                li_nodes.append({"tag": "li", "children": [item]})
-        if li_nodes:
-            content.append({"tag": "ul", "children": li_nodes})
-    def bullet_list(items):
-        items = items or ["None active this build"]
-        return {"tag": "ul", "children": [{"tag": "li", "children": [item]} for item in items]}
-    tuning_items = [
-        tuning_active_line(env, token)
-        for token in tuning_order(env)
-        if token not in tuning_skipped_tokens
-    ]
-    content.append({"tag": "h3", "children": ["Luminaire Tuning"]})
-    content.append(bullet_list(tuning_items))
-    def addon_status_icon(token):
-        if token in skipped_tokens:
-            return "\u2796"
-        return "\u2705" if token in addon_tokens else "\u274c"
-    def make_status_table(rows):
-        name_width = max(len(name) for name, _ in rows) + 2
-        lines = [f"{name.ljust(name_width)}{status}" for name, status in rows]
-        children = []
-        for i, line in enumerate(lines):
-            if i > 0:
-                children.append({"tag": "br"})
-            children.append(line)
-        return {"tag": "pre", "children": [{"tag": "code", "children": children}]}
-    addon_rows = [
-        (addon_display_name(token), addon_status_icon(token))
-        for token in toggle_addon_order(env)
-    ]
-    # nomount/zeromount shown as their own row here — see CODEX.md
-    # (resolve_mountless_engine section).
-    addon_rows.append(("Mountless Engine", resolve_mountless_engine(env)))
-    content.append({"tag": "h3", "children": ["Add-ons"]})
-    content.append({"tag": "p", "children": ["Opt-in — these exist to give more options, not to define the standard config, so you can choose what you prefer."]})
-    content.append(make_status_table(addon_rows))
-    return content
-
-
-CHANGELOG_MAX_LEN = 300
-
-
 def build_push_caption(env):
     branch_raw = env.get("BRANCH", "")
     author     = env.get("AUTHOR", "")
@@ -426,56 +311,6 @@ def build_push_caption(env):
     return head_full + "\n" + message_block + footer
 
 
-def build_channel_caption(env, variant_links, variant_versions=None):
-    if variant_versions is None:
-        variant_versions = {}
-    kernel_ver  = env.get("KERNEL_VERSION", "")
-    linux_ver   = env.get("LINUX_VER", "N/A")
-    android_ver = KERNEL_VERSION_TO_ANDROID.get(kernel_ver, "?")
-    major_minor = ".".join(linux_ver.split(".")[:2]) + ".x"
-    sections = [
-        f"*Luminaire \\| Protocol \\| {mdv2_escape(linux_ver)}*\n"
-        f"*GKI Kernel \\| Android {mdv2_escape(android_ver)} \\| Linux {mdv2_escape(major_minor)}*"
-    ]
-    features_url = env.get("FEATURES_URL", "").strip()
-    if features_url:
-        sections.append(f"[What's Inside?]({mdv2_escape_url(features_url)})")
-    else:
-        sections.append("What's Inside?: see Add\\-ons block in the zip's caption")
-    download_lines = ["*Download*"]
-    variant_items = list(variant_links.items())
-    for i, (variant_key, link) in enumerate(variant_items):
-        display = VARIANT_DISPLAY.get(variant_key, mdv2_escape(variant_key))
-        version = variant_versions.get(variant_key, "")
-        if version:
-            display = f"{display} \\- {mdv2_escape(version)}"
-        safe_link = mdv2_escape_url(link)
-        download_lines.append(f">• [{display}]({safe_link})")
-        if i < len(variant_items) - 1:
-            download_lines.append(">")
-    sections.append("\n".join(download_lines))
-    changelog_added = False
-    changelog_raw = env.get("CHANGELOG", "").strip()
-    if changelog_raw:
-        entries = [e.strip() for e in changelog_raw.split(";") if e.strip()]
-        changelog_body = "\n".join(f"- {mdv2_code_escape(entry)}" for entry in entries)
-        changelog_block = "```Changelog\n" + changelog_body + "```"
-        changelog_block = truncate(changelog_block, CHANGELOG_MAX_LEN)
-        sections.append(changelog_block)
-        changelog_added = True
-    donate_url = mdv2_escape_url("https://sociabuzz.com/chainonyourdoor")
-    sections.append(f"[Support]({donate_url})")
-    group_url = mdv2_escape_url("https://t.me/{}".format(env.get("TELEGRAM_GROUP", "")))
-    sections.append(
-        "If you encounter any issues or unexpected behavior, please "
-        f"report them through the [Luminaire Lab]({group_url}) "
-        "discussion group\\."
-    )
-    sections.append("\\#GKI \\#Kernel \\#Luminaire")
-    caption = "\n\n".join(sections)
-    return truncate(caption, CAPTION_LIMIT)
-
-
 def main():
     if len(sys.argv) == 3 and sys.argv[1] == "push":
         env = os.environ
@@ -484,30 +319,16 @@ def main():
             f.write(caption)
         print("[info] telegram_caption: push caption written ✅", flush=True)
         return
-    out_group   = sys.argv[1]
-    out_channel = sys.argv[2]
+    out_group = sys.argv[1]
     env = os.environ
     block_luminaire, block_root, block_tuning, block_addons = build_blocks(env)
     caption_group = "\n".join(
         b for b in [block_luminaire, block_root, block_tuning, block_addons] if b is not None
     )
     caption_group = truncate(caption_group, CAPTION_LIMIT)
-    variant_links_json = env.get("VARIANT_LINKS_JSON", "")
-    try:
-        variant_links = json.loads(variant_links_json) if variant_links_json else {}
-    except Exception:
-        variant_links = {}
-    variant_versions_json = env.get("VARIANT_VERSIONS_JSON", "")
-    try:
-        variant_versions = json.loads(variant_versions_json) if variant_versions_json else {}
-    except Exception:
-        variant_versions = {}
-    caption_channel = build_channel_caption(env, variant_links, variant_versions)
     with open(out_group, "w") as f:
         f.write(caption_group)
-    with open(out_channel, "w") as f:
-        f.write(caption_channel)
-    print("[info] telegram_caption: captions written ✅", flush=True)
+    print("[info] telegram_caption: caption written ✅", flush=True)
 
 
 if __name__ == "__main__":
