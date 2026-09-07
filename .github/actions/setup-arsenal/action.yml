@@ -40,8 +40,12 @@ runs:
         KERNEL_VERSION="${{ inputs.kernel-version }}"
         ANDROID_VERSION="$(resolve_android_version)"
         OVERRIDE="${{ inputs.kernel-branch-override }}"
-        OVERRIDE="${OVERRIDE//\//-}"
-        KERNEL_BRANCH="${OVERRIDE:-${ANDROID_VERSION}-${KERNEL_VERSION}}"
+        OVERRIDE="${OVERRIDE//\\//-}"
+        if [ -n "$OVERRIDE" ]; then
+          KERNEL_BRANCH="${ANDROID_VERSION}-${KERNEL_VERSION}-${OVERRIDE}"
+        else
+          KERNEL_BRANCH="${ANDROID_VERSION}-${KERNEL_VERSION}"
+        fi
         echo "arsenal_key=arsenal" >> $GITHUB_OUTPUT
         echo "kernel_key=kernel-${KERNEL_BRANCH}" >> $GITHUB_OUTPUT
 
