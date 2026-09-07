@@ -2982,10 +2982,32 @@ index acfb51a..3a3d97b 100644
  {
      struct ksu_nuke_ext4_sysfs_cmd cmd;
 diff --git a/kernel/supercall/supercall.c b/kernel/supercall/supercall.c
-index 47bca69..daad4f0 100644
+index 47bca69..c6d00b8 100644
 --- a/kernel/supercall/supercall.c
 +++ b/kernel/supercall/supercall.c
-@@ -122,7 +122,7 @@ extern uint32_t ksuver_override;
+@@ -118,11 +118,29 @@ static void ksu_install_fd_tw_func(struct callback_head *cb)
+     kfree(tw);
+ }
+ 
++int ksu_supercall_reboot_handler(void __user **arg)
++{
++    struct ksu_install_fd_tw *tw;
++
++    tw = kzalloc(sizeof(*tw), GFP_KERNEL);
++    if (!tw)
++        return 0;
++
++    tw->outp = (int __user *)(*arg);
++    tw->cb.func = ksu_install_fd_tw_func;
++
++    if (task_work_add(current, &tw->cb, TWA_RESUME)) {
++        kfree(tw);
++        pr_warn("install fd add task_work failed\n");
++    }
++    return 0;
++}
++
+ extern uint32_t ksuver_override;
  extern uint32_t ksuflags_override;
  
  // downstream: make sure to pass arg as reference, this can allow us to extend things.
@@ -2995,14 +3017,15 @@ index 47bca69..daad4f0 100644
  
      if (magic1 != KSU_INSTALL_MAGIC1)
 diff --git a/kernel/supercall/supercall.h b/kernel/supercall/supercall.h
-index 5e356a6..649d10c 100644
+index 5e356a6..0b9e777 100644
 --- a/kernel/supercall/supercall.h
 +++ b/kernel/supercall/supercall.h
-@@ -22,6 +22,7 @@ struct ksu_ioctl_cmd_map {
+@@ -22,6 +22,8 @@ struct ksu_ioctl_cmd_map {
  int ksu_install_fd(void);
  // Install a KSU fd that authorizes operations required while starting su.
  int ksu_install_su_fd(void);
 +int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void __user **arg);
++int ksu_supercall_reboot_handler(void __user **arg);
  bool ksu_is_su_session_fd(const struct file *filp);
  
  void ksu_supercalls_init(void);
