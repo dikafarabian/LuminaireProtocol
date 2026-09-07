@@ -2927,10 +2927,24 @@ index 68c333f1..007a9389 100644
  {
      struct ksu_nuke_ext4_sysfs_cmd cmd;
 diff --git a/kernel/supercall/supercall.c b/kernel/supercall/supercall.c
-index 3dfd4abf..a959063a 100644
+index 3dfd4abf..a5e28b36 100644
 --- a/kernel/supercall/supercall.c
 +++ b/kernel/supercall/supercall.c
-@@ -77,53 +77,31 @@ static void ksu_install_fd_tw_func(struct callback_head *cb)
+@@ -63,6 +63,13 @@ int ksu_install_fd(void)
+     return fd;
+ }
+ 
++int ksu_install_su_fd(void)
++{
++    // KOWSU installs the su session fd via the plain driver fd;
++    // alias kept so the SuSFS-configured exec path can link.
++    return ksu_install_fd();
++}
++
+ static void ksu_install_fd_tw_func(struct callback_head *cb)
+ {
+     struct ksu_install_fd_tw *tw = container_of(cb, struct ksu_install_fd_tw, cb);
+@@ -77,53 +84,31 @@ static void ksu_install_fd_tw_func(struct callback_head *cb)
      kfree(tw);
  }
  
@@ -2995,10 +3009,14 @@ index 3dfd4abf..a959063a 100644
      ksu_supercall_cleanup_state();
  }
 diff --git a/kernel/supercall/supercall.h b/kernel/supercall/supercall.h
-index fbedd11f..b14b8d1a 100644
+index fbedd11f..693cd5e1 100644
 --- a/kernel/supercall/supercall.h
 +++ b/kernel/supercall/supercall.h
-@@ -21,4 +21,5 @@ int ksu_install_fd(void);
+@@ -18,7 +18,9 @@ struct ksu_ioctl_cmd_map {
+ 
+ // Install KSU fd to current process
+ int ksu_install_fd(void);
++int ksu_install_su_fd(void);
  
  void ksu_supercalls_init(void);
  void ksu_supercalls_exit(void);

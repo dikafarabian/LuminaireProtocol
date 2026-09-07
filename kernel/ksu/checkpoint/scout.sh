@@ -105,8 +105,8 @@ case "$KERNEL_VARIANT" in
         ;;
     KOWSU)
         if [ "$SUSFS_ENABLED" = "true" ]; then
-            latest=$(latest_sha_or_empty "KowSU" \
-                "https://api.github.com/repos/KOWX712/KernelSU/commits/main" '.sha')
+            latest=$(latest_sha_or_empty "KowSU (newest tag)" \
+                "https://api.github.com/repos/KOWX712/KernelSU/tags" '.[0].commit.sha')
             resolve_component "kowsu" "KOWSU" "$latest"
 
             SUSFS_GKI_BRANCH="gki-$(resolve_android_version)-${KERNEL_VERSION}"
@@ -114,8 +114,8 @@ case "$KERNEL_VARIANT" in
                 "https://gitlab.com/api/v4/projects/simonpunk%2Fsusfs4ksu/repository/commits/${SUSFS_GKI_BRANCH}" '.id')
             resolve_component "susfs_kowsu" "SUSFS_KOWSU" "$latest"
         else
-            latest=$(latest_sha_or_empty "KowSU" \
-                "https://api.github.com/repos/KOWX712/KernelSU/commits/main" '.sha')
+            latest=$(latest_sha_or_empty "KowSU (newest tag)" \
+                "https://api.github.com/repos/KOWX712/KernelSU/tags" '.[0].commit.sha')
             resolve_component "kowsu" "KOWSU" "$latest"
         fi
         ;;
