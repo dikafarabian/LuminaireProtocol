@@ -1,5 +1,5 @@
 diff --git a/kernel/Kbuild b/kernel/Kbuild
-index b256080..51a2b21 100644
+index b2560806..51a2b213 100644
 --- a/kernel/Kbuild
 +++ b/kernel/Kbuild
 @@ -4,24 +4,12 @@ kernelsu-objs += feature/kernel_umount.o
@@ -38,7 +38,7 @@ index b256080..51a2b21 100644
  
  kernelsu-objs += extras.o
 diff --git a/kernel/Kconfig b/kernel/Kconfig
-index 88e2281..fcb0e66 100644
+index 88e22811..fcb0e664 100644
 --- a/kernel/Kconfig
 +++ b/kernel/Kconfig
 @@ -2,7 +2,6 @@ menu "KernelSU"
@@ -155,7 +155,7 @@ index 88e2281..fcb0e66 100644
  
  endmenu
 diff --git a/kernel/Makefile b/kernel/Makefile
-index 07fbe78..d57930b 100644
+index 07fbe783..d57930be 100644
 --- a/kernel/Makefile
 +++ b/kernel/Makefile
 @@ -33,4 +33,14 @@ format:
@@ -174,7 +174,7 @@ index 07fbe78..d57930b 100644
 +
  # Keep a new line here!! Because someone may append config
 diff --git a/kernel/core/init.c b/kernel/core/init.c
-index e9cd102..0af7fa3 100644
+index e9cd1023..0af7fa35 100644
 --- a/kernel/core/init.c
 +++ b/kernel/core/init.c
 @@ -6,6 +6,7 @@
@@ -364,7 +364,7 @@ index e9cd102..0af7fa3 100644
  
      put_cred(ksu_cred);
 diff --git a/kernel/feature/adb_root.c b/kernel/feature/adb_root.c
-index bcf93bc..3535ab2 100644
+index bcf93bc4..3535ab20 100644
 --- a/kernel/feature/adb_root.c
 +++ b/kernel/feature/adb_root.c
 @@ -9,9 +9,12 @@
@@ -515,7 +515,7 @@ index bcf93bc..3535ab2 100644
      return 0;
  }
 diff --git a/kernel/feature/adb_root.h b/kernel/feature/adb_root.h
-index 154a466..ac113ea 100644
+index 154a466d..ac113ea5 100644
 --- a/kernel/feature/adb_root.h
 +++ b/kernel/feature/adb_root.h
 @@ -2,8 +2,7 @@
@@ -529,10 +529,10 @@ index 154a466..ac113ea 100644
  void ksu_adb_root_init(void);
  
 diff --git a/kernel/feature/kernel_umount.c b/kernel/feature/kernel_umount.c
-index 7e337ab..8b6e0b3 100644
+index d77494df..034db917 100644
 --- a/kernel/feature/kernel_umount.c
 +++ b/kernel/feature/kernel_umount.c
-@@ -83,30 +83,6 @@ int ksu_handle_umount(uid_t old_uid, uid_t new_uid)
+@@ -106,30 +106,6 @@ int ksu_handle_umount(uid_t old_uid, uid_t new_uid)
          return 0;
      }
  
@@ -540,7 +540,7 @@ index 7e337ab..8b6e0b3 100644
 -    // 1. Normal app: zygote -> appuid
 -    // 2. Isolated process forked from zygote: zygote -> isolated_process
 -    // 3. App zygote forked from zygote: zygote -> appuid
--    // 4. Webview zygote forked from zygote: zygote -> webview_zygote
+-    // 4. Webview zygote forked from zygote: zygote -> webview_zygote (controlled by feature policy)
 -    // 5. Isolated process forked from app zygote: appuid -> isolated_process (already handled by 3)
 -    // 6. Isolated process forked from webview zygote (already handled by 4)
 -    if (!is_appuid(new_uid) && new_uid != WEBVIEW_ZYGOTE_UID && !is_isolated_process(new_uid)) {
@@ -564,7 +564,7 @@ index 7e337ab..8b6e0b3 100644
      pr_info("handle umount for uid: %d, pid: %d\n", new_uid, current->pid);
  
 diff --git a/kernel/feature/selinux_hide.c b/kernel/feature/selinux_hide.c
-index fbb6c44..1b34903 100644
+index fbb6c44f..1b34903f 100644
 --- a/kernel/feature/selinux_hide.c
 +++ b/kernel/feature/selinux_hide.c
 @@ -1,6 +1,4 @@
@@ -1115,7 +1115,7 @@ index fbb6c44..1b34903 100644
  {
      struct policydb *policydb;
 diff --git a/kernel/feature/sucompat.c b/kernel/feature/sucompat.c
-index 12978b1..e8a4af2 100644
+index 73c01271..e8a4af2f 100644
 --- a/kernel/feature/sucompat.c
 +++ b/kernel/feature/sucompat.c
 @@ -1,6 +1,3 @@
@@ -1138,14 +1138,13 @@ index 12978b1..e8a4af2 100644
  
  #include "arch.h"
  #include "policy/allowlist.h"
-@@ -21,30 +24,36 @@
+@@ -21,29 +24,36 @@
  #include "klog.h" // IWYU pragma: keep
  #include "runtime/ksud.h"
  #include "feature/sucompat.h"
 +#include "feature/adb_root.h"
  #include "policy/app_profile.h"
 -#include "hook/syscall_hook.h"
--#include "supercall/supercall.h"
  #include "sulog/event.h"
 -#include "ksu.h"
 -#include "util.h"
@@ -1183,7 +1182,7 @@ index 12978b1..e8a4af2 100644
      pr_info("su_compat: set to %d\n", enable);
      return 0;
  }
-@@ -65,6 +74,13 @@ static void __user *userspace_stack_buffer(const void *d, size_t len)
+@@ -64,6 +74,13 @@ static void __user *userspace_stack_buffer(const void *d, size_t len)
      return copy_to_user(p, d, len) ? NULL : p;
  }
  
@@ -1197,7 +1196,7 @@ index 12978b1..e8a4af2 100644
  static char __user *ksud_user_path(void)
  {
      static const char ksud_path[] = KSUD_PATH;
-@@ -72,255 +88,190 @@ static char __user *ksud_user_path(void)
+@@ -71,247 +88,190 @@ static char __user *ksud_user_path(void)
      return userspace_stack_buffer(ksud_path, sizeof(ksud_path));
  }
  
@@ -1391,12 +1390,12 @@ index 12978b1..e8a4af2 100644
 +#else
 +        ret = ksu_adb_root_handle_execveat(filename->name, (void ***)&envp_user->ptr.native);
 +#endif
++
++    if (ret)
++        pr_err("adb root failed: %d\n", ret);
  
 -do_orig_stat:
 -    return ksu_syscall_table[orig_nr](regs);
-+    if (ret)
-+        pr_err("adb root failed: %d\n", ret);
-+
 +    return ret;
  }
  
@@ -1414,7 +1413,6 @@ index 12978b1..e8a4af2 100644
 -    char path[sizeof(su_path) + 1];
 -    long ret, orig_regs[5];
 -    unsigned long addr;
--    int su_fd = -1;
 -    int tmp_fd;
 -    struct file *ksud_file;
 -    const struct cred *old_cred;
@@ -1505,13 +1503,6 @@ index 12978b1..e8a4af2 100644
 -        regs->__PT_PARM3_REG = orig_regs[2];
 -        regs->__PT_SYSCALL_PARM4_REG = orig_regs[3];
 -        regs->__PT_PARM5_REG = orig_regs[4];
--    } else {
--        // Only grant the scoped driver capability after the selected root
--        // profile has been applied successfully.
--        su_fd = ksu_install_su_fd();
--        if (su_fd < 0) {
--            pr_warn("install su session fd failed: %d\n", su_fd);
--        }
 +    if (ret) {
 +        pr_err("escape_with_root_profile() failed: %d\n", ret);
 +        return -EINVAL;
@@ -1588,7 +1579,7 @@ index 12978b1..e8a4af2 100644
  
  void __exit ksu_sucompat_exit()
 diff --git a/kernel/feature/sucompat.h b/kernel/feature/sucompat.h
-index 5e2cfe1..a4a6a7d 100644
+index 5e2cfe11..a4a6a7de 100644
 --- a/kernel/feature/sucompat.h
 +++ b/kernel/feature/sucompat.h
 @@ -3,15 +3,15 @@
@@ -1616,7 +1607,7 @@ index 5e2cfe1..a4a6a7d 100644
 +#endif
 \ No newline at end of file
 diff --git a/kernel/hook/setuid_hook.c b/kernel/hook/setuid_hook.c
-index d3f3ac4..1f1e91b 100644
+index d3f3ac49..1f1e91be 100644
 --- a/kernel/hook/setuid_hook.c
 +++ b/kernel/hook/setuid_hook.c
 @@ -11,6 +11,8 @@
@@ -1789,7 +1780,7 @@ index d3f3ac4..1f1e91b 100644
  {
      ksu_kernel_umount_init();
 diff --git a/kernel/hook/setuid_hook.h b/kernel/hook/setuid_hook.h
-index 3a3dfea..b848623 100644
+index 3a3dfea8..b8486238 100644
 --- a/kernel/hook/setuid_hook.h
 +++ b/kernel/hook/setuid_hook.h
 @@ -7,7 +7,4 @@
@@ -1801,7 +1792,7 @@ index 3a3dfea..b848623 100644
 -
  #endif
 diff --git a/kernel/include/ksu.h b/kernel/include/ksu.h
-index 95c9edb..7f2870a 100644
+index 95c9edb1..7f2870a8 100644
 --- a/kernel/include/ksu.h
 +++ b/kernel/include/ksu.h
 @@ -8,7 +8,6 @@
@@ -1813,10 +1804,10 @@ index 95c9edb..7f2870a 100644
  extern struct selinux_policy *backup_sepolicy;
  extern bool ksu_no_custom_rc;
 diff --git a/kernel/policy/allowlist.c b/kernel/policy/allowlist.c
-index 7dd2c2d..b247314 100644
+index 088013ff..8fdb39a4 100644
 --- a/kernel/policy/allowlist.c
 +++ b/kernel/policy/allowlist.c
-@@ -296,10 +296,7 @@ bool ksu_uid_should_umount(uid_t uid)
+@@ -297,10 +297,6 @@ bool ksu_uid_should_umount(uid_t uid)
  {
      struct app_profile *profile;
      bool res;
@@ -1824,12 +1815,11 @@ index 7dd2c2d..b247314 100644
 -        // we should not umount on manager!
 -        return false;
 -    }
-+
- #ifdef CONFIG_KSU_DISABLE_POLICY
-     return !__ksu_is_allow_uid(uid);
- #else
+     if (unlikely(uid == WEBVIEW_ZYGOTE_UID)) {
+         return ksu_webview_zygote_umount_enabled;
+     }
 diff --git a/kernel/policy/app_profile.c b/kernel/policy/app_profile.c
-index 518ef41..62c43b0 100644
+index 518ef414..62c43b03 100644
 --- a/kernel/policy/app_profile.c
 +++ b/kernel/policy/app_profile.c
 @@ -1,6 +1,3 @@
@@ -1960,7 +1950,7 @@ index 518ef41..62c43b0 100644
 +    return 0;
  }
 diff --git a/kernel/policy/app_profile.h b/kernel/policy/app_profile.h
-index 0e223df..f63c84a 100644
+index 0e223df7..f63c84a8 100644
 --- a/kernel/policy/app_profile.h
 +++ b/kernel/policy/app_profile.h
 @@ -2,15 +2,12 @@
@@ -1981,7 +1971,7 @@ index 0e223df..f63c84a 100644
  
  #endif
 diff --git a/kernel/policy/feature.h b/kernel/policy/feature.h
-index 80e3a9d..7607146 100644
+index 80e3a9d5..7607146c 100644
 --- a/kernel/policy/feature.h
 +++ b/kernel/policy/feature.h
 @@ -2,7 +2,7 @@
@@ -1994,7 +1984,7 @@ index 80e3a9d..7607146 100644
  typedef int (*ksu_feature_get_t)(u64 *value);
  typedef int (*ksu_feature_set_t)(u64 value);
 diff --git a/kernel/runtime/boot_event.c b/kernel/runtime/boot_event.c
-index a76ef63..c8e74e7 100644
+index a76ef630..c8e74e78 100644
 --- a/kernel/runtime/boot_event.c
 +++ b/kernel/runtime/boot_event.c
 @@ -13,6 +13,7 @@
@@ -2018,7 +2008,7 @@ index a76ef63..c8e74e7 100644
  }
  
 diff --git a/kernel/runtime/ksud.h b/kernel/runtime/ksud.h
-index 09384de..ba23851 100644
+index 09384def..ba238519 100644
 --- a/kernel/runtime/ksud.h
 +++ b/kernel/runtime/ksud.h
 @@ -8,8 +8,20 @@
@@ -2046,7 +2036,7 @@ index 09384de..ba23851 100644
 +                             struct user_arg_ptr *envp, int *flags);
  #endif
 diff --git a/kernel/runtime/ksud_integration.c b/kernel/runtime/ksud_integration.c
-index 5bf84cb..6f81803 100644
+index 5bf84cb6..6f81803c 100644
 --- a/kernel/runtime/ksud_integration.c
 +++ b/kernel/runtime/ksud_integration.c
 @@ -11,7 +11,6 @@
@@ -2433,7 +2423,7 @@ index 5bf84cb..6f81803 100644
          free_module_rc();
      }
 diff --git a/kernel/selinux/rules.c b/kernel/selinux/rules.c
-index 762a7c5..250676f 100644
+index 762a7c55..250676f3 100644
 --- a/kernel/selinux/rules.c
 +++ b/kernel/selinux/rules.c
 @@ -160,6 +160,8 @@ void apply_kernelsu_rules()
@@ -2446,7 +2436,7 @@ index 762a7c5..250676f 100644
      mutex_unlock(&selinux_state.policy_mutex);
  }
 diff --git a/kernel/selinux/selinux.c b/kernel/selinux/selinux.c
-index 7bc6d6d..3b0fcb3 100644
+index 7bc6d6d0..3b0fcb3d 100644
 --- a/kernel/selinux/selinux.c
 +++ b/kernel/selinux/selinux.c
 @@ -220,3 +220,92 @@ void escape_to_root_for_adb_root(void)
@@ -2543,7 +2533,7 @@ index 7bc6d6d..3b0fcb3 100644
 +    susfs_set_sid(KERNEL_PRIV_APP_DOMAIN, &susfs_priv_app_sid);
 +}
 diff --git a/kernel/selinux/selinux.h b/kernel/selinux/selinux.h
-index a17ed22..c8db3ce 100644
+index a17ed226..c8db3cea 100644
 --- a/kernel/selinux/selinux.h
 +++ b/kernel/selinux/selinux.h
 @@ -39,4 +39,13 @@ void escape_to_root_for_adb_root();
@@ -2561,7 +2551,7 @@ index a17ed22..c8db3ce 100644
 +
  #endif
 diff --git a/kernel/sulog/event.c b/kernel/sulog/event.c
-index 51d6fa8..9f996cc 100644
+index 51d6fa84..9f996cc0 100644
 --- a/kernel/sulog/event.c
 +++ b/kernel/sulog/event.c
 @@ -25,18 +25,6 @@
@@ -2718,7 +2708,7 @@ index 51d6fa8..9f996cc 100644
  
  void ksu_sulog_emit_pending(struct ksu_sulog_pending_event *pending, int retval, gfp_t gfp)
 diff --git a/kernel/sulog/event.h b/kernel/sulog/event.h
-index 635ec01..c7b28b8 100644
+index 635ec01c..c7b28b86 100644
 --- a/kernel/sulog/event.h
 +++ b/kernel/sulog/event.h
 @@ -5,6 +5,7 @@
@@ -2743,7 +2733,7 @@ index 635ec01..c7b28b8 100644
  int ksu_sulog_emit_grant_root(int retval, __u32 uid, __u32 euid, gfp_t gfp);
  
 diff --git a/kernel/supercall/dispatch.c b/kernel/supercall/dispatch.c
-index acfb51a..448fe31 100644
+index 294c75b9..93c41c55 100644
 --- a/kernel/supercall/dispatch.c
 +++ b/kernel/supercall/dispatch.c
 @@ -4,6 +4,8 @@
@@ -2893,71 +2883,16 @@ index acfb51a..448fe31 100644
      }
      if (copy_to_user(arg, &cmd, sizeof(cmd))) {
          pr_err("manage_mark: copy_to_user failed\n");
-diff --git a/kernel/supercall/supercall.c b/kernel/supercall/supercall.c
-index 47bca69..363d8df 100644
---- a/kernel/supercall/supercall.c
-+++ b/kernel/supercall/supercall.c
-@@ -20,6 +20,7 @@
- #include "klog.h" // IWYU pragma: keep
- #include "manager/manager_identity.h"
- #include "supercall/supercall.h"
-+#include <linux/susfs.h>
- #include "../tiny_sulog.c"
- 
- #define KSU_DRIVER_PERMISSION_SU_SESSION (1UL << 0)
-@@ -118,39 +119,108 @@ static void ksu_install_fd_tw_func(struct callback_head *cb)
-     kfree(tw);
+@@ -509,6 +479,87 @@ static int do_manage_mark(void __user *arg)
+     return 0;
  }
  
-+int ksu_supercall_reboot_handler(void __user **arg)
-+{
-+    struct ksu_install_fd_tw *tw;
-+
-+    tw = kzalloc(sizeof(*tw), GFP_KERNEL);
-+    if (!tw)
-+        return 0;
-+
-+    tw->outp = (int __user *)(*arg);
-+    tw->cb.func = ksu_install_fd_tw_func;
-+
-+    if (task_work_add(current, &tw->cb, TWA_RESUME)) {
-+        kfree(tw);
-+        pr_warn("install fd add task_work failed\n");
-+    }
-+    return 0;
-+}
-+
- extern uint32_t ksuver_override;
- extern uint32_t ksuflags_override;
- 
- // downstream: make sure to pass arg as reference, this can allow us to extend things.
--static int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void __user **arg)
 +int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void __user **arg)
- {
- 
-     if (magic1 != KSU_INSTALL_MAGIC1)
-     	return 0;
- 
--    pr_info("sys_reboot: intercepted call! magic: 0x%x id: %d\n", magic1, magic2);
--
--    // arg4 = (unsigned long)PT_REGS_SYSCALL_PARM4(real_regs);
--    // downstream: dereference arg as arg4 so we can be inline to upstream
--    void __user *arg4 = (void __user *)*arg;
--
--    // Check if this is a request to install KSU fd
--    if (magic2 == KSU_INSTALL_MAGIC2) {
--        struct ksu_install_fd_tw *tw;
--
--        tw = kzalloc(sizeof(*tw), GFP_ATOMIC);
--        if (!tw)
--            return 0;
--
--        tw->outp = (int __user *)arg4;
--        tw->cb.func = ksu_install_fd_tw_func;
--
--        if (task_work_add(current, &tw->cb, TWA_RESUME)) {
--            kfree(tw);
--            pr_warn("install fd add task_work failed\n");
++{
++    if (magic1 != KSU_INSTALL_MAGIC1) {
++        return -EINVAL; 
++    }
++
 +    // If magic2 is susfs and current process is root
 +    if (magic2 == SUSFS_MAGIC && current_uid().val == 0) {
 +        switch(cmd) {
@@ -3024,27 +2959,90 @@ index 47bca69..363d8df 100644
 +                return 0;
 +            default:
 +                return -EINVAL;
-         }
-     }
- 
++        }
++    }
++
 +    if (magic2 == KSU_INSTALL_MAGIC2)
 +        return ksu_supercall_reboot_handler(arg);
 +
-+    pr_info("sys_reboot: intercepted call! magic: 0x%x id: %d\n", magic1, magic2);
++    return -EINVAL;
++}
 +
-     // downstream: extensions go here!
+ static int do_nuke_ext4_sysfs(void __user *arg)
+ {
+     struct ksu_nuke_ext4_sysfs_cmd cmd;
+diff --git a/kernel/supercall/supercall.c b/kernel/supercall/supercall.c
+index dddb9128..dd46df1d 100644
+--- a/kernel/supercall/supercall.c
++++ b/kernel/supercall/supercall.c
+@@ -253,37 +253,30 @@ static int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void
+     return 0;
+ }
  
-     // extensions
+-static int reboot_handler_pre(struct kprobe *p, struct pt_regs *regs)
++int ksu_supercall_reboot_handler(void __user **arg)
+ {
+-    struct pt_regs *real_regs = PT_REAL_REGS(regs);
+-    int magic1 = (int)PT_REGS_PARM1(real_regs);
+-    int magic2 = (int)PT_REGS_PARM2(real_regs);
+-    int cmd = (int)PT_REGS_PARM3(real_regs);
+-    void __user **arg = (void __user **)&PT_REGS_SYSCALL_PARM4(real_regs);
++    struct ksu_install_fd_tw *tw;
+ 
+-    return ksu_handle_sys_reboot(magic1, magic2, cmd, arg);
++    tw = kzalloc(sizeof(*tw), GFP_KERNEL);
++    if (!tw)
++        return 0;
+ 
+-}
++    tw->outp = (int __user *)(*arg);
++    tw->cb.func = ksu_install_fd_tw_func;
+ 
+-static struct kprobe reboot_kp = {
+-    .symbol_name = REBOOT_SYMBOL,
+-    .pre_handler = reboot_handler_pre,
+-};
++    if (task_work_add(current, &tw->cb, TWA_RESUME)) {
++        kfree(tw);
++        pr_warn("install fd add task_work failed\n");
++    }
++
++    return 0;
++}
+ 
+ void __init ksu_supercalls_init(void)
+ {
+-    int rc;
+-
+     ksu_supercall_dump_commands();
+ 
+     tiny_sulog_init_heap(); // grab heap memory for sulog
+-
+-    rc = register_kprobe(&reboot_kp);
+-    if (rc) {
+-        pr_err("reboot kprobe failed: %d\n", rc);
+-    } else {
+-        pr_info("reboot kprobe registered successfully\n");
+-    }
+ }
+ 
+ void __exit ksu_supercalls_exit(void)
+@@ -294,6 +287,5 @@ void __exit ksu_supercalls_exit(void)
+         sulog_buf_ptr = NULL;
+     }
+ 
+-    unregister_kprobe(&reboot_kp);
+     ksu_supercall_cleanup_state();
+ }
 diff --git a/kernel/supercall/supercall.h b/kernel/supercall/supercall.h
-index 5e356a6..0b9e777 100644
+index b74f4300..67b26660 100644
 --- a/kernel/supercall/supercall.h
 +++ b/kernel/supercall/supercall.h
-@@ -22,6 +22,8 @@ struct ksu_ioctl_cmd_map {
- int ksu_install_fd(void);
- // Install a KSU fd that authorizes operations required while starting su.
- int ksu_install_su_fd(void);
-+int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void __user **arg);
-+int ksu_supercall_reboot_handler(void __user **arg);
- bool ksu_is_su_session_fd(const struct file *filp);
+@@ -21,6 +21,7 @@ int ksu_install_fd(void);
  
  void ksu_supercalls_init(void);
+ void ksu_supercalls_exit(void);
++int ksu_supercall_reboot_handler(void __user **arg);
+ 
+ // extensions
+ #define CHANGE_MANAGER_UID 10006
