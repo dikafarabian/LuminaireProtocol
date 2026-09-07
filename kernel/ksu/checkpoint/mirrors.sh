@@ -9,18 +9,26 @@ declare -gA MIRROR_SOURCE_URL=(
     [resukisu]="https://github.com/ReSukiSU/ReSukiSU"
     [sukisu_builtin]="https://github.com/SukiSU-Ultra/SukiSU-Ultra"
     [ksunext_susfs_fork]="https://github.com/pershoot/KernelSU-Next"
+    [kowsu]="https://github.com/KOWX712/KernelSU"
+    [ksu]="https://github.com/tiann/KernelSU"
     [susfs_resukisu]="https://gitlab.com/simonpunk/susfs4ksu.git"
     [susfs_sukisu]="https://gitlab.com/simonpunk/susfs4ksu.git"
     [susfs_ksunext]="https://gitlab.com/simonpunk/susfs4ksu.git"
+    [susfs_kowsu]="https://gitlab.com/simonpunk/susfs4ksu.git"
+    [susfs_ksu]="https://gitlab.com/simonpunk/susfs4ksu.git"
 )
 
 declare -gA MIRROR_REPO=(
     [resukisu]="dikafarabian/ReSukiSU"
     [sukisu_builtin]="dikafarabian/SukiSU-Ultra"
     [ksunext_susfs_fork]="dikafarabian/KernelSU-Next"
+    [kowsu]="dikafarabian/KernelSU"
+    [ksu]="dikafarabian/KernelSU"
     [susfs_resukisu]="dikafarabian/susfs4ksu-mirror"
     [susfs_sukisu]="dikafarabian/susfs4ksu-mirror"
     [susfs_ksunext]="dikafarabian/susfs4ksu-mirror"
+    [susfs_kowsu]="dikafarabian/susfs4ksu-mirror"
+    [susfs_ksu]="dikafarabian/susfs4ksu-mirror"
 )
 
 mirror_clone_url() {

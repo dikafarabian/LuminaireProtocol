@@ -1,17 +1,9 @@
 {
-  "resukisu": {
+  "kowsu": {
     "good": "",
     "bad": []
   },
-  "susfs_resukisu": {
-    "good": "",
-    "bad": []
-  },
-  "sukisu_builtin": {
-    "good": "",
-    "bad": []
-  },
-  "susfs_sukisu": {
+  "ksu": {
     "good": "",
     "bad": []
   },
@@ -19,8 +11,32 @@
     "bad": [],
     "good": ""
   },
+  "resukisu": {
+    "good": "",
+    "bad": []
+  },
+  "sukisu_builtin": {
+    "good": "",
+    "bad": []
+  },
+  "susfs_kowsu": {
+    "good": "",
+    "bad": []
+  },
+  "susfs_ksu": {
+    "good": "",
+    "bad": []
+  },
   "susfs_ksunext": {
     "bad": [],
     "good": ""
+  },
+  "susfs_resukisu": {
+    "good": "",
+    "bad": []
+  },
+  "susfs_sukisu": {
+    "good": "",
+    "bad": []
   }
 }

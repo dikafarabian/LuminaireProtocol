@@ -42,14 +42,17 @@ import sys
 import caption
 
 VARIANT_DISPLAY_PLAIN = {
-    "VANILLA": "Vanilla",
-    "RESUKISU": "ReSukiSU",
-    "RESUKISU_SUSFS": "ReSukiSU+SUSFS",
-    "SUKISU": "SukiSU-Ultra",
-    "SUKISU_SUSFS": "SukiSU-Ultra+SUSFS",
+    "KSU": "KernelSU",
+    "KSU_SUSFS": "KernelSU+SUSFS",
+    "KOWSU": "KowSU",
+    "KOWSU_SUSFS": "KowSU+SUSFS",
     "KSUNEXT": "KernelSU-Next",
     "KSUNEXT_SUSFS": "KernelSU-Next+SUSFS",
-    "KOWSU": "KowSU",
+    "SUKISU": "SukiSU-Ultra",
+    "SUKISU_SUSFS": "SukiSU-Ultra+SUSFS",
+    "RESUKISU": "ReSukiSU",
+    "RESUKISU_SUSFS": "ReSukiSU+SUSFS",
+    "VANILLA": "Vanilla",
 }
 
 BUG_REPORT_NOTE = (

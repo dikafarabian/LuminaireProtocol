@@ -87,35 +87,36 @@ resolve_component() {
 }
 
 case "$KERNEL_VARIANT" in
-    RESUKISU)
-        latest=$(latest_sha_or_empty "ReSukiSU" \
-            "https://api.github.com/repos/ReSukiSU/ReSukiSU/commits/main" '.sha')
-        resolve_component "resukisu" "RESUKISU" "$latest"
-
+    KSU)
         if [ "$SUSFS_ENABLED" = "true" ]; then
+            latest=$(latest_sha_or_empty "KernelSU (official)" \
+                "https://api.github.com/repos/tiann/KernelSU/commits/main" '.sha')
+            resolve_component "ksu" "KSU" "$latest"
+
             SUSFS_GKI_BRANCH="gki-$(resolve_android_version)-${KERNEL_VERSION}"
-            latest=$(latest_sha_or_empty "SuSFS (ReSukiSU pairing)" \
+            latest=$(latest_sha_or_empty "SuSFS (KernelSU official pairing)" \
                 "https://gitlab.com/api/v4/projects/simonpunk%2Fsusfs4ksu/repository/commits/${SUSFS_GKI_BRANCH}" '.id')
-            resolve_component "susfs_resukisu" "SUSFS_RESUKISU" "$latest"
+            resolve_component "susfs_ksu" "SUSFS_KSU" "$latest"
+        else
+            latest=$(latest_sha_or_empty "KernelSU (official)" \
+                "https://api.github.com/repos/tiann/KernelSU/commits/main" '.sha')
+            resolve_component "ksu" "KSU" "$latest"
         fi
         ;;
-    SUKISU)
+    KOWSU)
         if [ "$SUSFS_ENABLED" = "true" ]; then
-            latest=$(latest_sha_or_empty "SukiSU-Ultra (builtin)" \
-                "https://api.github.com/repos/SukiSU-Ultra/SukiSU-Ultra/commits/builtin" '.sha')
-            resolve_component "sukisu_builtin" "SUKISU_BUILTIN" "$latest"
+            latest=$(latest_sha_or_empty "KowSU" \
+                "https://api.github.com/repos/KOWX712/KernelSU/commits/main" '.sha')
+            resolve_component "kowsu" "KOWSU" "$latest"
 
             SUSFS_GKI_BRANCH="gki-$(resolve_android_version)-${KERNEL_VERSION}"
-            latest=$(latest_sha_or_empty "SuSFS (SukiSU pairing)" \
+            latest=$(latest_sha_or_empty "SuSFS (KowSU pairing)" \
                 "https://gitlab.com/api/v4/projects/simonpunk%2Fsusfs4ksu/repository/commits/${SUSFS_GKI_BRANCH}" '.id')
-            resolve_component "susfs_sukisu" "SUSFS_SUKISU" "$latest"
+            resolve_component "susfs_kowsu" "SUSFS_KOWSU" "$latest"
         else
-            tag=$(latest_sha_or_empty "SukiSU-Ultra release" \
-                "https://api.github.com/repos/SukiSU-Ultra/SukiSU-Ultra/releases/latest" '.tag_name')
-            latest=""
-            [ -n "$tag" ] && latest=$(latest_sha_or_empty "SukiSU-Ultra" \
-                "https://api.github.com/repos/SukiSU-Ultra/SukiSU-Ultra/commits/${tag}" '.sha')
-            resolve_component "sukisu" "SUKISU" "$latest"
+            latest=$(latest_sha_or_empty "KowSU" \
+                "https://api.github.com/repos/KOWX712/KernelSU/commits/main" '.sha')
+            resolve_component "kowsu" "KOWSU" "$latest"
         fi
         ;;
     KSUNEXT)
@@ -137,7 +138,39 @@ case "$KERNEL_VARIANT" in
             resolve_component "ksunext" "KSUNEXT" "$latest"
         fi
         ;;
+    SUKISU)
+        if [ "$SUSFS_ENABLED" = "true" ]; then
+            latest=$(latest_sha_or_empty "SukiSU-Ultra (builtin)" \
+                "https://api.github.com/repos/SukiSU-Ultra/SukiSU-Ultra/commits/builtin" '.sha')
+            resolve_component "sukisu_builtin" "SUKISU_BUILTIN" "$latest"
+
+            SUSFS_GKI_BRANCH="gki-$(resolve_android_version)-${KERNEL_VERSION}"
+            latest=$(latest_sha_or_empty "SuSFS (SukiSU pairing)" \
+                "https://gitlab.com/api/v4/projects/simonpunk%2Fsusfs4ksu/repository/commits/${SUSFS_GKI_BRANCH}" '.id')
+            resolve_component "susfs_sukisu" "SUSFS_SUKISU" "$latest"
+        else
+            tag=$(latest_sha_or_empty "SukiSU-Ultra release" \
+                "https://api.github.com/repos/SukiSU-Ultra/SukiSU-Ultra/releases/latest" '.tag_name')
+            latest=""
+            [ -n "$tag" ] && latest=$(latest_sha_or_empty "SukiSU-Ultra" \
+                "https://api.github.com/repos/SukiSU-Ultra/SukiSU-Ultra/commits/${tag}" '.sha')
+            resolve_component "sukisu" "SUKISU" "$latest"
+        fi
+        ;;
+    RESUKISU)
+        latest=$(latest_sha_or_empty "ReSukiSU" \
+            "https://api.github.com/repos/ReSukiSU/ReSukiSU/commits/main" '.sha')
+        resolve_component "resukisu" "RESUKISU" "$latest"
+
+        if [ "$SUSFS_ENABLED" = "true" ]; then
+            SUSFS_GKI_BRANCH="gki-$(resolve_android_version)-${KERNEL_VERSION}"
+            latest=$(latest_sha_or_empty "SuSFS (ReSukiSU pairing)" \
+                "https://gitlab.com/api/v4/projects/simonpunk%2Fsusfs4ksu/repository/commits/${SUSFS_GKI_BRANCH}" '.id')
+            resolve_component "susfs_resukisu" "SUSFS_RESUKISU" "$latest"
+        fi
+        ;;
     VANILLA)
         log "scout: VANILLA — nothing to track"
         ;;
 esac
+

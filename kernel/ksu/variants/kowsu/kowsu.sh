@@ -11,9 +11,11 @@
 
 KSU_DIR="${KERNEL_SRC}/KernelSU"
 PATCHER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${LUMINAIRE_PATCH_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 
 log "Integrating KowSU..."
 cd "$KERNEL_SRC"
+mirror_preseed "kowsu" "$KSU_DIR" "${KOWSU_REF:-}" "${CANDIDATE_KOWSU:-false}" "$(resolve_android_version)-${KERNEL_VERSION}"
 KOWSU_SETUP=$(curl -LSs --fail --retry 3 --retry-all-errors --connect-timeout 30 \
     "https://raw.githubusercontent.com/KOWX712/KernelSU/main/kernel/setup.sh") \
     || error "KowSU: failed to download setup.sh!"

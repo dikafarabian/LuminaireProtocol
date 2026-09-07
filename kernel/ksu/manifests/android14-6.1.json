@@ -38,5 +38,21 @@
   "susfs_ksunext": {
     "good": "ad0c6ce81fb67b67e64fc6d8a1bc8c0970e3438d",
     "bad": []
+  },
+  "kowsu": {
+    "good": "c2ff45ba8d876d309eedb7ffc3e093bb4f502e41",
+    "bad": []
+  },
+  "susfs_kowsu": {
+    "good": "4fc9c1898ea66f51847cdbc0d1473ea4ef525a70",
+    "bad": []
+  },
+  "ksu": {
+    "good": "58aecc40a6eebc677ec82cf8d6ca5bf5d18f2a4d",
+    "bad": []
+  },
+  "susfs_ksu": {
+    "good": "4fc9c1898ea66f51847cdbc0d1473ea4ef525a70",
+    "bad": []
   }
 }

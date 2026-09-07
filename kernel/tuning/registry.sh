@@ -8,9 +8,9 @@ declare -A TUNING_SUPPORTED_VERSIONS=(
     [workqueue_catchup]="6.1"
     [schedutil_catchup]="6.1"
     [ufs_writebooster_catchup]="6.1"
-    [bbrv3]="5.10 5.15 6.1 6.6 6.6-konoha"
-    [bbg]="5.10 5.15 6.1 6.6 6.12 6.6-konoha"
-    [wireguard]="5.10 5.15 6.1 6.6 6.12 6.6-konoha"
+    [bbrv3]="5.10 5.15 6.1 6.6"
+    [bbg]="5.10 5.15 6.1 6.6 6.12"
+    [wireguard]="5.10 5.15 6.1 6.6 6.12"
 )
 
 TUNING_FEATURE_ORDER=(bore bbrv3 bbg wireguard adios le9uo kcompressd workqueue_catchup schedutil_catchup ufs_writebooster_catchup)

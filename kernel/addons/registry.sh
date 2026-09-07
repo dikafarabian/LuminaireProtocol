@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
 declare -A ADDON_SUPPORTED_VERSIONS=(
-    [nomount]="5.10 5.15 6.1 6.6 6.12 6.6-konoha"
-    [zeromount]="5.10 5.15 6.1 6.6 6.12 6.6-konoha"
-    [droidspaces]="5.10 5.15 6.1 6.6 6.12 6.6-konoha"
-    [rekernel]="5.10 5.15 6.1 6.6 6.12 6.6-konoha"
-    [ntsync]="5.10 5.15 6.1 6.6 6.6-konoha"
+    [nomount]="5.10 5.15 6.1 6.6 6.12"
+    [zeromount]="5.10 5.15 6.1 6.6 6.12"
+    [droidspaces]="5.10 5.15 6.1 6.6 6.12"
+    [rekernel]="5.10 5.15 6.1 6.6 6.12"
+    [ntsync]="5.10 5.15 6.1 6.6"
     [lz4zstd]="6.1"
-    [lz4kd]="5.10 5.15 6.1 6.6 6.6-konoha"
-    [kasumi]="5.10 5.15 6.1 6.6 6.12 6.6-konoha"
-    [mglru]="6.1 6.6 6.12 6.6-konoha"
+    [lz4kd]="5.10 5.15 6.1 6.6"
+    [kasumi]="5.10 5.15 6.1 6.6 6.12"
+    [mglru]="6.1 6.6 6.12"
 )
 
 ADDON_ORDER=(nomount zeromount droidspaces rekernel ntsync lz4zstd lz4kd kasumi mglru)

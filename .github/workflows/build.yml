@@ -23,26 +23,29 @@ on:
           - "5.15"
           - "6.1"
           - "6.6"
-          - "6.6-konoha"
           - "6.12"
       kernel_branch_override:
         description: "Kernel Branch Override"
         type: string
         default: ""
-      ksunext:
-        description: "KernelSU-Next"
+      ksu:
+        description: "KernelSU"
         type: boolean
-        default: true
+        default: false
       kowsu:
         description: "KowSU"
         type: boolean
         default: false
-      resukisu:
-        description: "ReSukiSU"
+      ksunext:
+        description: "KernelSU-Next"
         type: boolean
         default: true
       sukisu:
         description: "SukiSU-Ultra"
+        type: boolean
+        default: true
+      resukisu:
+        description: "ReSukiSU"
         type: boolean
         default: true
       vanilla:
@@ -174,11 +177,12 @@ jobs:
           SUSFS_ENABLED: ${{ inputs.susfs == 'enable' }}
         run: |
           variants=()
-          ${{ inputs.vanilla }}  && variants+=("{\"kernel_variant\":\"VANILLA\",\"susfs\":false}")
-          ${{ inputs.resukisu }} && variants+=("{\"kernel_variant\":\"RESUKISU\",\"susfs\":${SUSFS_ENABLED}}")
-          ${{ inputs.sukisu }}   && variants+=("{\"kernel_variant\":\"SUKISU\",\"susfs\":${SUSFS_ENABLED}}")
+          ${{ inputs.ksu }}     && variants+=("{\"kernel_variant\":\"KSU\",\"susfs\":${SUSFS_ENABLED}}")
+          ${{ inputs.kowsu }}   && variants+=("{\"kernel_variant\":\"KOWSU\",\"susfs\":${SUSFS_ENABLED}}")
           ${{ inputs.ksunext }} && variants+=("{\"kernel_variant\":\"KSUNEXT\",\"susfs\":${SUSFS_ENABLED}}")
-          ${{ inputs.kowsu }}   && variants+=("{\"kernel_variant\":\"KOWSU\",\"susfs\":false}")
+          ${{ inputs.sukisu }}   && variants+=("{\"kernel_variant\":\"SUKISU\",\"susfs\":${SUSFS_ENABLED}}")
+          ${{ inputs.resukisu }} && variants+=("{\"kernel_variant\":\"RESUKISU\",\"susfs\":${SUSFS_ENABLED}}")
+          ${{ inputs.vanilla }}  && variants+=("{\"kernel_variant\":\"VANILLA\",\"susfs\":false}")
 
           if [ ${#variants[@]} -eq 0 ]; then
             echo "No root solutions selected!"
@@ -336,18 +340,18 @@ jobs:
           OUTCOME="${{ steps.build.outcome }}"
           [ "$OUTCOME" = "success" ] && OUTCOME="success" || OUTCOME="failure"
           case "${{ matrix.kernel_variant }}" in
-            RESUKISU)
+            KSU)
               if [ "${{ matrix.susfs }}" = "true" ]; then
-                COMPONENTS="resukisu susfs_resukisu"
+                COMPONENTS="ksu susfs_ksu"
               else
-                COMPONENTS="resukisu"
+                COMPONENTS="ksu"
               fi
               ;;
-            SUKISU)
+            KOWSU)
               if [ "${{ matrix.susfs }}" = "true" ]; then
-                COMPONENTS="sukisu_builtin susfs_sukisu"
+                COMPONENTS="kowsu susfs_kowsu"
               else
-                COMPONENTS="sukisu"
+                COMPONENTS="kowsu"
               fi
               ;;
             KSUNEXT)
@@ -357,7 +361,22 @@ jobs:
                 COMPONENTS="ksunext"
               fi
               ;;
+            SUKISU)
+              if [ "${{ matrix.susfs }}" = "true" ]; then
+                COMPONENTS="sukisu_builtin susfs_sukisu"
+              else
+                COMPONENTS="sukisu"
+              fi
+              ;;
+            RESUKISU)
+              if [ "${{ matrix.susfs }}" = "true" ]; then
+                COMPONENTS="resukisu susfs_resukisu"
+              else
+                COMPONENTS="resukisu"
+              fi
+              ;;
           esac
+
           bash kernel/ksu/checkpoint/engine.sh "$OUTCOME" $COMPONENTS
 
       - name: "Save Build Caches"  # LTO and ccache, both to GH Release

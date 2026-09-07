@@ -4,17 +4,27 @@
 # Repo: https://gitlab.com/simonpunk/susfs4ksu
 # No blk.h workaround here (6.1-specific history, doesn't apply). See CODEX.md.
 
-if [ "$KERNEL_VARIANT" = "SUKISU" ]; then
-    SUSFS_REF="${SUSFS_SUKISU_REF:-}"
-    [ -n "$SUSFS_REF" ] || warn "SuSFS+SukiSU: no pin resolved — build will likely fail (see wishlist for known-good combos)"
+if [ "$KERNEL_VARIANT" = "KSU" ]; then
+    SUSFS_REF="${SUSFS_KSU_REF:-}"
     SUSFS_REPO="https://gitlab.com/simonpunk/susfs4ksu.git"
     SUSFS_BRANCH="gki-android15-6.6"
-    SUSFS_MIRROR_KEY="susfs_sukisu"
+    SUSFS_MIRROR_KEY="susfs_ksu"
+elif [ "$KERNEL_VARIANT" = "KOWSU" ]; then
+    SUSFS_REF="${SUSFS_KOWSU_REF:-}"
+    SUSFS_REPO="https://gitlab.com/simonpunk/susfs4ksu.git"
+    SUSFS_BRANCH="gki-android15-6.6"
+    SUSFS_MIRROR_KEY="susfs_kowsu"
 elif [ "$KERNEL_VARIANT" = "KSUNEXT" ]; then
     SUSFS_REF="${SUSFS_KSUNEXT_REF:-}"
     SUSFS_REPO="https://gitlab.com/simonpunk/susfs4ksu.git"
     SUSFS_BRANCH="gki-android15-6.6-dev"
     SUSFS_MIRROR_KEY="susfs_ksunext"
+elif [ "$KERNEL_VARIANT" = "SUKISU" ]; then
+    SUSFS_REF="${SUSFS_SUKISU_REF:-}"
+    [ -n "$SUSFS_REF" ] || warn "SuSFS+SukiSU: no pin resolved — build will likely fail (see wishlist for known-good combos)"
+    SUSFS_REPO="https://gitlab.com/simonpunk/susfs4ksu.git"
+    SUSFS_BRANCH="gki-android15-6.6"
+    SUSFS_MIRROR_KEY="susfs_sukisu"
 else
     SUSFS_REF="${SUSFS_RESUKISU_REF:-}"
     SUSFS_REPO="https://gitlab.com/simonpunk/susfs4ksu.git"
