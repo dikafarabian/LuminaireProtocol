@@ -106,6 +106,36 @@ else
     find "$KERNEL_SRC" -name "*.rej" -delete 2>/dev/null || true
 fi
 
+# Apply KernelSU-side patch (10_enable) so the fork exports the ksu_handle_* /
+# selinux-hide / supercall symbols SusFS's 50_add references. Official KernelSU
+# and KowSU keep those APIs internal (static), so without this patch the link
+# dies with undefined symbols (ksu_handle_execveat, fake_status_initialize_key, ...).
+# - KSU  (tiann): applies cleanly.
+# - KOWSU: structure differs (Kbuild / sucompat.c / supercall.c) — try --3way;
+#          if it still fails, warn and continue (link will likely fail).
+if [ "$KERNEL_VARIANT" = "KSU" ] || [ "$KERNEL_VARIANT" = "KOWSU" ]; then
+    KSU_PATCH="${SUSFS_DIR}/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch"
+    if [ ! -f "$KSU_PATCH" ]; then
+        warn "SuSFS: 10_enable_susfs_for_ksu.patch not found — skipping (link may fail for KSU/KOWSU)"
+    elif patch -p1 --dry-run --reverse -d "$KSU_DIR" < "$KSU_PATCH" > /dev/null 2>&1; then
+        log "SuSFS: 10_enable already applied to KernelSU, skipping."
+    else
+        log "Applying SuSFS 10_enable KernelSU patch (${KERNEL_VARIANT})..."
+        if [ "$KERNEL_VARIANT" = "KOWSU" ]; then
+            if git -C "$KSU_DIR" apply --3way "$KSU_PATCH" 2>/dev/null; then
+                log "SuSFS 10_enable applied ✅ (KowSU, git apply --3way)"
+            else
+                warn "SuSFS 10_enable: failed on KowSU (structure differs) — continuing (link will likely fail)"
+            fi
+        else
+            patch -p1 --fuzz=3 --forward -d "$KSU_DIR" < "$KSU_PATCH" \
+                && log "SuSFS 10_enable applied ✅" \
+                || warn "SuSFS 10_enable: hunks failed on KSU — continuing (link will likely fail)"
+        fi
+        find "$KSU_DIR" -name "*.rej" -delete 2>/dev/null || true
+    fi
+fi
+
 log "Fixing namespace.c susfs declarations (safety fallback)..."
 python3 "${KSU_SHARED_DIR}/fix_namespace.py" "${KERNEL_SRC}/fs/namespace.c" \
     || error "SuSFS: namespace.c fix failed!"
