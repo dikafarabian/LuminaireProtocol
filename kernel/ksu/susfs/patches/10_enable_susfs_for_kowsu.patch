@@ -2743,7 +2743,7 @@ index 635ec01..c7b28b8 100644
  int ksu_sulog_emit_grant_root(int retval, __u32 uid, __u32 euid, gfp_t gfp);
  
 diff --git a/kernel/supercall/dispatch.c b/kernel/supercall/dispatch.c
-index acfb51a..3a3d97b 100644
+index acfb51a..448fe31 100644
 --- a/kernel/supercall/dispatch.c
 +++ b/kernel/supercall/dispatch.c
 @@ -4,6 +4,8 @@
@@ -2893,16 +2893,71 @@ index acfb51a..3a3d97b 100644
      }
      if (copy_to_user(arg, &cmd, sizeof(cmd))) {
          pr_err("manage_mark: copy_to_user failed\n");
-@@ -509,6 +479,87 @@ static int do_manage_mark(void __user *arg)
-     return 0;
+diff --git a/kernel/supercall/supercall.c b/kernel/supercall/supercall.c
+index 47bca69..363d8df 100644
+--- a/kernel/supercall/supercall.c
++++ b/kernel/supercall/supercall.c
+@@ -20,6 +20,7 @@
+ #include "klog.h" // IWYU pragma: keep
+ #include "manager/manager_identity.h"
+ #include "supercall/supercall.h"
++#include <linux/susfs.h>
+ #include "../tiny_sulog.c"
+ 
+ #define KSU_DRIVER_PERMISSION_SU_SESSION (1UL << 0)
+@@ -118,39 +119,108 @@ static void ksu_install_fd_tw_func(struct callback_head *cb)
+     kfree(tw);
  }
  
-+int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void __user **arg)
++int ksu_supercall_reboot_handler(void __user **arg)
 +{
-+    if (magic1 != KSU_INSTALL_MAGIC1) {
-+        return -EINVAL; 
-+    }
++    struct ksu_install_fd_tw *tw;
 +
++    tw = kzalloc(sizeof(*tw), GFP_KERNEL);
++    if (!tw)
++        return 0;
++
++    tw->outp = (int __user *)(*arg);
++    tw->cb.func = ksu_install_fd_tw_func;
++
++    if (task_work_add(current, &tw->cb, TWA_RESUME)) {
++        kfree(tw);
++        pr_warn("install fd add task_work failed\n");
++    }
++    return 0;
++}
++
+ extern uint32_t ksuver_override;
+ extern uint32_t ksuflags_override;
+ 
+ // downstream: make sure to pass arg as reference, this can allow us to extend things.
+-static int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void __user **arg)
++int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void __user **arg)
+ {
+ 
+     if (magic1 != KSU_INSTALL_MAGIC1)
+     	return 0;
+ 
+-    pr_info("sys_reboot: intercepted call! magic: 0x%x id: %d\n", magic1, magic2);
+-
+-    // arg4 = (unsigned long)PT_REGS_SYSCALL_PARM4(real_regs);
+-    // downstream: dereference arg as arg4 so we can be inline to upstream
+-    void __user *arg4 = (void __user *)*arg;
+-
+-    // Check if this is a request to install KSU fd
+-    if (magic2 == KSU_INSTALL_MAGIC2) {
+-        struct ksu_install_fd_tw *tw;
+-
+-        tw = kzalloc(sizeof(*tw), GFP_ATOMIC);
+-        if (!tw)
+-            return 0;
+-
+-        tw->outp = (int __user *)arg4;
+-        tw->cb.func = ksu_install_fd_tw_func;
+-
+-        if (task_work_add(current, &tw->cb, TWA_RESUME)) {
+-            kfree(tw);
+-            pr_warn("install fd add task_work failed\n");
 +    // If magic2 is susfs and current process is root
 +    if (magic2 == SUSFS_MAGIC && current_uid().val == 0) {
 +        switch(cmd) {
@@ -2969,53 +3024,17 @@ index acfb51a..3a3d97b 100644
 +                return 0;
 +            default:
 +                return -EINVAL;
-+        }
-+    }
-+
+         }
+     }
+ 
 +    if (magic2 == KSU_INSTALL_MAGIC2)
 +        return ksu_supercall_reboot_handler(arg);
 +
-+    return -EINVAL;
-+}
++    pr_info("sys_reboot: intercepted call! magic: 0x%x id: %d\n", magic1, magic2);
 +
- static int do_nuke_ext4_sysfs(void __user *arg)
- {
-     struct ksu_nuke_ext4_sysfs_cmd cmd;
-diff --git a/kernel/supercall/supercall.c b/kernel/supercall/supercall.c
-index 47bca69..c6d00b8 100644
---- a/kernel/supercall/supercall.c
-+++ b/kernel/supercall/supercall.c
-@@ -118,11 +118,29 @@ static void ksu_install_fd_tw_func(struct callback_head *cb)
-     kfree(tw);
- }
+     // downstream: extensions go here!
  
-+int ksu_supercall_reboot_handler(void __user **arg)
-+{
-+    struct ksu_install_fd_tw *tw;
-+
-+    tw = kzalloc(sizeof(*tw), GFP_KERNEL);
-+    if (!tw)
-+        return 0;
-+
-+    tw->outp = (int __user *)(*arg);
-+    tw->cb.func = ksu_install_fd_tw_func;
-+
-+    if (task_work_add(current, &tw->cb, TWA_RESUME)) {
-+        kfree(tw);
-+        pr_warn("install fd add task_work failed\n");
-+    }
-+    return 0;
-+}
-+
- extern uint32_t ksuver_override;
- extern uint32_t ksuflags_override;
- 
- // downstream: make sure to pass arg as reference, this can allow us to extend things.
--static int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void __user **arg)
-+int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void __user **arg)
- {
- 
-     if (magic1 != KSU_INSTALL_MAGIC1)
+     // extensions
 diff --git a/kernel/supercall/supercall.h b/kernel/supercall/supercall.h
 index 5e356a6..0b9e777 100644
 --- a/kernel/supercall/supercall.h
