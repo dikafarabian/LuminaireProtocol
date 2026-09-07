@@ -42,12 +42,6 @@ done
 
 cp "$KERNEL_IMG" "${TOOL_AK3_DIR}/"
 
-if [ -n "${KASUMI_KO:-}" ] && [ -f "${KASUMI_KO}" ]; then
-    mkdir -p "${TOOL_AK3_DIR}/modules"
-    cp "$KASUMI_KO" "${TOOL_AK3_DIR}/modules/"
-    log "Kasumi: kasumi_lkm.ko included in zip under modules/ (manual insmod required) ✅"
-fi
-
 ZRAM_KO="${OUT_DIR}/drivers/block/zram/zram.ko"
 if [ -f "$ZRAM_KO" ]; then
     mkdir -p "${TOOL_AK3_DIR}/modules"

@@ -8,11 +8,10 @@ declare -A ADDON_SUPPORTED_VERSIONS=(
     [ntsync]="5.10 5.15 6.1 6.6"
     [lz4zstd]="6.1"
     [lz4kd]="5.10 5.15 6.1 6.6"
-    [kasumi]="5.10 5.15 6.1 6.6 6.12"
     [mglru]="6.1 6.6 6.12"
 )
 
-ADDON_ORDER=(nomount zeromount droidspaces rekernel ntsync lz4zstd lz4kd kasumi mglru)
+ADDON_ORDER=(nomount zeromount droidspaces rekernel ntsync lz4zstd lz4kd mglru)
 
 ADDON_MOUNTLESS_TOKENS=(nomount zeromount)
 

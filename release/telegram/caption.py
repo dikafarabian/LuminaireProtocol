@@ -20,7 +20,6 @@ ADDON_DISPLAY_NAMES = {
     "droidspaces": "Droidspaces",
     "zeromount":   "ZeroMount",
     "nomount":     "NoMount",
-    "kasumi":      "Kasumi",
     "ntsync":      "NTSync",
     "lz4zstd":     "LZ4+ZSTD",
     "lz4kd":       "LZ4KD",
