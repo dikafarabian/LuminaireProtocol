@@ -80,15 +80,14 @@ log "SuSFS source files copied ✅"
 log "Applying SuSFS kernel patch..."
 KERNEL_PATCH="${SUSFS_DIR}/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch"
 if [ ! -f "$KERNEL_PATCH" ]; then
-    warn "SuSFS kernel patch not found at ${KERNEL_PATCH} — skipping patch step, continuing with Kconfig/config setup"
+    error "SuSFS: mandatory kernel patch not found at ${KERNEL_PATCH}"
 elif patch -p1 --fuzz=3 --dry-run --reverse -d "$KERNEL_SRC" < "$KERNEL_PATCH" > /dev/null 2>&1; then
     log "SuSFS kernel patch already applied, skipping."
 else
     patch -p1 --fuzz=3 --forward -d "$KERNEL_SRC" < "$KERNEL_PATCH" \
         && log "SuSFS kernel patch applied ✅" \
-        || warn "SuSFS kernel patch: some hunks failed — continuing"
+        || error "SuSFS: mandatory kernel patch failed (${KERNEL_PATCH}); reject files preserved in ${KERNEL_SRC}"
 
-    find "$KERNEL_SRC" -name "*.rej" -delete 2>/dev/null || true
 fi
 
 log "Fixing namespace.c susfs declarations (safety fallback)..."

@@ -83,7 +83,7 @@ log "SuSFS source files copied ✅"
 log "Applying SuSFS kernel patch..."
 KERNEL_PATCH="${SUSFS_DIR}/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch"
 if [ ! -f "$KERNEL_PATCH" ]; then
-    warn "SuSFS kernel patch not found at ${KERNEL_PATCH} — skipping patch step, continuing with Kconfig/config setup"
+    error "SuSFS: mandatory kernel patch not found at ${KERNEL_PATCH}"
 elif patch -p1 --fuzz=3 --dry-run --reverse -d "$KERNEL_SRC" < "$KERNEL_PATCH" > /dev/null 2>&1; then
     log "SuSFS kernel patch already applied, skipping."
 else
@@ -94,7 +94,7 @@ else
 
     patch -p1 --fuzz=3 --forward -d "$KERNEL_SRC" < "$KERNEL_PATCH" \
         && log "SuSFS kernel patch applied ✅" \
-        || warn "SuSFS kernel patch: some hunks failed — continuing"
+        || error "SuSFS: mandatory kernel patch failed (${KERNEL_PATCH}); reject files preserved in ${KERNEL_SRC}"
 
     if [ "${KERNEL_VERSION}" = "6.1" ] && [ "${SUBLEVEL:-0}" -ge 157 ] && ! grep -qF '#include <trace/hooks/blk.h>' "${KERNEL_SRC}/fs/namespace.c"; then
         log "Post-patch: restoring blk.h to namespace.c..."
@@ -103,7 +103,6 @@ else
             || error "SuSFS: failed to restore blk.h include in namespace.c — internal.h anchor may have changed upstream!"
     fi
 
-    find "$KERNEL_SRC" -name "*.rej" -delete 2>/dev/null || true
 fi
 
 log "Fixing namespace.c susfs declarations (safety fallback)..."
