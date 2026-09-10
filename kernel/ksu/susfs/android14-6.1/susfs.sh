@@ -18,7 +18,7 @@ elif [ "$KERNEL_VARIANT" = "KOWSU" ]; then
 elif [ "$KERNEL_VARIANT" = "KSUNEXT" ]; then
     SUSFS_REF="${SUSFS_KSUNEXT_REF:-}"
     SUSFS_REPO="https://gitlab.com/simonpunk/susfs4ksu.git"
-    SUSFS_BRANCH="gki-android14-6.1-dev"
+    SUSFS_BRANCH="gki-android14-6.1"
     SUSFS_MIRROR_KEY="susfs_ksunext"
 elif [ "$KERNEL_VARIANT" = "SUKISU" ]; then
     SUSFS_REF="${SUSFS_SUKISU_REF:-}"
@@ -105,13 +105,6 @@ else
 
 fi
 
-# Apply KernelSU-side patch (10_enable) so the fork exports the ksu_handle_* /
-# selinux-hide / supercall symbols SusFS's 50_add references. Official KernelSU
-# and KowSU keep those APIs internal (static), so without this patch the link
-# dies with undefined symbols (ksu_handle_execveat, fake_status_initialize_key, ...).
-# - KSU  (tiann): applies cleanly from the SusFS tree.
-# - KOWSU: structure differs (Kbuild / sucompat.c / supercall.c) — use the
-#          manually ported patch from this repo (kernel/ksu/susfs/patches/).
 if [ "$KERNEL_VARIANT" = "KSU" ] || [ "$KERNEL_VARIANT" = "KOWSU" ]; then
     if [ "$KERNEL_VARIANT" = "KOWSU" ]; then
         KSU_PATCH="${KSU_SHARED_DIR}/susfs/patches/10_enable_susfs_for_kowsu.patch"
