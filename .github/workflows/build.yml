@@ -113,12 +113,13 @@ on:
         type: string
         default: ""
       update_arsenal:
-        description: "Update Arsenal"
+        description: "Update Arsenal (fresh = rebuild ALL caches from zero)"
         type: choice
         default: "no"
         options:
           - "yes"
           - "no"
+          - "fresh"
       localversion_override:
         description: "Custom Local Version"
         type: string
@@ -150,13 +151,13 @@ jobs:
       safe_ref: ${{ steps.set.outputs.safe_ref }}
       resolved_kernel_branch: ${{ steps.set.outputs.resolved_kernel_branch }}
 
-      cache_refreshed: ${{ inputs.update_arsenal == 'yes' }}
+      cache_refreshed: ${{ inputs.update_arsenal != 'no' }}
 
     env:
       PERSONAL_TOKEN:   ${{ secrets.PERSONAL_TOKEN }}
-      USE_KERNEL_CACHE: ${{ inputs.update_arsenal != 'yes' }}
-      USE_AK3_CACHE:    ${{ inputs.update_arsenal != 'yes' }}
-      USE_CLANG_CACHE:  ${{ inputs.update_arsenal != 'yes' }}
+      USE_KERNEL_CACHE: ${{ inputs.update_arsenal == 'no' }}
+      USE_AK3_CACHE:    ${{ inputs.update_arsenal == 'no' }}
+      USE_CLANG_CACHE:  ${{ inputs.update_arsenal == 'no' }}
       KERNEL_VERSION:   ${{ inputs.kernel_version }}
       KERNEL_BRANCH_OVERRIDE: ${{ inputs.kernel_branch_override }}
       BUILD_SYSTEM:     ${{ inputs.build_system }}
@@ -321,8 +322,8 @@ jobs:
         if: always() && env.IS_MAKE == 'true'
         run: ~/ccache-bin/ccache --show-stats
 
-      - name: "Upload Module.symvers"  # KMI gate: CRC of every exported symbol
-        if: always() && env.IS_MAKE == 'true'
+      - name: "Upload Module.symvers"  # KMI gate: CRC of every exported symbol — only when arsenal update requested (yes/fresh)
+        if: always() && env.IS_MAKE == 'true' && inputs.update_arsenal != 'no'
         uses: actions/upload-artifact@v7
         with:
           name: symvers-${{ needs.prepare-matrix.outputs.resolved_kernel_branch }}-${{ matrix.kernel_variant }}${{ matrix.susfs && '-susfs' || '' }}-${{ needs.prepare-matrix.outputs.safe_ref }}
