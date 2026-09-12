@@ -113,7 +113,7 @@ on:
         type: string
         default: ""
       update_arsenal:
-        description: "Update Arsenal (fresh = rebuild ALL caches from zero)"
+        description: "Update Arsenal"
         type: choice
         default: "no"
         options:
