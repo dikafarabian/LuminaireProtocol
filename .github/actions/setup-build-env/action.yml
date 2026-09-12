@@ -54,11 +54,11 @@ runs:
           ~/.apt-cache
         key: arsenal
 
-    - name: "Restore Kernel Source Cache"  # one cache per resolved kernel branch, never shared across branches
+    - name: "Restore Kernel Source Cache"  # one cache per resolved kernel branch + build system; Kleaf = full repo-synced workspace, Make = plain clone
       uses: actions/cache/restore@v6
       with:
         path: ~/kernel-cache
-        key: kernel-${{ inputs.kernel-branch }}
+        key: ${{ startsWith(inputs.build-system, 'Make') && format('kernel-{0}', inputs.kernel-branch) || format('kernel-kleaf-{0}', inputs.kernel-branch) }}
 
     - name: "Restore ccache"
       if: startsWith(inputs.build-system, 'Make')

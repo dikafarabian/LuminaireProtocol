@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Kleaf uses the AOSP prebuilt clang from the repo-synced workspace — skip dispatcher
+[ "$BUILD_SYSTEM" = "KLEAF" ] && return 0
+
 CLANG_CACHE_DIR="${HOME}/clang-cache"
 
 if [ "${USE_CLANG_CACHE}" = "true" ] && [ -d "${CLANG_CACHE_DIR}/bin" ]; then

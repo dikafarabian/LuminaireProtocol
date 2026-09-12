@@ -1,5 +1,5 @@
 name: "✨ Luminaire Protocol"
-run-name: "${{ inputs.run_mode == 'Dry Run' && '🧪' || inputs.run_mode == 'Warm Run' && '🔥' || inputs.run_mode == 'Build' && '🔬' || '🚀' }} ${{ inputs.kernel_version }} | ${{ inputs.lto_mode != 'NONE' && format('{0} LTO x ', inputs.lto_mode) || '' }}${{ contains(inputs.build_system, 'AOSP') && 'AOSP' || contains(inputs.build_system, 'Cirrus') && 'Cirrus' || contains(inputs.build_system, 'Neutron') && 'Neutron' || contains(inputs.build_system, 'WeebX') && 'WeebX' || 'Zyc' }} (${{ inputs.run_mode }})"
+run-name: "${{ inputs.run_mode == 'Dry Run' && '🧪' || inputs.run_mode == 'Warm Run' && '🔥' || inputs.run_mode == 'Build' && '🔬' || '🚀' }} ${{ inputs.kernel_version }} | ${{ inputs.lto_mode != 'NONE' && format('{0} LTO x ', inputs.lto_mode) || '' }}${{ contains(inputs.build_system, 'Kleaf') && 'Kleaf' || contains(inputs.build_system, 'AOSP') && 'AOSP' || contains(inputs.build_system, 'Cirrus') && 'Cirrus' || contains(inputs.build_system, 'Neutron') && 'Neutron' || contains(inputs.build_system, 'WeebX') && 'WeebX' || 'Zyc' }} (${{ inputs.run_mode }})"
 
 on:
   workflow_dispatch:
@@ -9,6 +9,7 @@ on:
         type: choice
         default: "Make - Neutron"
         options:
+          - "Kleaf - AOSP"
           - "Make - AOSP"
           - "Make - Cirrus"
           - "Make - Neutron"

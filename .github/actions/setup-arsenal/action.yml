@@ -47,7 +47,14 @@ runs:
           KERNEL_BRANCH="${ANDROID_VERSION}-${KERNEL_VERSION}"
         fi
         echo "arsenal_key=arsenal" >> $GITHUB_OUTPUT
-        echo "kernel_key=kernel-${KERNEL_BRANCH}" >> $GITHUB_OUTPUT
+        # Kleaf caches a full repo-synced GKI workspace (build files + prebuilts);
+        # Make caches a plain git clone of the kernel source. Same branch name,
+        # different content — separate keys so they never cross-contaminate.
+        if [ "${{ startsWith(inputs.build-system, 'Make') }}" = "true" ]; then
+          echo "kernel_key=kernel-${KERNEL_BRANCH}" >> $GITHUB_OUTPUT
+        else
+          echo "kernel_key=kernel-kleaf-${KERNEL_BRANCH}" >> $GITHUB_OUTPUT
+        fi
 
     - name: "Force Refresh (delete old caches)"
       if: inputs.update-arsenal != 'no'

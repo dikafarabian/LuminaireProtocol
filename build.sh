@@ -72,7 +72,11 @@ main() {
 
 restore_kernel_source() {
     echo "::group::📥 Kernel Source"
-    source "${LUMINAIRE_PATCH_DIR}/download/make.sh"
+    if [ "$BUILD_SYSTEM" = "KLEAF" ]; then
+        source "${LUMINAIRE_PATCH_DIR}/download/kleaf.sh"
+    else
+        source "${LUMINAIRE_PATCH_DIR}/download/make.sh"
+    fi
     log "Kernel source ready ✅"
     echo "::endgroup::"
 }
@@ -126,7 +130,11 @@ run_core() {
 
 run_build() {
     echo "::group::🏗️ Build Kernel (${BUILD_SYSTEM})"
-    source "${LUMINAIRE_PATCH_DIR}/build/make.sh"
+    if [ "$BUILD_SYSTEM" = "KLEAF" ]; then
+        source "${LUMINAIRE_PATCH_DIR}/build/kleaf.sh"
+    else
+        source "${LUMINAIRE_PATCH_DIR}/build/make.sh"
+    fi
     echo "::endgroup::"
 }
 
