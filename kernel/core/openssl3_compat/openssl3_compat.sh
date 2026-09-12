@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# KLEAF builds host tools with Bazel-managed deps — not affected by the host
-# OpenSSL 3 missing-macro issue this works around
 [ "$BUILD_SYSTEM" = "KLEAF" ] && return 0
 
 EXTRACT_CERT="${KERNEL_SRC}/certs/extract-cert.c"

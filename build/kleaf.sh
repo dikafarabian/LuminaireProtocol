@@ -3,11 +3,6 @@
 # ======================================================
 # 🏗️ BUILD — KLEAF (Bazel)
 # ======================================================
-# Kleaf ignores OUT_DIR/.config — all config changes must
-# land in gki_defconfig BEFORE the Bazel build, then get
-# canonicalized by a config pass. That's why the fragment
-# merge and BBG LSM patch are done here with sed instead
-# of sourcing kernel/config/defconfig.sh (Make-only).
 
 if [ ${#BRANDING_KLEAF_ARGS[@]} -eq 0 ]; then
     error "BRANDING_KLEAF_ARGS is empty — branding.sh may not have run correctly!"
@@ -23,10 +18,6 @@ mkdir -p "$LTO_CACHE_DIR"
 
 log "Applying Luminaire configs (fragment)..."
 DEFCONFIG_FILE="${KERNEL_SRC}/arch/arm64/configs/gki_defconfig"
-# Regexes are held in variables before use in [[ =~ ]] — inlining a regex
-# literal containing unquoted spaces (e.g. "is not set") causes bash to
-# tokenize it as separate conditional-expression words and throw a syntax
-# error, which previously broke this loop on every Kleaf build.
 RE_CONFIG_SET='^(CONFIG_[^=]+)=(.*)$'
 RE_CONFIG_UNSET_GUARD='^(# CONFIG_[^ ]+) is not set$'
 RE_CONFIG_UNSET_EXTRACT='^# (CONFIG_[^ ]+) is not set$'
@@ -38,7 +29,6 @@ while IFS= read -r line; do
     if [[ "$line" =~ ^CONFIG_([^=]+)=(.*)$ ]]; then
         key="CONFIG_${BASH_REMATCH[1]}"
         val="${BASH_REMATCH[2]}"
-        # Remove existing entry (set or unset) then append — mirrors merge_config.sh -m
         sed -i "/^${key}[= ]/d;/^# ${key} is not set/d" "$DEFCONFIG_FILE"
         echo "${key}=${val}" >> "$DEFCONFIG_FILE"
     elif [[ "$line" =~ $RE_CONFIG_UNSET_EXTRACT ]]; then
@@ -51,10 +41,6 @@ log "Fragment applied ✅"
 
 log "Running config pass to canonicalize gki_defconfig..."
 cd "$KERNEL_DIR"
-# First pass is EXPECTED to exit 1 with "savedefconfig does not match" whenever
-# fragments/addons modified gki_defconfig — Kleaf still writes the canonical
-# defconfig to out/cache before failing the check. Copy it back over
-# gki_defconfig so the real build below passes the same check cleanly.
 tools/bazel build "${KLEAF_ARGS[@]}" //common:kernel_aarch64_config \
     || warn "config pass reported a defconfig mismatch (expected on first pass) — adopting generated canonical defconfig"
 
@@ -66,10 +52,6 @@ else
     error "Canonical defconfig not found — config pass may have failed early"
 fi
 
-# BBG requires baseband_guard in CONFIG_LSM. defconfig.sh does this same
-# patch for MAKE builds via a live `scripts/config` pass on .config, but
-# it's skipped for KLEAF — so patch the canonicalized defconfig text
-# directly with sed, the same way the fragment loop above does.
 if [ "${BBG_ENABLED:-false}" = "true" ]; then
     log "BBG: patching CONFIG_LSM in canonicalized defconfig..."
     CURRENT_LSM=$(grep -oP '^CONFIG_LSM="\K[^"]+' "$DEFCONFIG_FILE" || true)

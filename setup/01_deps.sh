@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 
-# Common — needed for both Make and Kleaf
 PKGS_COMMON=(git curl wget zip patch rsync python3 ca-certificates aria2 pigz cpio g++ libzstd-dev)
 
-# Make-only — Kleaf uses the AOSP prebuilt toolchain via Bazel, these are handled internally
 PKGS_MAKE=(bc bison flex libssl-dev libelf-dev libdw-dev dwarves cmake ninja-build gcc-arm-linux-gnueabi)
 
 if [ "$BUILD_SYSTEM" = "KLEAF" ]; then

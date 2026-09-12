@@ -3,10 +3,6 @@
 # ======================================================
 # 📥 DOWNLOAD — KLEAF (Repo Sync)
 # ======================================================
-# Pulls the full GKI workspace (Kleaf build files +
-# AOSP clang prebuilts) and overrides common/ with
-# LuminaireKernel-${KERNEL_VERSION} via a local manifest,
-# so the compiled source is the same tree Make builds use.
 
 if [ "${USE_KERNEL_CACHE}" = "true" ] && [ -f "${HOME}/kernel-cache/tools/bazel" ]; then
     log "Restoring Kleaf workspace from cache..."

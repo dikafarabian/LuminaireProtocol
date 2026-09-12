@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# Kleaf handles caching internally via Bazel — skip ccache setup
 [ "$BUILD_SYSTEM" = "KLEAF" ] && return 0
 
 CCACHE_CACHE_DIR="${HOME}/ccache-bin"

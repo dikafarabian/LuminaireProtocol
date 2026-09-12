@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# Build system + Clang variant — parse combined input (e.g. "Make - Cirrus", "Kleaf - AOSP")
 case "${BUILD_SYSTEM:-Make - Cirrus}" in
     "Kleaf - AOSP" | KLEAF)
         BUILD_SYSTEM="KLEAF"
@@ -50,5 +49,4 @@ export KCFLAGS="-w"
 
 log "Paths configured ✅ (Build System: ${BUILD_SYSTEM}, Clang: ${CLANG_VARIANT})"
 
-# Default empty array — overridden by branding.sh for KLEAF
 BRANDING_KLEAF_ARGS=()
