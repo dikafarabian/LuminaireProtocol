@@ -51,7 +51,12 @@ log "Fragment applied ✅"
 
 log "Running config pass to canonicalize gki_defconfig..."
 cd "$KERNEL_DIR"
-tools/bazel build "${KLEAF_ARGS[@]}" //common:kernel_aarch64_config
+# First pass is EXPECTED to exit 1 with "savedefconfig does not match" whenever
+# fragments/addons modified gki_defconfig — Kleaf still writes the canonical
+# defconfig to out/cache before failing the check. Copy it back over
+# gki_defconfig so the real build below passes the same check cleanly.
+tools/bazel build "${KLEAF_ARGS[@]}" //common:kernel_aarch64_config \
+    || warn "config pass reported a defconfig mismatch (expected on first pass) — adopting generated canonical defconfig"
 
 CANONICAL=$(find "${KERNEL_DIR}/out" -path "*/common/defconfig" 2>/dev/null | head -1)
 if [ -n "$CANONICAL" ]; then
