@@ -212,7 +212,7 @@ diff --git a/kernel/sched/core.c b/kernel/sched/core.c
 index 31fabf8aa..8664cf96f 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -4535,6 +4535,205 @@ int wake_up_state(struct task_struct *p, unsigned int state)
+@@ -4535,6 +4535,194 @@ int wake_up_state(struct task_struct *p, unsigned int state)
  }
  EXPORT_SYMBOL(wake_up_state);
  
