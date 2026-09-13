@@ -86,15 +86,15 @@ def source_branch(env) -> str:
 def commits_url(env) -> str:
     """Full commit history of the release branch.
 
-    Overridable with COMMITS_URL. Otherwise derived from the orchestrator repo's
-    owner plus LuminaireKernel-<KERNEL_VERSION>.
+    Overridable with COMMITS_URL. Otherwise derived from KERNEL_SOURCE_OWNER
+    (default chainonyourdoor — the kernel source owner, NOT the orchestrator
+    repo owner) plus LuminaireKernel-<KERNEL_VERSION>.
     """
     explicit = env.get("COMMITS_URL", "").strip()
     if explicit:
         return explicit
     server = env.get("GITHUB_SERVER_URL", "https://github.com").rstrip("/")
-    repo = env.get("GITHUB_REPOSITORY", "")
-    owner = repo.split("/")[0] if "/" in repo else repo
+    owner = env.get("KERNEL_SOURCE_OWNER", "").strip() or "chainonyourdoor"
     kv = env.get("KERNEL_VERSION", "").strip()
     branch = source_branch(env)
     if not owner or not kv or not branch:
