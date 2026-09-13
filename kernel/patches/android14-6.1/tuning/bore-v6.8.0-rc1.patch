@@ -253,17 +253,6 @@ index 31fabf8aa..8664cf96f 100644
 +	return p && p->sched_class == &fair_sched_class && !p->exit_state;
 +}
 +
-+static u32 count_child_tasks(struct task_struct *p)
-+{
-+	struct task_struct *child;
-+	u32 cnt = 0;
-+
-+	list_for_each_entry(child, &p->children, sibling)
-+		cnt++;
-+
-+	return cnt;
-+}
-+
 +static inline bool burst_cache_expired(u64 bc, u64 now)
 +{
 +	return now - (BORE_BC_TIMESTAMP(bc) << 16) > (u64)sched_burst_cache_lifetime;
