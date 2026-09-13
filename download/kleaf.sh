@@ -39,13 +39,4 @@ MANIFEST_EOF
     retry 3 run_quiet repo sync -c -j"$(nproc --all)" --no-tags --no-clone-bundle -q \
         || error "repo sync failed! (see output above)"
     cd "$ROOT_DIR"
-
-    log "Saving to cache..."
-    mkdir -p "${HOME}/kernel-cache"
-    rsync -a --delete \
-      --exclude='prebuilts/ndk-r27/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/*/lib/linux/riscv64' \
-      --exclude='prebuilts/ndk-r27/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/*/lib/linux/i386' \
-      --exclude='prebuilts/ndk-r27/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/*/lib/linux/x86_64' \
-      --exclude='prebuilts/ndk-r27/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/*/lib/wasm' \
-      "${KERNEL_DIR}/" "${HOME}/kernel-cache/"
 fi
