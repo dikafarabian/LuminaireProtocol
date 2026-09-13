@@ -39,6 +39,22 @@ while IFS= read -r line; do
 done < <(grep -E '^CONFIG_|^# CONFIG_' "${LUMINAIRE_PATCH_DIR}/kernel/config/luminaire.fragment")
 log "Fragment applied ✅"
 
+if [ "${BBG_ENABLED:-false}" = "true" ]; then
+    log "BBG: patching CONFIG_LSM before config pass..."
+    CURRENT_LSM=$(grep -oP '^CONFIG_LSM="\K[^"]+' "$DEFCONFIG_FILE" || true)
+    if [ -z "$CURRENT_LSM" ]; then
+        CURRENT_LSM=$(grep -oP '^\tdefault "\K[^"]+(?="$)' "${KERNEL_SRC}/security/Kconfig" | tail -1)
+        [ -n "$CURRENT_LSM" ] || error "BBG: could not determine CONFIG_LSM default from security/Kconfig!"
+    fi
+    if [[ ",${CURRENT_LSM}," == *",baseband_guard,"* ]]; then
+        log "BBG: baseband_guard already in CONFIG_LSM ✅"
+    else
+        sed -i "/^CONFIG_LSM=/d" "$DEFCONFIG_FILE"
+        echo "CONFIG_LSM=\"${CURRENT_LSM},baseband_guard\"" >> "$DEFCONFIG_FILE"
+        log "BBG: baseband_guard appended to CONFIG_LSM ✅"
+    fi
+fi
+
 log "Running config pass to canonicalize gki_defconfig..."
 cd "$KERNEL_DIR"
 tools/bazel build "${KLEAF_ARGS[@]}" //common:kernel_aarch64_config \
@@ -50,26 +66,6 @@ if [ -n "$CANONICAL" ]; then
     log "gki_defconfig canonicalized ✅ (from $(basename $(dirname $CANONICAL))/defconfig)"
 else
     error "Canonical defconfig not found — config pass may have failed early"
-fi
-
-if [ "${BBG_ENABLED:-false}" = "true" ]; then
-    log "BBG: patching CONFIG_LSM in canonicalized defconfig..."
-    CURRENT_LSM=$(grep -oP '^CONFIG_LSM="\K[^"]+' "$DEFCONFIG_FILE" || true)
-    if [ -z "$CURRENT_LSM" ]; then
-        CURRENT_LSM=$(grep -oP '^\tdefault "\K[^"]+(?="$)' "${KERNEL_SRC}/security/Kconfig" | tail -1)
-        if [ -n "$CURRENT_LSM" ]; then
-            echo "CONFIG_LSM=\"${CURRENT_LSM}\"" >> "$DEFCONFIG_FILE"
-            log "BBG: CONFIG_LSM absent from canonical defconfig (= Kconfig default) — materialized explicitly ✅"
-        else
-            error "BBG: could not determine CONFIG_LSM default from security/Kconfig!"
-        fi
-    fi
-    if [[ ",${CURRENT_LSM}," == *",baseband_guard,"* ]]; then
-        log "BBG: baseband_guard already in CONFIG_LSM ✅"
-    else
-        sed -i "s|^CONFIG_LSM=\"${CURRENT_LSM}\"|CONFIG_LSM=\"${CURRENT_LSM},baseband_guard\"|" "$DEFCONFIG_FILE"
-        log "BBG: baseband_guard appended to CONFIG_LSM ✅"
-    fi
 fi
 
 cd "$ROOT_DIR"
