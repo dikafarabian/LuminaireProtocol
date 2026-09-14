@@ -42,6 +42,8 @@ fi
 # KLEAF
 # -------------------------------------------------------
 
+touch "${KERNEL_SRC}/.scmversion"
+
 BRAND_DEFCONFIG="${KERNEL_SRC}/arch/arm64/configs/gki_defconfig"
 if [ -n "${LOCALVERSION:-}" ] && [ -f "$BRAND_DEFCONFIG" ]; then
     if grep -q "^CONFIG_LOCALVERSION=" "$BRAND_DEFCONFIG"; then
