@@ -160,6 +160,15 @@ apply_lz4zstd_patch() {
 
 apply_lz4zstd_patch "001-lz4.patch (LZ4 1.10.0)" "$LZ4_PATCH" 'grep -q "LZ4_VERSION_MINOR 10" lib/lz4/lz4.h'
 
+LZ4HC_C="lib/lz4/lz4hc.c"
+if [ -f "$LZ4HC_C" ] && ! grep -q '#ifndef MIN' "$LZ4HC_C"; then
+    sed -i \
+        -e 's/^#define MIN(a, b) ((a) < (b) ? (a) : (b))$/#ifndef MIN\n&\n#endif/' \
+        -e 's/^#define MAX(a, b) ((a) > (b) ? (a) : (b))$/#ifndef MAX\n&\n#endif/' \
+        "$LZ4HC_C"
+    log "LZ4/ZSTD: guarded MIN/MAX macros in lz4hc.c against linux/minmax.h redefinition ✅"
+fi
+
 ZSTD_FILES=(
     lib/zstd/Makefile
     lib/zstd/decompress_sources.h
