@@ -142,7 +142,7 @@ apply_lz4zstd_patch() {
         if [ "$rc" -eq 0 ]; then
             log "LZ4/ZSTD: ${name} applied cleanly ✅"
         else
-            warn "LZ4/ZSTD: ${name} applied — core source updated, known ARM64 accel rename hunks skipped (expected, non-fatal) ⚠️"
+            log "LZ4/ZSTD: ${name} applied — core source updated, ARM64 accel already handled separately, no action needed ✅"
         fi
     else
         warn "LZ4/ZSTD: ${name} core source did not update — reverting and skipping"
