@@ -100,6 +100,24 @@ else
 
     BUILD_SECONDS=$(( $(date +%s) - START_TIME ))
     log "Kleaf build completed in ${BUILD_SECONDS}s ✅"
+
+    log "Diagnostic: inspecting version-string sources..."
+    cd "$KERNEL_DIR"
+    if [ -f "common/.scmversion" ]; then
+        log "  common/.scmversion exists -> '$(cat common/.scmversion)'"
+    else
+        log "  common/.scmversion NOT present"
+    fi
+    find . -name "kernel.release" 2>/dev/null | while read -r f; do
+        log "  kernel.release @ ${f} -> $(cat "$f" 2>/dev/null)"
+    done
+    find . -iname "localversion" -path "*kernel_aarch64*" 2>/dev/null | while read -r f; do
+        log "  localversion @ ${f} -> $(cat "$f" 2>/dev/null)"
+    done
+    find bazel-bin bazel-out -iname "*.config" 2>/dev/null | while read -r f; do
+        grep -H "^CONFIG_LOCALVERSION=" "$f" 2>/dev/null | while read -r l; do log "  .config match: ${l}"; done
+    done
+    cd "$ROOT_DIR"
 fi
 echo "BUILD_SECONDS=${BUILD_SECONDS}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
 
