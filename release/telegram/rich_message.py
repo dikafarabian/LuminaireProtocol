@@ -65,6 +65,17 @@ def variant_display(key: str) -> str:
     return VARIANT_DISPLAY_PLAIN.get(key, key)
 
 
+VARIANT_ORDER = ["KSU", "KOWSU", "KSUNEXT", "SUKISU", "RESUKISU", "VANILLA"]
+
+
+def variant_sort_key(key: str):
+    base = key[:-len("_SUSFS")] if key.endswith("_SUSFS") else key
+    try:
+        return VARIANT_ORDER.index(base)
+    except ValueError:
+        return len(VARIANT_ORDER)
+
+
 def source_branch(env) -> str:
     """Branch the release was built from.
 
@@ -339,7 +350,7 @@ def variant_table(variant_links, variant_versions) -> str:
     all.
     """
     rows = []
-    for key, link in variant_links.items():
+    for key, link in sorted(variant_links.items(), key=lambda kv: variant_sort_key(kv[0])):
         name = html_cell(variant_display(key))
         ver = html_cell(variant_versions.get(key, "") or "\u2014")
         rows.append(f'<tr><td><a href="{link}">{name}</a></td><td>{ver}</td></tr>')
