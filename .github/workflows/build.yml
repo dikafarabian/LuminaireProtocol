@@ -122,9 +122,9 @@ on:
           - "no"
           - "fresh"
       localversion_override:
-        description: "Custom Local Version"
+        description: "Custom Local Version Tag (android+kmi auto-detected, don't include it here)"
         type: string
-        default: "-android14-11-Luminaire"
+        default: "-Luminaire"
       build_user_override:
         description: "Custom Build User"
         type: string

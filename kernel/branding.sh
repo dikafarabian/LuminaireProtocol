@@ -23,7 +23,7 @@ else
 fi
 
 if [ -n "$LOCALVERSION_OVERRIDE" ]; then
-    export LOCALVERSION="$LOCALVERSION_OVERRIDE"
+    export LOCALVERSION="-${ANDROID_VERSION}-${KMI_GENERATION}${LOCALVERSION_OVERRIDE}"
 else
     unset LOCALVERSION
     log "LOCALVERSION_OVERRIDE empty — using stock kernel versioning (no custom tag)"
