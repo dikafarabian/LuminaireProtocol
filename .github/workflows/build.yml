@@ -122,7 +122,7 @@ on:
           - "no"
           - "fresh"
       localversion_override:
-        description: "Custom Local Version Tag (android+kmi auto-detected, don't include it here)"
+        description: "Custom Local Version"
         type: string
         default: "-Luminaire"
       build_user_override:
