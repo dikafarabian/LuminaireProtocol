@@ -53,13 +53,13 @@ fi
 touch "${KERNEL_SRC}/.scmversion"
 
 BRAND_DEFCONFIG="${KERNEL_SRC}/arch/arm64/configs/gki_defconfig"
-if [ -n "${LOCALVERSION:-}" ] && [ -f "$BRAND_DEFCONFIG" ]; then
+if [ -n "${LOCALVERSION_OVERRIDE:-}" ] && [ -f "$BRAND_DEFCONFIG" ]; then
     if grep -q "^CONFIG_LOCALVERSION=" "$BRAND_DEFCONFIG"; then
-        sed -i "s|^CONFIG_LOCALVERSION=.*|CONFIG_LOCALVERSION=\"${LOCALVERSION}\"|" "$BRAND_DEFCONFIG"
+        sed -i "s|^CONFIG_LOCALVERSION=.*|CONFIG_LOCALVERSION=\"${LOCALVERSION_OVERRIDE}\"|" "$BRAND_DEFCONFIG"
     else
-        echo "CONFIG_LOCALVERSION=\"${LOCALVERSION}\"" >> "$BRAND_DEFCONFIG"
+        echo "CONFIG_LOCALVERSION=\"${LOCALVERSION_OVERRIDE}\"" >> "$BRAND_DEFCONFIG"
     fi
-    log "Kleaf CONFIG_LOCALVERSION patched (${LOCALVERSION}) ✅"
+    log "Kleaf CONFIG_LOCALVERSION patched (${LOCALVERSION_OVERRIDE}) — android+kmi supplied by Kleaf's own stamping ✅"
 fi
 
 MKCOMPILE_H="${KERNEL_SRC}/scripts/mkcompile_h"
