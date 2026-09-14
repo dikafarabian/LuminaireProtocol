@@ -125,14 +125,10 @@ on:
         description: "Custom Local Version"
         type: string
         default: "-Luminaire"
-      build_user_override:
-        description: "Custom Build User"
+      build_identity_override:
+        description: "Custom Build Identity (user@host)"
         type: string
-        default: "chainonyourdoor"
-      build_host_override:
-        description: "Custom Build Host"
-        type: string
-        default: "LuminaireCI"
+        default: "chainonyourdoor@LuminaireCI"
 
 env:
   DEBIAN_FRONTEND: noninteractive
@@ -251,8 +247,7 @@ jobs:
       KERNEL_VERSION:              ${{ inputs.kernel_version }}
       KERNEL_BRANCH_OVERRIDE:      ${{ inputs.kernel_branch_override }}
       LOCALVERSION_OVERRIDE:      ${{ inputs.localversion_override }}
-      BUILD_USER_OVERRIDE:      ${{ inputs.build_user_override }}
-      BUILD_HOST_OVERRIDE:      ${{ inputs.build_host_override }}
+      BUILD_IDENTITY_OVERRIDE:  ${{ inputs.build_identity_override }}
       LTO_MODE:                  ${{ inputs.lto_mode }}
       RUN_MODE:                    ${{ inputs.run_mode }}
       DRY_RUN:                     ${{ inputs.run_mode == 'Dry Run' }}
