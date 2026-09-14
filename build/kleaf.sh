@@ -8,6 +8,8 @@ if [ ${#BRANDING_KLEAF_ARGS[@]} -eq 0 ]; then
     error "BRANDING_KLEAF_ARGS is empty — branding.sh may not have run correctly!"
 fi
 
+unset JAVA_HOME
+
 KLEAF_ARGS=(
     --config=fast
     --lto="${LTO_MODE,,}"

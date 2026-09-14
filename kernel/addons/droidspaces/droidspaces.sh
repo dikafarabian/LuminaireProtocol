@@ -40,6 +40,9 @@ for cfg in "${DROIDSPACES_CONFIGS[@]}"; do
     grep -q "^${cfg}=y" "$GKI_DEFCONFIG" || MISSING_CONFIGS+=("${cfg}=y")
 done
 if [ "${#MISSING_CONFIGS[@]}" -gt 0 ]; then
+    for cfg in "${DROIDSPACES_CONFIGS[@]}"; do
+        sed -i "/^# ${cfg} is not set$/d" "$GKI_DEFCONFIG"
+    done
     {
         echo ""
         echo "# Droidspaces — added by addon (missing from base defconfig)"
