@@ -75,7 +75,7 @@ CONFIG_IP_NF_TARGET_TTL=y
 
 # Disable debug overhead
 CONFIG_UBSAN=n
-CONFIG_PAGE_OWNER=n
+CONFIG_PAGE_OWNER=y
 CONFIG_RCU_TRACE=n
 
 # Disable BTF generation
