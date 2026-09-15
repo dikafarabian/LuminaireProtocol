@@ -1,9 +1,7 @@
 {
   "resukisu": {
     "good": "e3fcb183e1b2f9804a4e9796a318705e08669a2c",
-    "bad": [
-      "b22a46e6ee79931b1e3b39fc562d56176936ab77"
-    ]
+    "bad": []
   },
   "susfs_resukisu": {
     "good": "05f201978bdbd5d08f842e0a2a6e0f2ff0912787",
@@ -15,18 +13,11 @@
   },
   "sukisu_builtin": {
     "good": "b20dee702035af09cb2ecb5f35443bbc1747f3e6",
-    "bad": [
-      "e2912817f4e1b194e582a06e0b5eacf6a3fb7083"
-    ]
+    "bad": []
   },
   "susfs_sukisu": {
     "good": "4fc9c1898ea66f51847cdbc0d1473ea4ef525a70",
-    "bad": [
-      "05f201978bdbd5d08f842e0a2a6e0f2ff0912787",
-      "6c2b5042ec656cd3ce9ad352a1e226e2e9e26779",
-      "887928223bf685113f32837d5282117c9e4a04ca",
-      "ed8a83285818e76a7b43c26e2dfadc57424b38ed"
-    ]
+    "bad": []
   },
   "ksunext": {
     "good": "",
@@ -38,9 +29,7 @@
   },
   "susfs_ksunext": {
     "good": "c3c0a97d427ec694f516dc38121d13c3801effe2",
-    "bad": [
-      "a9c5ae9b8c23db85d296d35baf1b386b39eb09a3"
-    ]
+    "bad": []
   },
   "kowsu": {
     "good": "97e32a83e0158d916ad61ed799cacd33af0a4065",
@@ -48,20 +37,14 @@
   },
   "susfs_kowsu": {
     "good": "6c2b5042ec656cd3ce9ad352a1e226e2e9e26779",
-    "bad": [
-      "05f201978bdbd5d08f842e0a2a6e0f2ff0912787"
-    ]
+    "bad": []
   },
   "ksu": {
     "good": "e23e035ad168ef13da86970f689dcab062e520de",
-    "bad": [
-      "3a7ac9dc0dc8c0b573fd4eb4836fd0860ef4242e"
-    ]
+    "bad": []
   },
   "susfs_ksu": {
     "good": "6c2b5042ec656cd3ce9ad352a1e226e2e9e26779",
-    "bad": [
-      "05f201978bdbd5d08f842e0a2a6e0f2ff0912787"
-    ]
+    "bad": []
   }
 }
