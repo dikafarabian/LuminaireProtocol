@@ -1,7 +1,9 @@
 {
   "resukisu": {
     "good": "e3fcb183e1b2f9804a4e9796a318705e08669a2c",
-    "bad": []
+    "bad": [
+      "b22a46e6ee79931b1e3b39fc562d56176936ab77"
+    ]
   },
   "susfs_resukisu": {
     "good": "05f201978bdbd5d08f842e0a2a6e0f2ff0912787",
