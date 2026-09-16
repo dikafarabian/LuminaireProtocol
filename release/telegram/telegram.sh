@@ -36,9 +36,20 @@ case "$RUN_MODE_UPPER" in
     RELEASE)   TARGET_THREAD_ID="${TELEGRAM_THREAD_ID_RELEASE:-}" ;;
     *)         error "Telegram: unknown RUN_MODE '${RUN_MODE:-}' — expected Build or Release" ;;
 esac
-if [ -z "$TARGET_THREAD_ID" ]; then
-    warn "Skipping Telegram: no thread id configured for RUN_MODE=${RUN_MODE}, KERNEL_VERSION=${KERNEL_VERSION:-}"
-    return 0
+
+if [ "${DELIVERY_TARGET:-Group}" = "Private" ]; then
+    if [ -z "${TELEGRAM_PERSONAL_CHAT_ID:-}" ]; then
+        warn "Skipping Telegram: DELIVERY_TARGET=Private but TELEGRAM_PERSONAL_CHAT_ID not set"
+        return 0
+    fi
+    TARGET_CHAT_ID="$TELEGRAM_PERSONAL_CHAT_ID"
+    TARGET_THREAD_ID=""
+else
+    if [ -z "$TARGET_THREAD_ID" ]; then
+        warn "Skipping Telegram: no thread id configured for RUN_MODE=${RUN_MODE}, KERNEL_VERSION=${KERNEL_VERSION:-}"
+        return 0
+    fi
+    TARGET_CHAT_ID="$TELEGRAM_CHAT_ID"
 fi
 
 ZIP_SIZE_BYTES=$(stat -c%s "$ZIP_PATH" 2>/dev/null || stat -f%z "$ZIP_PATH" 2>/dev/null || echo 0)
@@ -115,16 +126,15 @@ python3 "${LUMINAIRE_PATCH_DIR}/release/telegram/embed_zip.py" "$ZIP_PATH" "$GRO
 log "📤 Sending ${ZIP_NAME} to Telegram (${RUN_MODE_UPPER} topic)..."
 
 GROUP_MESSAGE_ID=""
-if telegram_api_call "sendRichMessage" /tmp/telegram_response.json "Telegram group send" \
-        -F "chat_id=${TELEGRAM_CHAT_ID}" \
-        -F "message_thread_id=${TARGET_THREAD_ID}" \
-        -F "rich_message=<${GROUP_CARD_FILE}" \
-        -F "zip_file=@${ZIP_PATH};filename=${ZIP_NAME}"; then
+SEND_ARGS=(-F "chat_id=${TARGET_CHAT_ID}" -F "rich_message=<${GROUP_CARD_FILE}" -F "zip_file=@${ZIP_PATH};filename=${ZIP_NAME}")
+[ -n "$TARGET_THREAD_ID" ] && SEND_ARGS+=(-F "message_thread_id=${TARGET_THREAD_ID}")
+
+if telegram_api_call "sendRichMessage" /tmp/telegram_response.json "Telegram send" "${SEND_ARGS[@]}"; then
     GROUP_MESSAGE_ID=$(echo "$TG_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['message_id'])" 2>/dev/null || echo "")
-    log "Group topic sent ✅ (message_id=${GROUP_MESSAGE_ID})"
+    log "Sent ✅ (message_id=${GROUP_MESSAGE_ID})"
 fi
 
-if [ "$RUN_MODE_UPPER" = "RELEASE" ] && [ -n "${TELEGRAM_CHANNEL_ID:-}" ]; then
+if [ "${DELIVERY_TARGET:-Group}" != "Private" ] && [ "$RUN_MODE_UPPER" = "RELEASE" ] && [ -n "${TELEGRAM_CHANNEL_ID:-}" ]; then
     if [ -z "$GROUP_MESSAGE_ID" ]; then
         warn "Telegram: could not get group message_id — skipping variant link save"
     else
