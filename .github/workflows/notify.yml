@@ -25,6 +25,7 @@ jobs:
       - name: "📌 Notify Push"
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           COMMIT:     ${{ github.sha }}
           BRANCH:     ${{ github.ref_name }}
           MESSAGE:    ${{ github.event.head_commit.message }}
