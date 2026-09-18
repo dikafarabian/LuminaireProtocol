@@ -19,7 +19,7 @@ jobs:
   # (below) actually touches all of them.
   list-caches:
     name: "List Cache Keys"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       keys: ${{ steps.list.outputs.keys }}
     steps:
@@ -41,7 +41,7 @@ jobs:
     name: "Touch ${{ matrix.key }}"
     needs: list-caches
     if: needs.list-caches.outputs.keys != '[]'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
