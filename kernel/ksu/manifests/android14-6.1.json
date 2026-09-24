@@ -38,15 +38,11 @@
   },
   "kowsu": {
     "good": "97e32a83e0158d916ad61ed799cacd33af0a4065",
-    "bad": [
-      "15f086b1e675b06d7aa3d9a7a8ba84ae1afba1ee"
-    ]
+    "bad": []
   },
   "susfs_kowsu": {
     "good": "273ae364c5b7c92ceb15634c9f075b6fc0501048",
-    "bad": [
-      "60024a4cedd16c83c75cb225d9ae37ba4fd8dbca"
-    ]
+    "bad": []
   },
   "ksu": {
     "good": "08a3b087e49227c8a6731c5f1114998b5e25255b",
