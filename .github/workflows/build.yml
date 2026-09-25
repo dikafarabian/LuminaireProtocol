@@ -148,7 +148,7 @@ jobs:
   # ======================================================
   prepare-matrix:
     name: "Prepare Arsenal"
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.set.outputs.matrix }}
       addons: ${{ steps.set.outputs.addons }}
@@ -235,7 +235,7 @@ jobs:
   # ======================================================
   Start-Build:
     name: "Build Kernel (${{ matrix.kernel_variant }}${{ matrix.susfs && '+SUSFS' || '' }})"
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 90
     needs: prepare-matrix
     strategy:
@@ -417,7 +417,7 @@ jobs:
   # ======================================================
   notify-channel:
     name: "Notify Channel"
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     needs: [prepare-matrix, Start-Build]
     if: inputs.run_mode == 'Release' && always()
 
