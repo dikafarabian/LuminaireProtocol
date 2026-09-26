@@ -148,7 +148,7 @@ jobs:
   # ======================================================
   prepare-matrix:
     name: "Prepare Arsenal"
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.set.outputs.matrix }}
       addons: ${{ steps.set.outputs.addons }}
@@ -235,7 +235,7 @@ jobs:
   # ======================================================
   Start-Build:
     name: "Build Kernel (${{ matrix.kernel_variant }}${{ matrix.susfs && '+SUSFS' || '' }})"
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 90
     needs: prepare-matrix
     strategy:
@@ -275,15 +275,15 @@ jobs:
 
       - name: "Free Disk Space"
         run: |
-          sudo mv /usr/share/dotnet        /tmp/_trash_dotnet        2>/dev/null || true
-          sudo mv /usr/local/lib/android   /tmp/_trash_android       2>/dev/null || true
-          sudo mv /opt/ghc                 /tmp/_trash_ghc           2>/dev/null || true
-          sudo mv /usr/lib/jvm             /tmp/_trash_jvm           2>/dev/null || true
-          sudo mv /usr/share/swift         /tmp/_trash_swift         2>/dev/null || true
-          sudo mv /usr/local/share/powershell /tmp/_trash_pwsh      2>/dev/null || true
+          sudo mv /usr/share/dotnet        /var/tmp/_trash_dotnet        2>/dev/null || true
+          sudo mv /usr/local/lib/android   /var/tmp/_trash_android       2>/dev/null || true
+          sudo mv /opt/ghc                 /var/tmp/_trash_ghc           2>/dev/null || true
+          sudo mv /usr/lib/jvm             /var/tmp/_trash_jvm           2>/dev/null || true
+          sudo mv /usr/share/swift         /var/tmp/_trash_swift         2>/dev/null || true
+          sudo mv /usr/local/share/powershell /var/tmp/_trash_pwsh      2>/dev/null || true
           (sudo nice -n 19 ionice -c 3 rm -rf \
-            /tmp/_trash_dotnet /tmp/_trash_android /tmp/_trash_ghc \
-            /tmp/_trash_jvm /tmp/_trash_swift /tmp/_trash_pwsh \
+            /var/tmp/_trash_dotnet /var/tmp/_trash_android /var/tmp/_trash_ghc \
+            /var/tmp/_trash_jvm /var/tmp/_trash_swift /var/tmp/_trash_pwsh \
             /var/lib/docker /var/cache/snapd /home/linuxbrew \
           ) &
           mkdir -p /dev/shm/ldcache
@@ -417,7 +417,7 @@ jobs:
   # ======================================================
   notify-channel:
     name: "Notify Channel"
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     needs: [prepare-matrix, Start-Build]
     if: inputs.run_mode == 'Release' && always()
 
