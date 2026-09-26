@@ -60,6 +60,7 @@ fi
 log "Running config pass to canonicalize gki_defconfig..."
 cd "$KERNEL_DIR"
 tools/bazel build "${KLEAF_ARGS[@]}" //common:kernel_aarch64_config \
+    > "${LTO_CACHE_DIR}/config_probe.log" 2>&1 \
     || warn "config pass reported a defconfig mismatch (expected on first pass) — adopting generated canonical defconfig"
 
 CANONICAL=$(find "${KERNEL_DIR}/out" -path "*/common/defconfig" 2>/dev/null | head -1)
