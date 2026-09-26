@@ -43,6 +43,14 @@ python3 "${PATCHER_DIR}/branding.py" "$BRANDING_TARGET" \
     || error "SukiSU-Ultra: branding patch failed!"
 log "Branding applied ✅"
 
+if [ "${SUSFS_ENABLED:-false}" = "true" ]; then
+    log "Patching SuSFS post-execveat compat..."
+    python3 "${PATCHER_DIR}/susfs_post_execveat_compat.py" \
+        "${KSU_DIR}/kernel/feature/sucompat.c" \
+        || error "SukiSU-Ultra: SuSFS post-execveat compat patch failed!"
+    log "SuSFS post-execveat compat patched ✅"
+fi
+
 SUKISU_GIT_COMMIT_COUNT=$(git -C "$KSU_DIR" rev-list --count main 2>/dev/null || echo "")
 SUKISU_GITHUB_COMMITS=$(curl -sI --connect-timeout 10 --max-time 15 \
     "https://api.github.com/repos/SukiSU-Ultra/SukiSU-Ultra/commits?sha=main&per_page=1" 2>/dev/null \
