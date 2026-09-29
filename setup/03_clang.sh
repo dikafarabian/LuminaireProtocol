@@ -43,6 +43,25 @@ else
     log "Clang cached ✅"
 fi
 
+LLD_DEPS=$(ldd "${TOOL_CLANG_DIR}/bin/ld.lld" 2>&1 || true)
+if grep -q "libxml2.so.16 => not found" <<< "$LLD_DEPS"; then
+    log "Providing libxml2.so.16 for clang..."
+    XML_POOL="http://archive.ubuntu.com/ubuntu"
+    XML_DEB_PATH=$(curl -fsSL "${XML_POOL}/dists/resolute/main/binary-amd64/Packages.gz" \
+        | zcat | awk -v RS= '/^Package: libxml2-16\n/' | sed -n 's/^Filename: //p') \
+        || error "libxml2-16: failed to query package index!"
+    [ -n "$XML_DEB_PATH" ] || error "libxml2-16: package not found in index!"
+    XML_TMP=$(mktemp -d)
+    retry 3 run_quiet curl -fL "${XML_POOL}/${XML_DEB_PATH}" -o "${XML_TMP}/libxml2.deb" \
+        || error "libxml2-16: download failed!"
+    dpkg -x "${XML_TMP}/libxml2.deb" "${XML_TMP}/root"
+    mkdir -p "${TOOL_CLANG_DIR}/lib"
+    cp -a "${XML_TMP}"/root/usr/lib/*/libxml2.so.16* "${TOOL_CLANG_DIR}/lib/"
+    rm -rf "$XML_TMP"
+    "${TOOL_CLANG_DIR}/bin/ld.lld" --version > /dev/null 2>&1 || error "ld.lld still fails after libxml2-16 install!"
+    log "libxml2.so.16 ready ✅"
+fi
+
 set +o pipefail
 CLANG_VERSION=$("${TOOL_CLANG_DIR}/bin/clang" --version 2>&1 \
     | grep -oP 'clang version \K[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
