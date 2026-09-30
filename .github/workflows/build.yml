@@ -27,8 +27,13 @@ on:
           - "6.12"
       kernel_branch_override:
         description: "Kernel Branch"
-        type: string
+        type: choice
         default: "luminaire"
+        options:
+          - "base"
+          - "lts"
+          - "luminaire"
+          - "staging"
       ksu:
         description: "KernelSU"
         type: boolean
@@ -211,13 +216,9 @@ jobs:
           # already embedded in the branch name itself).
           source functions.sh
           KERNEL_VERSION="${{ inputs.kernel_version }}"
-          ANDROID_VERSION="$(resolve_android_version)"
-          OVERRIDE="$(echo '${{ inputs.kernel_branch_override }}' | tr '/' '-')"
-          if [ -n "$OVERRIDE" ]; then
-            RESOLVED_KERNEL_BRANCH="${ANDROID_VERSION}-${KERNEL_VERSION}-${OVERRIDE}"
-          else
-            RESOLVED_KERNEL_BRANCH="${ANDROID_VERSION}-${KERNEL_VERSION}"
-          fi
+          KERNEL_BRANCH_OVERRIDE="${{ inputs.kernel_branch_override }}"
+          RESOLVED_KERNEL_BRANCH="$(resolve_kernel_branch)"
+          verify_kernel_branch "$RESOLVED_KERNEL_BRANCH"
           echo "resolved_kernel_branch=${RESOLVED_KERNEL_BRANCH}" >> $GITHUB_OUTPUT
 
       - name: "Setup Arsenal"  # restores clang+arsenal cache (auto-saved if missing), then runs arsenal.sh

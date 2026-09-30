@@ -38,14 +38,8 @@ runs:
       run: |
         source functions.sh
         KERNEL_VERSION="${{ inputs.kernel-version }}"
-        ANDROID_VERSION="$(resolve_android_version)"
-        OVERRIDE="${{ inputs.kernel-branch-override }}"
-        OVERRIDE="${OVERRIDE//\\//-}"
-        if [ -n "$OVERRIDE" ]; then
-          KERNEL_BRANCH="${ANDROID_VERSION}-${KERNEL_VERSION}-${OVERRIDE}"
-        else
-          KERNEL_BRANCH="${ANDROID_VERSION}-${KERNEL_VERSION}"
-        fi
+        KERNEL_BRANCH_OVERRIDE="${{ inputs.kernel-branch-override }}"
+        KERNEL_BRANCH="$(resolve_kernel_branch)"
         echo "arsenal_key=arsenal" >> $GITHUB_OUTPUT
         # Kleaf = full repo-synced GKI workspace, Make = plain clone — separate keys
         if [ "${{ startsWith(inputs.build-system, 'Make') }}" = "true" ]; then

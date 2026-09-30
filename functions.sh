@@ -57,6 +57,21 @@ resolve_android_version() {
     esac
 }
 
+resolve_kernel_branch() {
+    local base
+    base="$(resolve_android_version)-${KERNEL_VERSION}"
+    case "${KERNEL_BRANCH_OVERRIDE}" in
+        ""|"base") echo "${base}" ;;
+        *) echo "${base}-${KERNEL_BRANCH_OVERRIDE}" ;;
+    esac
+}
+
+verify_kernel_branch() {
+    git ls-remote --exit-code --heads \
+        "https://github.com/chainonyourdoor/LuminaireKernel-${KERNEL_VERSION}" "refs/heads/$1" >/dev/null 2>&1 \
+        || error "Kernel branch $1 not found in LuminaireKernel-${KERNEL_VERSION}"
+}
+
 run_setup() {
     echo "::group::📦 Setup"
     for script in "${LUMINAIRE_PATCH_DIR}/setup/"*.sh; do
