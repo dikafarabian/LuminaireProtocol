@@ -104,6 +104,26 @@ if [ "$KERNEL_VARIANT" = "KSUNEXT" ]; then
     fi
 fi
 
+if [ "$KERNEL_VARIANT" = "KSU" ] || [ "$KERNEL_VARIANT" = "KOWSU" ]; then
+    if [ "$KERNEL_VARIANT" = "KOWSU" ]; then
+        KSU_PATCH="${KSU_SHARED_DIR}/susfs/patches/10_enable_susfs_for_kowsu.patch"
+    else
+        KSU_PATCH="${SUSFS_DIR}/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch"
+    fi
+    if [ ! -f "$KSU_PATCH" ]; then
+        error "SuSFS: mandatory 10_enable patch not found (${KSU_PATCH})"
+    elif patch -p1 --dry-run --reverse -d "$KSU_DIR" < "$KSU_PATCH" > /dev/null 2>&1; then
+        log "SuSFS: 10_enable already applied to KernelSU, skipping."
+    else
+        log "Applying SuSFS 10_enable KernelSU patch (${KERNEL_VARIANT})..."
+        patch -p1 --fuzz=3 --forward -d "$KSU_DIR" < "$KSU_PATCH" \
+            && log "SuSFS 10_enable applied ✅" \
+            || error "SuSFS: mandatory 10_enable patch failed on ${KERNEL_VARIANT} (${KSU_PATCH}); reject files preserved in ${KSU_DIR}"
+    fi
+    grep -q 'Wno-pointer-bool-conversion' "${KSU_DIR}/kernel/Kbuild" \
+        || printf 'ccflags-y += -Wno-pointer-bool-conversion\n' >> "${KSU_DIR}/kernel/Kbuild"
+fi
+
 rm -rf "$SUSFS_DIR"
 
 log "Ensuring KSU_SUSFS Kconfig declarations exist..."
