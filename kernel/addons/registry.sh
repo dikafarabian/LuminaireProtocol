@@ -6,7 +6,7 @@ declare -A ADDON_SUPPORTED_VERSIONS=(
     [droidspaces]="5.10 5.15 6.1 6.6 6.12"
     [rekernel]="5.10 5.15 6.1 6.6 6.12"
     [ntsync]="5.10 5.15 6.1 6.6"
-    [lz4zstd]="6.1"
+    [lz4zstd]="6.1 6.6"
     [lz4kd]="5.10 5.15 6.1 6.6"
     [mglru]="6.1 6.6 6.12"
 )
