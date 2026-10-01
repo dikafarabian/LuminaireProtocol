@@ -169,6 +169,18 @@ if [ -f "$LZ4HC_C" ] && ! grep -q '#ifndef MIN' "$LZ4HC_C"; then
     log "LZ4/ZSTD: guarded MIN/MAX macros in lz4hc.c against linux/minmax.h redefinition ✅"
 fi
 
+restore_lz4_export() {
+    local symbol="$1" file="$2"
+    [ -f "$file" ] || return 0
+    grep -q "^EXPORT_SYMBOL(${symbol});" "$file" && return 0
+    grep -qE "^[a-z_ ]+[ *]${symbol}\(" "$file" || return 0
+    printf '\nEXPORT_SYMBOL(%s);\n' "$symbol" >> "$file"
+    log "LZ4/ZSTD: restored EXPORT_SYMBOL(${symbol}) dropped by the LZ4 bump ✅"
+}
+
+restore_lz4_export LZ4_compress_fast_continue lib/lz4/lz4.c
+restore_lz4_export LZ4_resetStreamHC lib/lz4/lz4hc.c
+
 ZSTD_FILES=(
     lib/zstd/Makefile
     lib/zstd/decompress_sources.h
