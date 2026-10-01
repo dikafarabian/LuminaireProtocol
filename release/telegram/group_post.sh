@@ -43,11 +43,12 @@ case "$RUN_MODE_UPPER" in
     *)       error "Telegram: unknown RUN_MODE '${RUN_MODE:-}' — expected Build or Release" ;;
 esac
 
-STAGING_CHAT_ID="${TELEGRAM_PERSONAL_CHAT_ID:-}"
-[ -n "$STAGING_CHAT_ID" ] || error "TELEGRAM_PERSONAL_CHAT_ID not set — needed to stage zip uploads"
+STAGING_CHAT_ID="${TELEGRAM_STAGING_CHAT_ID:-${TELEGRAM_PERSONAL_CHAT_ID:-}}"
+[ -n "$STAGING_CHAT_ID" ] || error "TELEGRAM_STAGING_CHAT_ID not set — needed to stage zip uploads"
 
 if [ "${DELIVERY_TARGET:-Group}" = "Private" ]; then
-    TARGET_CHAT_ID="$STAGING_CHAT_ID"
+    [ -n "${TELEGRAM_PERSONAL_CHAT_ID:-}" ] || error "DELIVERY_TARGET=Private but TELEGRAM_PERSONAL_CHAT_ID not set"
+    TARGET_CHAT_ID="$TELEGRAM_PERSONAL_CHAT_ID"
     TARGET_THREAD_ID=""
 else
     [ -n "${TELEGRAM_CHAT_ID:-}" ] || error "TELEGRAM_CHAT_ID not set"
