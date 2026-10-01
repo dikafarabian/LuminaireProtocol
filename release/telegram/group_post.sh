@@ -6,15 +6,26 @@ source "${LUMINAIRE_PATCH_DIR}/functions.sh"
 source "${TELEGRAM_DIR}/config.sh"
 source "${TELEGRAM_DIR}/common.sh"
 
-TELEGRAM_API_TIMEOUT="${TELEGRAM_API_TIMEOUT:-900}"
+TELEGRAM_API_TIMEOUT="${TELEGRAM_API_TIMEOUT:-300}"
 TELEGRAM_MAX_RETRIES="${TELEGRAM_MAX_RETRIES:-3}"
 TELEGRAM_MAX_FILE_BYTES=$((50 * 1024 * 1024))
 
 STAGE_DIR="${STAGE_DIR:-/tmp/group-stage}"
 LINKS_DIR="${LINKS_DIR:-${GITHUB_WORKSPACE:-$PWD}/variant-links}"
+FILE_IDS_FILE="/tmp/group_post_file_ids.json"
 PAYLOAD_FILE="/tmp/group_post_payload.json"
 ATTACHMENTS_FILE="/tmp/group_post_attachments.txt"
 RESPONSE_FILE="/tmp/group_post_response.json"
+STAGED_MESSAGE_IDS=()
+
+cleanup() {
+    local message_id
+    for message_id in "${STAGED_MESSAGE_IDS[@]}"; do
+        telegram_api_call "deleteMessage" "$RESPONSE_FILE" "Staging cleanup" \
+            -d "chat_id=${STAGING_CHAT_ID}" -d "message_id=${message_id}" || true
+    done
+    rm -f "$FILE_IDS_FILE" "$PAYLOAD_FILE" "$ATTACHMENTS_FILE" "$RESPONSE_FILE"
+}
 
 if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
     warn "Skipping group post: TELEGRAM_BOT_TOKEN not set"
@@ -32,15 +43,19 @@ case "$RUN_MODE_UPPER" in
     *)       error "Telegram: unknown RUN_MODE '${RUN_MODE:-}' — expected Build or Release" ;;
 esac
 
+STAGING_CHAT_ID="${TELEGRAM_PERSONAL_CHAT_ID:-}"
+[ -n "$STAGING_CHAT_ID" ] || error "TELEGRAM_PERSONAL_CHAT_ID not set — needed to stage zip uploads"
+
 if [ "${DELIVERY_TARGET:-Group}" = "Private" ]; then
-    [ -n "${TELEGRAM_PERSONAL_CHAT_ID:-}" ] || error "DELIVERY_TARGET=Private but TELEGRAM_PERSONAL_CHAT_ID not set"
-    TARGET_CHAT_ID="$TELEGRAM_PERSONAL_CHAT_ID"
+    TARGET_CHAT_ID="$STAGING_CHAT_ID"
     TARGET_THREAD_ID=""
 else
     [ -n "${TELEGRAM_CHAT_ID:-}" ] || error "TELEGRAM_CHAT_ID not set"
     [ -n "$TARGET_THREAD_ID" ] || error "No thread id configured for RUN_MODE=${RUN_MODE}, KERNEL_VERSION=${KERNEL_VERSION:-}"
     TARGET_CHAT_ID="$TELEGRAM_CHAT_ID"
 fi
+
+trap cleanup EXIT
 
 OVERSIZED=()
 while IFS= read -r meta; do
@@ -57,11 +72,29 @@ if [ -z "$(find "$STAGE_DIR" -name meta.json -print -quit)" ]; then
     error "Group post aborted: no variant zip is eligible for upload"
 fi
 
+echo '{}' > "$FILE_IDS_FILE"
+while IFS= read -r meta; do
+    variant="$(jq -r '.variant' "$meta")"
+    zip_name="$(jq -r '.zip_name' "$meta")"
+    log "📤 Uploading ${zip_name}..."
+    telegram_api_call "sendDocument" "$RESPONSE_FILE" "Upload ${zip_name}" \
+        -F "chat_id=${STAGING_CHAT_ID}" \
+        -F "disable_notification=true" \
+        -F "document=@$(dirname "$meta")/${zip_name};filename=${zip_name}" \
+        || error "Upload failed: ${zip_name}"
+    file_id="$(jq -r '.result.document.file_id // empty' <<< "$TG_RESPONSE")"
+    staged_id="$(jq -r '.result.message_id // empty' <<< "$TG_RESPONSE")"
+    [ -n "$staged_id" ] && STAGED_MESSAGE_IDS+=("$staged_id")
+    [ -n "$file_id" ] || error "Upload ${zip_name}: no file_id in response"
+    jq --arg variant "$variant" --arg file_id "$file_id" '. + {($variant): $file_id}' "$FILE_IDS_FILE" > "${FILE_IDS_FILE}.new"
+    mv "${FILE_IDS_FILE}.new" "$FILE_IDS_FILE"
+done < <(find "$STAGE_DIR" -name meta.json | sort)
+
 TELEGRAM_GROUP="${TELEGRAM_GROUP:-}" \
 CHANGELOG="${CHANGELOG:-}" \
 GITHUB_SERVER_URL="${GITHUB_SERVER_URL:-https://github.com}" \
 GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}" \
-python3 "${TELEGRAM_DIR}/group_card.py" "$STAGE_DIR" "$PAYLOAD_FILE" "$ATTACHMENTS_FILE" \
+python3 "${TELEGRAM_DIR}/group_card.py" "$STAGE_DIR" "$FILE_IDS_FILE" "$PAYLOAD_FILE" "$ATTACHMENTS_FILE" \
     || error "Telegram: group card builder failed!"
 
 mapfile -t ATTACHMENT_SPECS < "$ATTACHMENTS_FILE"
@@ -72,13 +105,11 @@ for spec in "${ATTACHMENT_SPECS[@]}"; do
 done
 [ -n "$TARGET_THREAD_ID" ] && SEND_ARGS+=(-F "message_thread_id=${TARGET_THREAD_ID}")
 
-log "📤 Sending group post (${RUN_MODE_UPPER}, ${#ATTACHMENT_SPECS[@]} attachment(s))..."
-if ! telegram_api_call "sendRichMessage" "$RESPONSE_FILE" "Group send" "${SEND_ARGS[@]}"; then
-    rm -f "$PAYLOAD_FILE" "$ATTACHMENTS_FILE" "$RESPONSE_FILE"
-    error "Group post failed"
-fi
+log "📨 Sending group post (${RUN_MODE_UPPER})..."
+telegram_api_call "sendRichMessage" "$RESPONSE_FILE" "Group send" "${SEND_ARGS[@]}" \
+    || error "Group post failed"
 
-GROUP_MESSAGE_ID=$(python3 -c "import sys,json; print(json.load(sys.stdin)['result']['message_id'])" <<< "$TG_RESPONSE" 2>/dev/null || echo "")
+GROUP_MESSAGE_ID="$(jq -r '.result.message_id // empty' <<< "$TG_RESPONSE")"
 log "Sent ✅ (message_id=${GROUP_MESSAGE_ID})"
 
 if [ "${DELIVERY_TARGET:-Group}" != "Private" ] && [ "$RUN_MODE_UPPER" = "RELEASE" ] && [ -n "${TELEGRAM_CHANNEL_ID:-}" ]; then
@@ -93,8 +124,6 @@ if [ "${DELIVERY_TARGET:-Group}" != "Private" ] && [ "$RUN_MODE_UPPER" = "RELEAS
         log "Variant link saved → ${link_file} ✅"
     done < <(find "$STAGE_DIR" -name meta.json | sort)
 fi
-
-rm -f "$PAYLOAD_FILE" "$ATTACHMENTS_FILE" "$RESPONSE_FILE"
 
 if [ "${#OVERSIZED[@]}" -gt 0 ]; then
     error "Group post sent without: ${OVERSIZED[*]} (over the upload limit)"
