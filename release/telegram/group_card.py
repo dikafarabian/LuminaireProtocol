@@ -47,11 +47,10 @@ def variant_block(meta: dict, index: int) -> str:
         title = f"{title} \u00b7 {version}"
     return "\n".join(
         [
-            "<details>",
-            f"<summary>{title}</summary>",
+            f'<table bordered><tr><th align="center">{title}</th></tr></table>',
             "",
             f"![](tg://document?id=zip{index})",
-            "</details>",
+            "",
         ]
     )
 
