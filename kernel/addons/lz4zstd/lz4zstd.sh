@@ -170,11 +170,16 @@ if [ -f "$LZ4HC_C" ] && ! grep -q '#ifndef MIN' "$LZ4HC_C"; then
 fi
 
 restore_lz4_export() {
-    local symbol="$1" file="$2"
+    local symbol="$1" file="$2" guard_end
     [ -f "$file" ] || return 0
     grep -q "^EXPORT_SYMBOL(${symbol});" "$file" && return 0
     grep -qE "^[a-z_ ]+[ *]${symbol}\(" "$file" || return 0
-    printf '\nEXPORT_SYMBOL(%s);\n' "$symbol" >> "$file"
+    guard_end=$(grep -n '^#endif /\* LZ4_COMMONDEFS_ONLY \*/' "$file" | tail -1 | cut -d: -f1)
+    if [ -n "$guard_end" ]; then
+        sed -i "${guard_end}i EXPORT_SYMBOL(${symbol});" "$file"
+    else
+        printf '\nEXPORT_SYMBOL(%s);\n' "$symbol" >> "$file"
+    fi
     log "LZ4/ZSTD: restored EXPORT_SYMBOL(${symbol}) dropped by the LZ4 bump ✅"
 }
 
