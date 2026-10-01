@@ -97,6 +97,13 @@ mirror_preseed() {
         rm -rf "$target_dir"
         return 1
     fi
+    case "$key" in
+        susfs_*) ;;
+        *)
+            timeout 120 git -C "$target_dir" fetch -q --force --tags "${MIRROR_SOURCE_URL[$key]}" 2>/dev/null \
+                || warn "mirror: ${key} — upstream tag refresh failed, version tag may lag"
+            ;;
+    esac
     log "mirror: ${key} pre-seeded ✅"
     return 0
 }
