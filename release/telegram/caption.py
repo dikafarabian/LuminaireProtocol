@@ -1,7 +1,6 @@
 import os
 import sys
 
-CAPTION_LIMIT = 1024
 PUSH_TEXT_LIMIT = 4096
 
 KERNEL_VERSION_TO_ANDROID = {
@@ -136,10 +135,6 @@ def html_escape(s):
 def html_escape_attr(s):
     return html_escape(s).replace('"', "&quot;")
 
-def mdv2_code_escape(s):
-    s = s.replace("\\", "\\\\")
-    s = s.replace("`", "\\`")
-    return s
 
 def utf16_len(s):
     return sum(2 if ord(c) > 0xFFFF else 1 for c in s)
@@ -161,77 +156,6 @@ def truncate(caption, limit, suffix="\n\u2026\n```"):
 def kernel_source_repo(kernel_ver):
     return f"LuminaireKernel-{kernel_ver}" if kernel_ver else "N/A"
 
-def build_blocks(env):
-    linux_ver       = mdv2_code_escape(env.get("LINUX_VER", "N/A"))
-    kernel_ver      = env.get("KERNEL_VERSION", "")
-    source_str      = mdv2_code_escape(kernel_source_repo(kernel_ver))
-    kernel_branch   = mdv2_code_escape(env.get("KERNEL_BRANCH", "N/A"))
-    compiler        = mdv2_code_escape(env.get("COMPILER_STRING", "N/A"))
-    lto             = mdv2_code_escape(env.get("LTO_MODE", "NONE"))
-    kernel_variant  = mdv2_code_escape(env.get("KERNEL_VARIANT_DISPLAY", "N/A"))
-    susfs_ver       = mdv2_code_escape(env.get("SUSFS_VER", "N/A"))
-    addon_tokens = [t for t in env.get("ADDONS", "").split(",") if t]
-    skipped_tokens = [t for t in env.get("SKIPPED_ADDONS", "").split(",") if t]
-    mountless = mdv2_code_escape(resolve_mountless_engine(env))
-    toggle_order = toggle_addon_order(env)
-    addon_name_width = max(
-        [len(addon_display_name(t)) for t in toggle_order] + [len("Mountless Engine")]
-    ) + 1
-    addon_status_lines = []
-    for token in toggle_order:
-        name = addon_display_name(token)
-        if token in skipped_tokens:
-            status = "N/A"
-        elif token in addon_tokens:
-            status = "Enable"
-        else:
-            status = "Disable"
-        addon_status_lines.append(f"{name.ljust(addon_name_width)}: {mdv2_code_escape(status)}")
-    tuning_skipped_tokens = [t for t in env.get("SKIPPED_TUNING", "").split(",") if t]
-    tuning_order_list = tuning_order(env)
-    tuning_active_lines = [
-        mdv2_code_escape(tuning_active_line(env, token))
-        for token in tuning_order_list
-        if token not in tuning_skipped_tokens
-    ]
-    block_luminaire = (
-        "```Luminaire\n"
-        f"Kernel    : Linux {linux_ver}\n"
-        f"Source    : {source_str}\n"
-        f"Branch    : {kernel_branch}\n"
-        f"Toolchain : {compiler}\n"
-        f"LTO       : {lto}```"
-    )
-    is_vanilla = env.get("KERNEL_VARIANT", "").upper() == "VANILLA"
-    if is_vanilla:
-        root_lines = [
-            "Version : Vanilla",
-            "SuSFS   : N/A (Vanilla)",
-        ]
-    else:
-        ksu_version = mdv2_code_escape(env.get("KERNEL_VARIANT_VERSION", "")) or "N/A"
-        root_lines = [
-            f"Version : {ksu_version}",
-            f"SuSFS   : {susfs_ver}",
-        ]
-    variant_label = "Vanilla" if is_vanilla else kernel_variant
-    block_root = f"```{variant_label}\n" + "\n".join(root_lines) + "```"
-    block_addons = (
-        "```Add-ons\n"
-        f"{'Mountless Engine'.ljust(addon_name_width)}: {mountless}\n"
-        + "\n".join(addon_status_lines) +
-        "```"
-    )
-    has_active_tuning = bool(tuning_active_lines)
-    if has_active_tuning:
-        block_tuning = (
-            "```Tuning\n"
-            + "\n".join(tuning_active_lines) +
-            "```"
-        )
-    else:
-        block_tuning = None
-    return block_luminaire, block_root, block_tuning, block_addons
 
 def build_push_caption(env):
     branch_raw = env.get("BRANCH", "")
@@ -262,23 +186,12 @@ def build_push_caption(env):
     return head_full + "\n" + message_block + footer
 
 def main():
-    if len(sys.argv) == 3 and sys.argv[1] == "push":
-        env = os.environ
-        caption = build_push_caption(env)
-        with open(sys.argv[2], "w") as f:
-            f.write(caption)
-        print("[info] telegram_caption: push caption written ✅", flush=True)
-        return
-    out_group = sys.argv[1]
-    env = os.environ
-    block_luminaire, block_root, block_tuning, block_addons = build_blocks(env)
-    caption_group = "\n".join(
-        b for b in [block_luminaire, block_root, block_tuning, block_addons] if b is not None
-    )
-    caption_group = truncate(caption_group, CAPTION_LIMIT)
-    with open(out_group, "w") as f:
-        f.write(caption_group)
-    print("[info] telegram_caption: caption written ✅", flush=True)
+    if len(sys.argv) != 3 or sys.argv[1] != "push":
+        sys.exit("usage: caption.py push <out-file>")
+    caption = build_push_caption(os.environ)
+    with open(sys.argv[2], "w") as f:
+        f.write(caption)
+    print("[info] telegram_caption: push caption written ✅", flush=True)
 
 if __name__ == "__main__":
     main()

@@ -1,9 +1,5 @@
 from __future__ import annotations
 
-import json
-import os
-import sys
-
 import caption
 
 VARIANT_DISPLAY_PLAIN = {
@@ -99,8 +95,6 @@ def chip(text: str, style: str = "") -> str:
     style_attr = f' style="{style}"' if style else ""
     return f'<tg-button type="disabled"{style_attr}>{html_cell(text)}</tg-button>'
 
-def section_label(text: str) -> str:
-    return f"<tg-button-row>{chip(text)}</tg-button-row>"
 
 def core_features_folds() -> list:
     out = ['<tg-button-row><tg-button type="disabled">Core Features'
@@ -176,13 +170,6 @@ def features_details(env, style: str = "") -> str:
     out.append("</details>")
     return "\n".join(out)
 
-def variant_table(variant_links, variant_versions) -> str:
-    rows = []
-    for key, link in sorted(variant_links.items(), key=lambda kv: variant_sort_key(kv[0])):
-        name = html_cell(variant_display(key))
-        ver = html_cell(variant_versions.get(key, "") or "\u2014")
-        rows.append(f'<tr><td><a href="{link}">{name}</a></td><td>{ver}</td></tr>')
-    return "<table bordered>" + "".join(rows) + "</table>"
 
 def changelog_block(env) -> str:
     raw = env.get("CHANGELOG", "").strip()
@@ -225,44 +212,3 @@ def compose_markdown(env, variants_block, has_banner=True) -> str:
     parts.append("\\#GKI \\#Kernel \\#Luminaire")
 
     return "\n\n".join(p for p in parts if p) + "\n"
-
-def build_markdown(env, variant_links, variant_versions, has_banner=True) -> str:
-    return compose_markdown(env, variant_table(variant_links, variant_versions), has_banner)
-
-def main() -> None:
-    if len(sys.argv) != 2:
-        sys.exit("usage: rich_message.py <out-json-file>")
-    env = os.environ
-
-    try:
-        variant_links = json.loads(env.get("VARIANT_LINKS_JSON", "") or "{}")
-    except Exception:
-        variant_links = {}
-    try:
-        variant_versions = json.loads(env.get("VARIANT_VERSIONS_JSON", "") or "{}")
-    except Exception:
-        variant_versions = {}
-
-    has_banner = env.get("RICH_HAS_BANNER", "1") not in ("", "0", "no")
-    md = build_markdown(env, variant_links, variant_versions, has_banner=has_banner)
-
-    payload = {"markdown": md}
-    if has_banner:
-        payload["media"] = [
-            {
-                "id": "banner",
-                "media": {"type": "photo", "media": "attach://banner_file"},
-            }
-        ]
-
-    with open(sys.argv[1], "w", encoding="utf-8") as f:
-        json.dump(payload, f, ensure_ascii=False)
-
-    print(
-        f"[info] rich_message: built {len(md)} chars (limit 32768) \u2705",
-        file=sys.stderr,
-        flush=True,
-    )
-
-if __name__ == "__main__":
-    main()

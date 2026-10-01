@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-}"
-TELEGRAM_CI_GROUP="LuminaireCI"
 TELEGRAM_GROUP="LuminaireLab"
 
 TELEGRAM_THREAD_ID_EVENT="4"

@@ -199,8 +199,8 @@ jobs:
           echo "matrix=${matrix_json}" >> $GITHUB_OUTPUT
 
           # Single source of truth for the ADDONS list — reused by Start-Build
-          # and notify-channel via this job's output, instead of each job
-          # rebuilding the same string from inputs independently.
+          # via this job's output, instead of rebuilding the same string
+          # from inputs independently.
           ADDONS="${{ inputs.rekernel && 'rekernel,' || '' }}${{ inputs.droidspaces && 'droidspaces,' || '' }}${{ inputs.ntsync && 'ntsync,' || '' }}${{ inputs.lz4zstd && 'lz4zstd,' || '' }}${{ inputs.lz4kd && 'lz4kd,' || '' }}${{ inputs.mountless_engine != 'none' && format('{0},', inputs.mountless_engine) || '' }}${{ inputs.mglru && 'mglru,' || '' }}"
           echo "addons=${ADDONS}" >> $GITHUB_OUTPUT
 
@@ -400,21 +400,21 @@ jobs:
           ccache-filename: ccache-data-${{ needs.prepare-matrix.outputs.resolved_kernel_branch }}-${{ matrix.kernel_variant }}${{ matrix.susfs && '+SUSFS' || '' }}-${{ steps.setup-build-env.outputs.clang-variant-upper }}${{ inputs.lto_mode != 'NONE' && format('-{0}', inputs.lto_mode) || '' }}-${{ needs.prepare-matrix.outputs.safe_ref }}.tar.zst
           gh-token:       ${{ secrets.PERSONAL_TOKEN }}
 
-      - name: "Upload Group Stage"
+      - name: "Upload Post Stage"
         if: inputs.run_mode == 'Build' || inputs.run_mode == 'Release'
         uses: actions/upload-artifact@v7
         with:
-          name: group-${{ matrix.kernel_variant }}${{ matrix.susfs && '-susfs' || '' }}
-          path: group-stage/
+          name: post-${{ matrix.kernel_variant }}${{ matrix.susfs && '-susfs' || '' }}
+          path: post-stage/
           retention-days: 1
           compression-level: 0
           if-no-files-found: ignore
 
   # ======================================================
-  # NOTIFY GROUP
+  # NOTIFY
   # ======================================================
-  notify-group:
-    name: "Notify Group"
+  notify:
+    name: "Notify"
     runs-on: ubuntu-24.04
     needs: [prepare-matrix, Start-Build]
     if: (inputs.run_mode == 'Build' || inputs.run_mode == 'Release') && always()
@@ -423,11 +423,11 @@ jobs:
       - name: "Checkout"
         uses: actions/checkout@v7
 
-      - name: "Download Group Stage"
+      - name: "Download Post Stage"
         uses: actions/download-artifact@v8
         with:
-          pattern: group-*
-          path: /tmp/group-stage
+          pattern: post-*
+          path: /tmp/post-stage
 
       - name: "Start Local Bot API"
         env:
@@ -450,7 +450,7 @@ jobs:
           docker logs tg-bot-api
           exit 1
 
-      - name: "Send Group Post"
+      - name: "Send Post"
         env:
           TELEGRAM_API_BASE:         http://localhost:8081
           TELEGRAM_BOT_TOKEN:        ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -459,58 +459,15 @@ jobs:
           TELEGRAM_PERSONAL_CHAT_ID: ${{ secrets.TELEGRAM_PERSONAL_CHAT_ID }}
           DELIVERY_TARGET:           ${{ inputs.delivery_target }}
           LUMINAIRE_PATCH_DIR:       ${{ github.workspace }}
-          STAGE_DIR:                 /tmp/group-stage
+          STAGE_DIR:                 /tmp/post-stage
           RUN_MODE:                  ${{ inputs.run_mode }}
           KERNEL_VERSION:            ${{ inputs.kernel_version }}
           CHANGELOG:                 ${{ inputs.changelog }}
+          EXPECTED_MATRIX_JSON:      ${{ needs.prepare-matrix.outputs.matrix }}
           GITHUB_SERVER_URL:         ${{ github.server_url }}
           GITHUB_REPOSITORY:         ${{ github.repository }}
-        run: bash release/telegram/group_post.sh
+        run: bash release/telegram/post.sh
 
       - name: "Stop Local Bot API"
         if: always()
         run: docker rm -f tg-bot-api || true
-
-      - name: "Upload Variant Links"
-        if: inputs.run_mode == 'Release'
-        uses: actions/upload-artifact@v7
-        with:
-          name: variant-link-group
-          path: variant-links/
-          if-no-files-found: ignore
-
-  # ======================================================
-  # NOTIFY CHANNEL
-  # ======================================================
-  notify-channel:
-    name: "Notify Channel"
-    runs-on: ubuntu-24.04
-    needs: [prepare-matrix, Start-Build, notify-group]
-    if: inputs.run_mode == 'Release' && always()
-
-    steps:
-      - name: "Checkout"
-        uses: actions/checkout@v7
-
-      - name: "Download Variant Links"
-        uses: actions/download-artifact@v8
-        with:
-          pattern: variant-link-*
-          path: /tmp/variant-links
-          merge-multiple: true
-
-      - name: "Send Channel Post"
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
-          LUMINAIRE_PATCH_DIR: ${{ github.workspace }}
-          LINKS_DIR:           /tmp/variant-links
-          KERNEL_VERSION:      ${{ inputs.kernel_version }}
-          ADDONS:              ${{ needs.prepare-matrix.outputs.addons }}
-          CHANGELOG:           ${{ inputs.changelog }}
-          EXPECTED_MATRIX_JSON: ${{ needs.prepare-matrix.outputs.matrix }}
-          GITHUB_SHA:          ${{ github.sha }}
-          GITHUB_SERVER_URL:   ${{ github.server_url }}
-          GITHUB_REPOSITORY:   ${{ github.repository }}
-          GITHUB_RUN_ID:       ${{ github.run_id }}
-        run: bash release/telegram/channel_post.sh

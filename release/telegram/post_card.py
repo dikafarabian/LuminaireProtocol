@@ -18,7 +18,7 @@ def load_metas(stage_dir: str) -> list:
             meta = json.load(f)
         meta["zip_path"] = os.path.join(os.path.dirname(path), meta["zip_name"])
         if not os.path.isfile(meta["zip_path"]):
-            sys.exit(f"group_card: {meta['zip_path']} missing")
+            sys.exit(f"post_card: {meta['zip_path']} missing")
         metas.append(meta)
     metas.sort(key=lambda m: (rm.variant_sort_key(m["variant"]), m["variant"]))
     return metas
@@ -71,7 +71,11 @@ def find_banner() -> str:
         candidate = os.path.join(base, name)
         if os.path.isfile(candidate):
             return candidate
-    return ""
+    sys.exit(f"post_card: banner requested but none of {BANNER_NAMES} found in {base}")
+
+
+def banner_requested() -> bool:
+    return os.environ.get("POST_BANNER", "0").lower() in ("1", "true", "yes")
 
 
 def build_payload(metas: list, env: dict, has_banner: bool) -> dict:
@@ -87,17 +91,17 @@ def build_payload(metas: list, env: dict, has_banner: bool) -> dict:
 
 def main() -> None:
     if len(sys.argv) != 4:
-        sys.exit("usage: group_card.py <stage-dir> <out-payload-json> <out-attachments-file>")
+        sys.exit("usage: post_card.py <stage-dir> <out-payload-json> <out-attachments-file>")
     stage_dir, payload_path, attachments_path = sys.argv[1:4]
 
     metas = load_metas(stage_dir)
     if not metas:
-        sys.exit("group_card: no staged variants found")
+        sys.exit("post_card: no staged variants found")
 
-    banner = find_banner()
+    banner = find_banner() if banner_requested() else ""
     payload = build_payload(metas, shared_env(metas[0]), bool(banner))
     if len(payload["markdown"]) > RICH_LIMIT:
-        sys.exit(f"group_card: {len(payload['markdown'])} chars exceeds {RICH_LIMIT}")
+        sys.exit(f"post_card: {len(payload['markdown'])} chars exceeds {RICH_LIMIT}")
 
     with open(payload_path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False)
@@ -105,7 +109,7 @@ def main() -> None:
         f.write("\n".join(attachment_specs(metas, banner)) + "\n")
 
     print(
-        f"[info] group_card: {len(metas)} variant(s), {len(payload['markdown'])} chars (limit {RICH_LIMIT}) \u2705",
+        f"[info] post_card: {len(metas)} variant(s), banner={'yes' if banner else 'no'}, {len(payload['markdown'])} chars (limit {RICH_LIMIT}) \u2705",
         file=sys.stderr,
         flush=True,
     )

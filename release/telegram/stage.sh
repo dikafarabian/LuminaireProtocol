@@ -3,11 +3,11 @@
 source "${LUMINAIRE_PATCH_DIR:-.}/functions.sh"
 
 if [ "${DRY_RUN:-false}" = "true" ]; then
-    log "Skipping group staging: Dry Run mode (pipeline test only)"
+    log "Skipping post staging: Dry Run mode (pipeline test only)"
     return 0
 fi
 if [ ! -f "${ZIP_PATH:-}" ]; then
-    warn "Skipping group staging: ZIP_PATH not set or file missing (ZIP_PATH='${ZIP_PATH:-}')"
+    warn "Skipping post staging: ZIP_PATH not set or file missing (ZIP_PATH='${ZIP_PATH:-}')"
     return 0
 fi
 
@@ -25,7 +25,7 @@ if [ "${SUSFS_ENABLED:-false}" = "true" ] && [ "$KERNEL_VARIANT" != "VANILLA" ];
     VARIANT_KEY="${KERNEL_VARIANT}_SUSFS"
 fi
 
-STAGE_DIR="${GITHUB_WORKSPACE:-$PWD}/group-stage"
+STAGE_DIR="${GITHUB_WORKSPACE:-$PWD}/post-stage"
 mkdir -p "$STAGE_DIR"
 cp "$ZIP_PATH" "${STAGE_DIR}/${ZIP_NAME}"
 
@@ -44,8 +44,8 @@ jq -n \
     --arg applied_tuning "${APPLIED_TUNING:-}" \
     --arg skipped_tuning "${SKIPPED_TUNING:-}" \
     '$ARGS.named' > "${STAGE_DIR}/meta.json" \
-    || error "Group staging: meta.json creation failed!"
+    || error "Post staging: meta.json creation failed!"
 
-log "Group stage ready: ${ZIP_NAME} (${VARIANT_KEY}) ✅"
+log "Post stage ready: ${ZIP_NAME} (${VARIANT_KEY}) ✅"
 
 return 0
