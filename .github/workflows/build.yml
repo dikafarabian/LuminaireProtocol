@@ -429,8 +429,30 @@ jobs:
           pattern: group-*
           path: /tmp/group-stage
 
+      - name: "Start Local Bot API"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_API_ID:    ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH:  ${{ secrets.TELEGRAM_API_HASH }}
+        run: |
+          set -euo pipefail
+          docker run -d --name tg-bot-api -p 8081:8081 \
+            -e TELEGRAM_API_ID="${TELEGRAM_API_ID}" \
+            -e TELEGRAM_API_HASH="${TELEGRAM_API_HASH}" \
+            -e TELEGRAM_LOCAL=true \
+            aiogram/telegram-bot-api:latest
+          for _ in $(seq 1 30); do
+            if curl -sf "http://localhost:8081/bot${TELEGRAM_BOT_TOKEN}/getMe" > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs tg-bot-api
+          exit 1
+
       - name: "Send Group Post"
         env:
+          TELEGRAM_API_BASE:         http://localhost:8081
           TELEGRAM_BOT_TOKEN:        ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:          ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_CHANNEL_ID:       ${{ secrets.TELEGRAM_CHANNEL_ID }}
@@ -444,6 +466,10 @@ jobs:
           GITHUB_SERVER_URL:         ${{ github.server_url }}
           GITHUB_REPOSITORY:         ${{ github.repository }}
         run: bash release/telegram/group_post.sh
+
+      - name: "Stop Local Bot API"
+        if: always()
+        run: docker rm -f tg-bot-api || true
 
       - name: "Upload Variant Links"
         if: inputs.run_mode == 'Release'

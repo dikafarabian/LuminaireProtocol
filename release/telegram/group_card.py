@@ -16,6 +16,9 @@ def load_metas(stage_dir: str) -> list:
     for path in glob.glob(os.path.join(stage_dir, "**", "meta.json"), recursive=True):
         with open(path, encoding="utf-8") as f:
             meta = json.load(f)
+        meta["zip_path"] = os.path.join(os.path.dirname(path), meta["zip_name"])
+        if not os.path.isfile(meta["zip_path"]):
+            sys.exit(f"group_card: {meta['zip_path']} missing")
         metas.append(meta)
     metas.sort(key=lambda m: (rm.variant_sort_key(m["variant"]), m["variant"]))
     return metas
@@ -55,6 +58,13 @@ def variant_block(meta: dict, index: int) -> str:
     )
 
 
+def attachment_specs(metas: list, banner: str) -> list:
+    specs = [f"banner_file=@{banner}"] if banner else []
+    for i, meta in enumerate(metas, 1):
+        specs.append(f"zip_{i}=@{meta['zip_path']};filename={meta['zip_name']}")
+    return specs
+
+
 def find_banner() -> str:
     base = os.path.dirname(os.path.abspath(__file__))
     for name in BANNER_NAMES:
@@ -64,41 +74,35 @@ def find_banner() -> str:
     return ""
 
 
-def build_payload(metas: list, env: dict, has_banner: bool, file_ids: dict) -> dict:
+def build_payload(metas: list, env: dict, has_banner: bool) -> dict:
     blocks = "\n".join(variant_block(m, i) for i, m in enumerate(metas, 1))
     markdown = rm.compose_markdown(env, blocks, has_banner=has_banner)
     media = []
     if has_banner:
         media.append({"id": "banner", "media": {"type": "photo", "media": "attach://banner_file"}})
-    for i, meta in enumerate(metas, 1):
-        media.append({"id": f"zip{i}", "media": {"type": "document", "media": file_ids[meta["variant"]]}})
+    for i in range(1, len(metas) + 1):
+        media.append({"id": f"zip{i}", "media": {"type": "document", "media": f"attach://zip_{i}"}})
     return {"markdown": markdown, "media": media}
 
 
 def main() -> None:
-    if len(sys.argv) != 5:
-        sys.exit("usage: group_card.py <stage-dir> <file-ids-json> <out-payload-json> <out-attachments-file>")
-    stage_dir, file_ids_path, payload_path, attachments_path = sys.argv[1:5]
+    if len(sys.argv) != 4:
+        sys.exit("usage: group_card.py <stage-dir> <out-payload-json> <out-attachments-file>")
+    stage_dir, payload_path, attachments_path = sys.argv[1:4]
 
     metas = load_metas(stage_dir)
     if not metas:
         sys.exit("group_card: no staged variants found")
 
-    with open(file_ids_path, encoding="utf-8") as f:
-        file_ids = json.load(f)
-    missing = [m["variant"] for m in metas if not file_ids.get(m["variant"])]
-    if missing:
-        sys.exit(f"group_card: no file_id for {', '.join(missing)}")
-
     banner = find_banner()
-    payload = build_payload(metas, shared_env(metas[0]), bool(banner), file_ids)
+    payload = build_payload(metas, shared_env(metas[0]), bool(banner))
     if len(payload["markdown"]) > RICH_LIMIT:
         sys.exit(f"group_card: {len(payload['markdown'])} chars exceeds {RICH_LIMIT}")
 
     with open(payload_path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False)
     with open(attachments_path, "w", encoding="utf-8") as f:
-        f.write(f"banner_file=@{banner}\n" if banner else "")
+        f.write("\n".join(attachment_specs(metas, banner)) + "\n")
 
     print(
         f"[info] group_card: {len(metas)} variant(s), {len(payload['markdown'])} chars (limit {RICH_LIMIT}) \u2705",

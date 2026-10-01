@@ -9,7 +9,7 @@ telegram_api_call() {
         http_code=$(curl -s -o "$response_file" -w "%{http_code}" \
             --max-time "${TELEGRAM_API_TIMEOUT:-60}" \
             --retry 0 \
-            -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/${method}" \
+            -X POST "${TELEGRAM_API_BASE:-https://api.telegram.org}/bot${TELEGRAM_BOT_TOKEN}/${method}" \
             "$@" 2>"$err_file") || http_code="000"
 
         TG_RESPONSE=$(cat "$response_file" 2>/dev/null || echo "")
