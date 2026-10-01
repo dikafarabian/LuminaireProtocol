@@ -86,20 +86,15 @@ if [ "${DELIVERY_TARGET:-Group}" = "Private" ]; then
     exit 0
 fi
 
-case "$RUN_MODE_UPPER" in
-    BUILD)   GROUP_THREAD_ID="${TELEGRAM_THREAD_ID_BUILD_BY_VERSION[$KERNEL_VERSION]:-}" ;;
-    RELEASE) GROUP_THREAD_ID="${TELEGRAM_THREAD_ID_RELEASE:-}" ;;
-esac
-[ -n "${TELEGRAM_CHAT_ID:-}" ] || error "TELEGRAM_CHAT_ID not set"
-[ -n "$GROUP_THREAD_ID" ] || error "No thread id configured for RUN_MODE=${RUN_MODE}, KERNEL_VERSION=${KERNEL_VERSION:-}"
-
-send_post "$TELEGRAM_CHAT_ID" "$GROUP_THREAD_ID" 0 "Group post"
-
 if [ "$RUN_MODE_UPPER" = "RELEASE" ]; then
-    if [ -z "${TELEGRAM_CHANNEL_ID:-}" ]; then
-        warn "Skipping channel post: TELEGRAM_CHANNEL_ID not set"
-        exit 0
-    fi
+    [ -n "${TELEGRAM_CHANNEL_ID:-}" ] || error "TELEGRAM_CHANNEL_ID not set"
     assert_all_variants_staged
     send_post "$TELEGRAM_CHANNEL_ID" "" 1 "Channel post"
+    exit 0
 fi
+
+GROUP_THREAD_ID="${TELEGRAM_THREAD_ID_BUILD_BY_VERSION[$KERNEL_VERSION]:-}"
+[ -n "${TELEGRAM_CHAT_ID:-}" ] || error "TELEGRAM_CHAT_ID not set"
+[ -n "$GROUP_THREAD_ID" ] || error "No thread id configured for KERNEL_VERSION=${KERNEL_VERSION:-}"
+
+send_post "$TELEGRAM_CHAT_ID" "$GROUP_THREAD_ID" 0 "Group post"
