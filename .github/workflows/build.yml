@@ -245,11 +245,6 @@ jobs:
 
     env:
       PERSONAL_TOKEN:              ${{ secrets.PERSONAL_TOKEN }}
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-      TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
-      DELIVERY_TARGET:             ${{ inputs.delivery_target }}
-      TELEGRAM_PERSONAL_CHAT_ID: ${{ secrets.TELEGRAM_PERSONAL_CHAT_ID }}
       USE_KERNEL_CACHE:            "true"
       USE_AK3_CACHE:               "true"
       USE_CLANG_CACHE:             "true"
@@ -405,11 +400,56 @@ jobs:
           ccache-filename: ccache-data-${{ needs.prepare-matrix.outputs.resolved_kernel_branch }}-${{ matrix.kernel_variant }}${{ matrix.susfs && '+SUSFS' || '' }}-${{ steps.setup-build-env.outputs.clang-variant-upper }}${{ inputs.lto_mode != 'NONE' && format('-{0}', inputs.lto_mode) || '' }}-${{ needs.prepare-matrix.outputs.safe_ref }}.tar.zst
           gh-token:       ${{ secrets.PERSONAL_TOKEN }}
 
-      - name: "Upload Variant Link"  # for channel post aggregation
+      - name: "Upload Group Stage"
+        if: inputs.run_mode == 'Build' || inputs.run_mode == 'Release'
+        uses: actions/upload-artifact@v7
+        with:
+          name: group-${{ matrix.kernel_variant }}${{ matrix.susfs && '-susfs' || '' }}
+          path: group-stage/
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: ignore
+
+  # ======================================================
+  # NOTIFY GROUP
+  # ======================================================
+  notify-group:
+    name: "Notify Group"
+    runs-on: ubuntu-24.04
+    needs: [prepare-matrix, Start-Build]
+    if: (inputs.run_mode == 'Build' || inputs.run_mode == 'Release') && always()
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v7
+
+      - name: "Download Group Stage"
+        uses: actions/download-artifact@v8
+        with:
+          pattern: group-*
+          path: /tmp/group-stage
+
+      - name: "Send Group Post"
+        env:
+          TELEGRAM_BOT_TOKEN:        ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:          ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHANNEL_ID:       ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          TELEGRAM_PERSONAL_CHAT_ID: ${{ secrets.TELEGRAM_PERSONAL_CHAT_ID }}
+          DELIVERY_TARGET:           ${{ inputs.delivery_target }}
+          LUMINAIRE_PATCH_DIR:       ${{ github.workspace }}
+          STAGE_DIR:                 /tmp/group-stage
+          RUN_MODE:                  ${{ inputs.run_mode }}
+          KERNEL_VERSION:            ${{ inputs.kernel_version }}
+          CHANGELOG:                 ${{ inputs.changelog }}
+          GITHUB_SERVER_URL:         ${{ github.server_url }}
+          GITHUB_REPOSITORY:         ${{ github.repository }}
+        run: bash release/telegram/group_post.sh
+
+      - name: "Upload Variant Links"
         if: inputs.run_mode == 'Release'
         uses: actions/upload-artifact@v7
         with:
-          name: variant-link-${{ matrix.kernel_variant }}${{ matrix.susfs && '-susfs' || '' }}
+          name: variant-link-group
           path: variant-links/
           if-no-files-found: ignore
 
@@ -419,7 +459,7 @@ jobs:
   notify-channel:
     name: "Notify Channel"
     runs-on: ubuntu-24.04
-    needs: [prepare-matrix, Start-Build]
+    needs: [prepare-matrix, Start-Build, notify-group]
     if: inputs.run_mode == 'Release' && always()
 
     steps:

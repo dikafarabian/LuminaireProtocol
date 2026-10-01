@@ -194,7 +194,7 @@ def changelog_block(env) -> str:
     body = "\n".join(f"\u2022 {e}" for e in entries)
     return "```\n" + body + "\n```"
 
-def build_markdown(env, variant_links, variant_versions, has_banner=True) -> str:
+def compose_markdown(env, variants_block, has_banner=True) -> str:
     linux_ver = env.get("LINUX_VER", "N/A")
     kernel_ver = env.get("KERNEL_VERSION", "")
     android_ver = caption.KERNEL_VERSION_TO_ANDROID.get(kernel_ver, "?")
@@ -208,7 +208,7 @@ def build_markdown(env, variant_links, variant_versions, has_banner=True) -> str
     parts.append(f"# Luminaire Protocol | {linux_ver}")
     parts.append(f"> GKI Kernel | Android {android_ver} | Linux {major_minor}")
     parts.append(features_details(env))
-    parts.append(variant_table(variant_links, variant_versions))
+    parts.append(variants_block)
 
     cl = changelog_block(env)
     if cl:
@@ -225,6 +225,9 @@ def build_markdown(env, variant_links, variant_versions, has_banner=True) -> str
     parts.append("\\#GKI \\#Kernel \\#Luminaire")
 
     return "\n\n".join(p for p in parts if p) + "\n"
+
+def build_markdown(env, variant_links, variant_versions, has_banner=True) -> str:
+    return compose_markdown(env, variant_table(variant_links, variant_versions), has_banner)
 
 def main() -> None:
     if len(sys.argv) != 2:

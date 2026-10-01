@@ -161,7 +161,7 @@ run_postbuild() {
 run_release() {
     echo "::group::🚀 Release"
     source "${LUMINAIRE_PATCH_DIR}/release/anykernel.sh" || error "Release failed: anykernel.sh"
-    source "${LUMINAIRE_PATCH_DIR}/release/telegram/telegram.sh"  || error "Release failed: telegram.sh"
+    source "${LUMINAIRE_PATCH_DIR}/release/telegram/stage.sh"  || error "Release failed: stage.sh"
     echo "::endgroup::"
 }
 
