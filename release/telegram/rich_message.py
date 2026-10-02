@@ -102,7 +102,10 @@ def chip(text: str, style: str = "") -> str:
 
 def variant_header(title: str, build_mode: bool) -> str:
     if build_mode:
-        return f'<tg-button-row>{chip(title, "primary")}</tg-button-row>'
+        return (
+            '<tg-button-row><tg-button type="callback_data" data="x" '
+            f'style="primary">{html_cell(title)}</tg-button></tg-button-row>'
+        )
     return f'<table bordered><tr><th align="center">{html_cell(title)}</th></tr></table>'
 
 
@@ -214,9 +217,10 @@ def compose_markdown(env, variants_block, has_banner=True) -> str:
 
     cl = changelog_block(env)
     if cl:
-        parts.append(button_row(("Full Changelog", commits_url(env), "success")))
+        if not build_mode:
+            parts.append(button_row(("Full Changelog", commits_url(env), "success")))
         parts.append(cl)
-    else:
+    elif not build_mode:
         parts.append(button_row(("Commits", commits_url(env), "success")))
 
     if not build_mode:

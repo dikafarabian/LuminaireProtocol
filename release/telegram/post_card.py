@@ -46,11 +46,22 @@ def shared_env(first: dict) -> dict:
     return env
 
 
-def variant_block(meta: dict, index: int, build_mode: bool) -> str:
-    title = rm.variant_display(meta["variant"])
+def variant_title(meta: dict, build_mode: bool) -> str:
+    key = meta["variant"]
     version = meta.get("variant_version", "")
-    if version:
-        title = f"{title} \u00b7 {version}"
+    if not build_mode:
+        title = rm.variant_display(key)
+        return f"{title} \u00b7 {version}" if version else title
+    has_susfs = key.endswith("_SUSFS")
+    base = key[: -len("_SUSFS")] if has_susfs else key
+    parts = [" ".join(p for p in (rm.variant_display(base), version) if p)]
+    if has_susfs:
+        parts.append(" ".join(p for p in ("SuSFS", meta.get("susfs_version", "")) if p))
+    return " \u00b7 ".join(parts)
+
+
+def variant_block(meta: dict, index: int, build_mode: bool) -> str:
+    title = variant_title(meta, build_mode)
     return "\n".join(
         [
             rm.variant_header(title, build_mode),

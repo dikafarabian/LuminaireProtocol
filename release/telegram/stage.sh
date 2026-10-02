@@ -25,6 +25,11 @@ if [ "${SUSFS_ENABLED:-false}" = "true" ] && [ "$KERNEL_VARIANT" != "VANILLA" ];
     VARIANT_KEY="${KERNEL_VARIANT}_SUSFS"
 fi
 
+SUSFS_VERSION_TAG=""
+if [ "${SUSFS_ENABLED:-false}" = "true" ] && [ "$KERNEL_VARIANT" != "VANILLA" ]; then
+    SUSFS_VERSION_TAG="$(sed -n 's/^#define SUSFS_VERSION "\(.*\)"/\1/p' "${KERNEL_SRC:-}/include/linux/susfs.h" 2>/dev/null | head -n 1)" || true
+fi
+
 STAGE_DIR="${GITHUB_WORKSPACE:-$PWD}/post-stage"
 mkdir -p "$STAGE_DIR"
 cp "$ZIP_PATH" "${STAGE_DIR}/${ZIP_NAME}"
@@ -35,6 +40,7 @@ jq -n \
     --arg variant "$VARIANT_KEY" \
     --arg zip_name "$ZIP_NAME" \
     --arg variant_version "$KERNEL_VARIANT_VERSION" \
+    --arg susfs_version "$SUSFS_VERSION_TAG" \
     --arg linux_ver "${KERNEL_VERSION}.${SUBLEVEL}" \
     --arg kernel_version "$KERNEL_VERSION" \
     --arg kernel_branch "${KERNEL_BRANCH:-}" \
