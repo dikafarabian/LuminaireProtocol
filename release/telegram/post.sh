@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 📨 TELEGRAM — Post Sender (Build / Release)
+# ======================================================
+
 TELEGRAM_DIR="${LUMINAIRE_PATCH_DIR}/release/telegram"
 
 source "${LUMINAIRE_PATCH_DIR}/functions.sh"

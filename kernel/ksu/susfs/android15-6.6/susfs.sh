@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🧬 SuSFS — shared apply logic (any KSU fork, android15-6.6)
+# ======================================================
+# Repo: https://gitlab.com/simonpunk/susfs4ksu
+
 if [ "$KERNEL_VARIANT" = "KSU" ]; then
     SUSFS_REF="${SUSFS_KSU_REF:-}"
     SUSFS_REPO="https://gitlab.com/simonpunk/susfs4ksu.git"

@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 📨 TELEGRAM — Post Staging
+# ======================================================
+
 source "${LUMINAIRE_PATCH_DIR:-.}/functions.sh"
 
 if [ "${DRY_RUN:-false}" = "true" ]; then

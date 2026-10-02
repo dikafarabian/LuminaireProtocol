@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 📨 TELEGRAM — Post Configuration
+# ======================================================
+
 TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-}"
 TELEGRAM_GROUP="LuminaireLab"
 

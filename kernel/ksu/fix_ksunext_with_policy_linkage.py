@@ -1,3 +1,8 @@
+# ======================================================
+# 🩹 PATCH — KSUNEXT with_policy linkage fix
+# ======================================================
+# Target: selinux_hide.c (android15-6.6, android16-6.12)
+
 import sys
 
 TARGETS = [

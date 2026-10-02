@@ -1,3 +1,7 @@
+# ======================================================
+# 📨 TELEGRAM — Post Payload Builder
+# ======================================================
+
 from __future__ import annotations
 
 import glob

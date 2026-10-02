@@ -1,3 +1,8 @@
+# ======================================================
+# 🩹 PATCH — SuSFS sus_map hunk fix
+# ======================================================
+# Target: task_mmu.c (show_smap)
+
 import sys
 
 SUS_MAP_GUARD = (

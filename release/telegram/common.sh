@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 📨 TELEGRAM — API Helper
+# ======================================================
+
 telegram_api_call() {
     local method="$1" response_file="$2" label="$3"; shift 3
     local err_file http_code curl_err attempt=1 sleep_secs
