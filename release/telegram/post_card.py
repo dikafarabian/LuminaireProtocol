@@ -46,14 +46,14 @@ def shared_env(first: dict) -> dict:
     return env
 
 
-def variant_block(meta: dict, index: int) -> str:
-    title = rm.html_cell(rm.variant_display(meta["variant"]))
-    version = rm.html_cell(meta.get("variant_version", ""))
+def variant_block(meta: dict, index: int, build_mode: bool) -> str:
+    title = rm.variant_display(meta["variant"])
+    version = meta.get("variant_version", "")
     if version:
         title = f"{title} \u00b7 {version}"
     return "\n".join(
         [
-            f'<table bordered><tr><th align="center">{title}</th></tr></table>',
+            rm.variant_header(title, build_mode),
             "",
             f"![](tg://document?id=zip{index})",
             "",
@@ -82,7 +82,8 @@ def banner_requested() -> bool:
 
 
 def build_payload(metas: list, env: dict, has_banner: bool) -> dict:
-    blocks = "\n".join(variant_block(m, i) for i, m in enumerate(metas, 1))
+    build_mode = rm.is_build_mode(env)
+    blocks = "\n".join(variant_block(m, i, build_mode) for i, m in enumerate(metas, 1))
     markdown = rm.compose_markdown(env, blocks, has_banner=has_banner)
     media = []
     if has_banner:

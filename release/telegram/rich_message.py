@@ -25,6 +25,10 @@ def variant_display(key: str) -> str:
     return VARIANT_DISPLAY_PLAIN.get(key, key)
 
 
+def is_build_mode(env) -> bool:
+    return env.get("RUN_MODE", "").strip().upper() == "BUILD"
+
+
 VARIANT_ORDER = ["KSU", "KOWSU", "KSUNEXT", "SUKISU", "RESUKISU", "VANILLA"]
 
 
@@ -94,6 +98,12 @@ def button_row(buttons, align: str = "") -> str:
 def chip(text: str, style: str = "") -> str:
     style_attr = f' style="{style}"' if style else ""
     return f'<tg-button type="disabled"{style_attr}>{html_cell(text)}</tg-button>'
+
+
+def variant_header(title: str, build_mode: bool) -> str:
+    if build_mode:
+        return f'<tg-button-row>{chip(title, "primary")}</tg-button-row>'
+    return f'<table bordered><tr><th align="center">{html_cell(title)}</th></tr></table>'
 
 
 def core_features_folds() -> list:
@@ -189,13 +199,18 @@ def compose_markdown(env, variants_block, has_banner=True) -> str:
     group_url = "https://t.me/{}".format(env.get("TELEGRAM_GROUP", ""))
     support_url = "https://sociabuzz.com/chainonyourdoor"
 
+    build_mode = is_build_mode(env)
+
     parts = []
-    if has_banner:
-        parts.append("![](tg://photo?id=banner)")
-    parts.append(f"# Luminaire Protocol | {linux_ver}")
-    parts.append(f"> GKI Kernel | Android {android_ver} | Linux {major_minor}")
-    parts.append(features_details(env))
-    parts.append(variants_block)
+    if build_mode:
+        parts += [build_info_table(env), addon_table(env), variants_block]
+    else:
+        if has_banner:
+            parts.append("![](tg://photo?id=banner)")
+        parts.append(f"# Luminaire Protocol | {linux_ver}")
+        parts.append(f"> GKI Kernel | Android {android_ver} | Linux {major_minor}")
+        parts.append(features_details(env))
+        parts.append(variants_block)
 
     cl = changelog_block(env)
     if cl:
@@ -204,11 +219,12 @@ def compose_markdown(env, variants_block, has_banner=True) -> str:
     else:
         parts.append(button_row(("Commits", commits_url(env), "success")))
 
-    parts.append(button_row([
-        ("Support", support_url, "primary"),
-        ("Join", group_url, "primary"),
-    ]))
-    parts.append("> " + BUG_REPORT_NOTE.format(group_url=group_url))
-    parts.append("\\#GKI \\#Kernel \\#Luminaire")
+    if not build_mode:
+        parts.append(button_row([
+            ("Support", support_url, "primary"),
+            ("Join", group_url, "primary"),
+        ]))
+        parts.append("> " + BUG_REPORT_NOTE.format(group_url=group_url))
+        parts.append("\\#GKI \\#Kernel \\#Luminaire")
 
     return "\n\n".join(p for p in parts if p) + "\n"
