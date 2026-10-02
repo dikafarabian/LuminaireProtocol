@@ -16,6 +16,19 @@ VARIANT_DISPLAY_PLAIN = {
     "VANILLA": "Vanilla",
 }
 
+VARIANT_RELEASE_URL = {
+    "KSU": "https://github.com/tiann/KernelSU/releases",
+    "KOWSU": "https://github.com/KOWX712/KernelSU/releases",
+    "KSUNEXT": "https://github.com/KernelSU-Next/KernelSU-Next/releases",
+    "SUKISU": "https://github.com/SukiSU-Ultra/SukiSU-Ultra/releases",
+    "RESUKISU": "https://github.com/ReSukiSU/ReSukiSU/releases",
+}
+
+MOUNTLESS_RELEASE_URL = {
+    "NoMount": "https://github.com/maxsteeel/nomount/releases",
+    "ZeroMount": "https://github.com/Enginex0/zeromount/releases",
+}
+
 BUG_REPORT_NOTE = (
     "If you encounter any issues or unexpected behavior, please report them "
     "through the [Luminaire Lab]({group_url}) discussion group."
@@ -100,10 +113,16 @@ def chip(text: str, style: str = "") -> str:
     return f'<tg-button type="disabled"{style_attr}>{html_cell(text)}</tg-button>'
 
 
-def variant_header(title: str, build_mode: bool) -> str:
+def release_url(key: str) -> str:
+    base = key[:-len("_SUSFS")] if key.endswith("_SUSFS") else key
+    return VARIANT_RELEASE_URL.get(base, "")
+
+
+def variant_header(title: str, build_mode: bool, url: str = "") -> str:
     if build_mode:
+        action = f'type="url" url="{url}"' if url else 'type="callback_data" data="x"'
         return (
-            '<tg-button-row><tg-button type="callback_data" data="x" '
+            f'<tg-button-row><tg-button {action} '
             f'style="primary">{html_cell(title)}</tg-button></tg-button-row>'
         )
     return f'<table bordered><tr><th align="center">{html_cell(title)}</th></tr></table>'
@@ -146,12 +165,18 @@ def tuning_fold(env) -> list:
 def addon_section(env) -> list:
     return [addon_table(env)]
 
-def addon_table(env) -> str:
+def engine_chip(engine: str, link: bool) -> str:
+    url = MOUNTLESS_RELEASE_URL.get(engine, "") if link else ""
+    if not url:
+        return chip(engine, "primary" if engine != "None" else "")
+    return f'<tg-button type="url" style="primary" url="{url}">{html_cell(engine)}</tg-button>'
+
+def addon_table(env, link_engine: bool = False) -> str:
     addon_tokens = [t for t in env.get("ADDONS", "").split(",") if t]
     skipped_addons = [t for t in env.get("SKIPPED_ADDONS", "").split(",") if t]
 
     engine = caption.resolve_mountless_engine(env)
-    engine_cell = chip(engine, "primary" if engine != "None" else "")
+    engine_cell = engine_chip(engine, link_engine)
     rows = [("Mountless Engine", engine_cell)]
 
     for token in caption.toggle_addon_order(env):
@@ -206,7 +231,7 @@ def compose_markdown(env, variants_block, has_banner=True) -> str:
 
     parts = []
     if build_mode:
-        parts += [build_info_table(env, with_header=False), addon_table(env), variants_block]
+        parts += [build_info_table(env, with_header=False), addon_table(env, link_engine=True), variants_block]
     else:
         if has_banner:
             parts.append("![](tg://photo?id=banner)")

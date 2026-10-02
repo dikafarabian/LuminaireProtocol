@@ -64,7 +64,7 @@ def variant_block(meta: dict, index: int, build_mode: bool) -> str:
     title = variant_title(meta, build_mode)
     return "\n".join(
         [
-            rm.variant_header(title, build_mode),
+            rm.variant_header(title, build_mode, rm.release_url(meta["variant"])),
             "",
             f"![](tg://document?id=zip{index})",
             "",
