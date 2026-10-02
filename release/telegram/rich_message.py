@@ -80,7 +80,7 @@ def commits_url(env) -> str:
 def html_cell(text: str) -> str:
     return caption.html_escape(str(text)).replace("\n", " ").strip()
 
-def build_info_table(env, with_header: bool = True) -> str:
+def build_info_table(env) -> str:
     kv = env.get("KERNEL_VERSION", "").strip()
     lto_raw = env.get("LTO_MODE", "").strip()
     lto_display = caption.LTO_DISPLAY.get(lto_raw, lto_raw or "N/A")
@@ -92,9 +92,8 @@ def build_info_table(env, with_header: bool = True) -> str:
         ("Toolchain", html_cell(env.get("COMPILER_STRING", "").strip() or "N/A")),
         ("LTO", lto_chip),
     ]
-    head = '<tr><th colspan="2" align="center">Build Information</th></tr>' if with_header else ""
     body = "".join(f"<tr><td>{html_cell(k)}</td><td>{v}</td></tr>" for k, v in rows)
-    return f"<table bordered>{head}{body}</table>"
+    return f"<table bordered>{body}</table>"
 
 def button_row(buttons) -> str:
     if isinstance(buttons, tuple):
@@ -194,13 +193,9 @@ def features_details(env) -> str:
         '<summary><tg-button type="disabled" style="primary">'
         "What's Inside?</tg-button></summary>",
         "",
-        build_info_table(env),
-        "",
     ]
     out += core_features_folds()
     out += tuning_fold(env)
-    out += [""]
-    out.append(addon_table(env, link_engine=True))
     out.append("</details>")
     return "\n".join(out)
 
@@ -228,13 +223,15 @@ def compose_markdown(env, variants_block, has_banner=True) -> str:
 
     parts = []
     if build_mode:
-        parts += [build_info_table(env, with_header=False), addon_table(env, link_engine=True), variants_block]
+        parts += [build_info_table(env), addon_table(env, link_engine=True), variants_block]
     else:
         if has_banner:
             parts.append("![](tg://photo?id=banner)")
         parts.append(f"# Luminaire Protocol | {linux_ver}")
         parts.append(f"> GKI Kernel | Android {android_ver} | Linux {major_minor}")
         parts.append(features_details(env))
+        parts.append(build_info_table(env))
+        parts.append(addon_table(env, link_engine=True))
         parts.append(variants_block)
 
     cl = changelog_block(env)
