@@ -29,6 +29,8 @@ STAGE_DIR="${GITHUB_WORKSPACE:-$PWD}/post-stage"
 mkdir -p "$STAGE_DIR"
 cp "$ZIP_PATH" "${STAGE_DIR}/${ZIP_NAME}"
 
+META_FILE="$(mktemp -d)/luminaire.json"
+
 jq -n \
     --arg variant "$VARIANT_KEY" \
     --arg zip_name "$ZIP_NAME" \
@@ -43,8 +45,12 @@ jq -n \
     --arg skipped_addons "${SKIPPED_ADDONS:-}" \
     --arg applied_tuning "${APPLIED_TUNING:-}" \
     --arg skipped_tuning "${SKIPPED_TUNING:-}" \
-    '$ARGS.named' > "${STAGE_DIR}/meta-${VARIANT_KEY}.json" \
+    '$ARGS.named' > "$META_FILE" \
     || error "Post staging: meta file creation failed!"
+
+zip -q -j "${STAGE_DIR}/${ZIP_NAME}" "$META_FILE" \
+    || error "Post staging: embedding meta into zip failed!"
+rm -rf "$(dirname "$META_FILE")"
 
 log "Post stage ready: ${ZIP_NAME} (${VARIANT_KEY}) ✅"
 

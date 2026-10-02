@@ -4,21 +4,25 @@ import glob
 import json
 import os
 import sys
+import zipfile
 
 import rich_message as rm
 
 RICH_LIMIT = 32768
+META_NAME = "luminaire.json"
 BANNER_NAMES = ("banner.jpg", "banner.jpeg", "banner.png")
 
 
 def load_metas(stage_dir: str) -> list:
     metas = []
-    for path in glob.glob(os.path.join(stage_dir, "**", "meta-*.json"), recursive=True):
-        with open(path, encoding="utf-8") as f:
-            meta = json.load(f)
-        meta["zip_path"] = os.path.join(os.path.dirname(path), meta["zip_name"])
-        if not os.path.isfile(meta["zip_path"]):
-            sys.exit(f"post_card: {meta['zip_path']} missing")
+    for path in glob.glob(os.path.join(stage_dir, "**", "*.zip"), recursive=True):
+        try:
+            with zipfile.ZipFile(path) as archive:
+                meta = json.loads(archive.read(META_NAME))
+        except KeyError:
+            sys.exit(f"post_card: {os.path.basename(path)} has no {META_NAME}")
+        meta["zip_path"] = path
+        meta["zip_name"] = os.path.basename(path)
         metas.append(meta)
     metas.sort(key=lambda m: (rm.variant_sort_key(m["variant"]), m["variant"]))
     return metas

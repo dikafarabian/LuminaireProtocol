@@ -409,15 +409,6 @@ jobs:
           retention-days: 1
           if-no-files-found: ignore
 
-      - name: "Upload Meta"
-        if: inputs.run_mode == 'Build' || inputs.run_mode == 'Release'
-        uses: actions/upload-artifact@v7
-        with:
-          path: post-stage/meta-*.json
-          archive: false
-          retention-days: 1
-          if-no-files-found: ignore
-
   # ======================================================
   # NOTIFY
   # ======================================================
