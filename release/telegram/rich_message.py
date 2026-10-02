@@ -65,7 +65,7 @@ def commits_url(env) -> str:
 def html_cell(text: str) -> str:
     return caption.html_escape(str(text)).replace("\n", " ").strip()
 
-def build_info_table(env) -> str:
+def build_info_table(env, with_header: bool = True) -> str:
     kv = env.get("KERNEL_VERSION", "").strip()
     lto_raw = env.get("LTO_MODE", "").strip()
     lto_display = caption.LTO_DISPLAY.get(lto_raw, lto_raw or "N/A")
@@ -77,7 +77,7 @@ def build_info_table(env) -> str:
         ("Toolchain", html_cell(env.get("COMPILER_STRING", "").strip() or "N/A")),
         ("LTO", lto_chip),
     ]
-    head = '<tr><th colspan="2" align="center">Build Information</th></tr>'
+    head = '<tr><th colspan="2" align="center">Build Information</th></tr>' if with_header else ""
     body = "".join(f"<tr><td>{html_cell(k)}</td><td>{v}</td></tr>" for k, v in rows)
     return f"<table bordered>{head}{body}</table>"
 
@@ -206,7 +206,7 @@ def compose_markdown(env, variants_block, has_banner=True) -> str:
 
     parts = []
     if build_mode:
-        parts += [build_info_table(env), addon_table(env), variants_block]
+        parts += [build_info_table(env, with_header=False), addon_table(env), variants_block]
     else:
         if has_banner:
             parts.append("![](tg://photo?id=banner)")
