@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🔌 CORE — Module Version Bypass
+# ======================================================
+# Patches kernel/module/version.c
+
 if [ "${MODULE_BYPASS_ENABLED:-true}" != "true" ]; then
     log "Module version bypass disabled (MODULE_BYPASS_ENABLED=false) — skipping"
     return 0

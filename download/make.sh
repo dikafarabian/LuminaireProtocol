@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 📥 DOWNLOAD — MAKE (Kernel Source Clone)
+# ======================================================
+# Repo: https://github.com/chainonyourdoor/LuminaireKernel-<version>
+
 if [ "${USE_KERNEL_CACHE}" = "true" ] && [ -d "${HOME}/kernel-cache/common" ]; then
     log "Restoring kernel source from cache..."
     cp -a "${HOME}/kernel-cache/." "${KERNEL_DIR}/"

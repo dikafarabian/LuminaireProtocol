@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🧭 SETUP — Paths & Build System
+# ======================================================
+
 case "${BUILD_SYSTEM:-Make - Cirrus}" in
     "Kleaf - AOSP" | KLEAF)
         BUILD_SYSTEM="KLEAF"

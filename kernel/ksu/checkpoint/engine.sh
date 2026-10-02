@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+# ======================================================
+# 🚦 CHECKPOINT — Engine
+# ======================================================
+# Promotes or blacklists pinned refs in the manifest after a build
+
 set -eo pipefail
 
 LUMINAIRE_PATCH_DIR="${LUMINAIRE_PATCH_DIR:-$GITHUB_WORKSPACE}"

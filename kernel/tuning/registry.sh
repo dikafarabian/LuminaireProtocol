@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🗂️ REGISTRY — Tuning
+# ======================================================
+# Supported kernel versions, order and run_tuning
+
 declare -A TUNING_SUPPORTED_VERSIONS=(
     [bore]="6.1"
     [adios]="6.1"

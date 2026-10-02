@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# ⚙️ TUNING — Kcompressd
+# ======================================================
+
 KCOMPRESSD_PATCH="${PATCHES_DIR}/tuning/kcompressd-v0.5.patch"
 
 log "⚙️ Applying Kcompressd patch..."

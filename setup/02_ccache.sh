@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# ⚡ SETUP — ccache
+# ======================================================
+
 [ "$BUILD_SYSTEM" = "KLEAF" ] && return 0
 
 CCACHE_CACHE_DIR="${HOME}/ccache-bin"

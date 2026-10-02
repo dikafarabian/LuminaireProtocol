@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🧰 ARSENAL — Tool & Source Preparation
+# ======================================================
+# Prepares toolchains and kernel source for the cache, no build
+
 set -eo pipefail
 
 exec 2>&1

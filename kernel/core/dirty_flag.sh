@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🧹 CORE — Dirty Flag Cleanup
+# ======================================================
+# Strips -dirty from the kernel version string
+
 sed -i 's/-dirty//' "${KERNEL_SRC}/scripts/setlocalversion"
 
 if [ -f "${KERNEL_DIR}/build/kernel/kleaf/impl/stamp.bzl" ]; then

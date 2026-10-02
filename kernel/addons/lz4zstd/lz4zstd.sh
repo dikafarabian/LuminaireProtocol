@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 📦 ADDON — LZ4+ZSTD (ZRAM compression bump)
+# ======================================================
+# Repo: https://github.com/mrcxlinux/kernel_patches
+# Source: https://github.com/torvalds/linux (v6.15)
+
 LZ4ZSTD_PATCH_BASE="https://raw.githubusercontent.com/mrcxlinux/kernel_patches/main/zram"
 ZSTD_SRC_BASE="https://raw.githubusercontent.com/torvalds/linux/v6.15"
 cd "${KERNEL_SRC}"

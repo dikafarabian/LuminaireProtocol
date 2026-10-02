@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 📚 SETUP — Dependencies (apt packages)
+# ======================================================
+
 PKGS_COMMON=(git curl wget zip patch rsync python3 ca-certificates aria2 pigz cpio g++ libzstd-dev)
 
 PKGS_MAKE=(bc bison flex libssl-dev libelf-dev libdw-dev dwarves cmake ninja-build gcc-arm-linux-gnueabi)

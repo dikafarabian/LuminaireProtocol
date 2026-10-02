@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🔥 TUNING — BORE (CPU scheduler)
+# ======================================================
+
 BORE_PATCH="${PATCHES_DIR}/tuning/bore-v6.8.0-rc1.patch"
 
 log "🔥 Applying BORE CPU scheduler patch..."

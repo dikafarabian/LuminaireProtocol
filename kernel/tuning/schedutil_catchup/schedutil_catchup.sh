@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🩹 TUNING — Schedutil (stable catch-up)
+# ======================================================
+
 SCHEDUTIL_CATCHUP_PATCH="${PATCHES_DIR}/tuning/schedutil_catchup.patch"
 
 log "🩹 Applying Schedutil stable catch-up..."

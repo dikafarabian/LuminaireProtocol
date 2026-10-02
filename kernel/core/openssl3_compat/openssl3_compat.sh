@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🩹 CORE — OpenSSL 3 Compat
+# ======================================================
+# Patches certs/extract-cert.c
+
 [ "$BUILD_SYSTEM" = "KLEAF" ] && return 0
 
 EXTRACT_CERT="${KERNEL_SRC}/certs/extract-cert.c"

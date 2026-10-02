@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🗂️ REGISTRY — Root Solutions
+# ======================================================
+# Supported kernel versions per KSU variant
+
 declare -A KSU_VARIANT_SUPPORTED_VERSIONS=(
     [ksu]="5.10 5.15 6.1 6.6 6.12"
     [kowsu]="5.10 5.15 6.1 6.6 6.12"

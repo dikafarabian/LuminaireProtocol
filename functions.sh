@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🧩 FUNCTIONS — Shared Helpers
+# ======================================================
+# Logging, retry, stage markers, version and branch resolvers
+
 COLOR_RED='\033[0;31m'
 COLOR_YELLOW='\033[0;33m'
 COLOR_CYAN='\033[0;36m'

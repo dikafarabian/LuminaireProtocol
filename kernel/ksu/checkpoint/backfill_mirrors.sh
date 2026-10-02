@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+# ======================================================
+# 🪞 CHECKPOINT — Mirror Backfill
+# ======================================================
+# Copies every known-good ref in the manifests to its mirror
+
 set -eo pipefail
 
 LUMINAIRE_PATCH_DIR="${LUMINAIRE_PATCH_DIR:-$GITHUB_WORKSPACE}"

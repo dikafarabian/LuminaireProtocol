@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🩹 TUNING — UFS / WriteBooster (stable catch-up)
+# ======================================================
+
 UFS_WRITEBOOSTER_CATCHUP_PATCH="${PATCHES_DIR}/tuning/ufs_writebooster_catchup.patch"
 
 log "🩹 Applying UFS / WriteBooster stable catch-up..."

@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🛡️ TUNING — le9uo (working set protection)
+# ======================================================
+
 LE9UO_PATCH="${PATCHES_DIR}/tuning/le9uo-v1.15.patch"
 
 log "🛡️ Applying le9uo working set protection patch..."

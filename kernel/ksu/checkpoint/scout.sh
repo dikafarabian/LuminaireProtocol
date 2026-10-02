@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+# ======================================================
+# 🔭 CHECKPOINT — Scout
+# ======================================================
+# Resolves pinned vs candidate refs for the KSU fork and SuSFS
+
 set -eo pipefail
 
 LUMINAIRE_PATCH_DIR="${LUMINAIRE_PATCH_DIR:-$GITHUB_WORKSPACE}"

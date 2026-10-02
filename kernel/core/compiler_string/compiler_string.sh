@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🏷️ CORE — Compiler String
+# ======================================================
+# Patches mkcompile_h with COMPILER_STRING
+
 [ "$BUILD_SYSTEM" = "KLEAF" ] && return 0
 
 MKCOMPILE_H="${KERNEL_SRC}/scripts/mkcompile_h"

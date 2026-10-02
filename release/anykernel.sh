@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 📦 RELEASE — AnyKernel3 Packaging
+# ======================================================
+# Repo: https://github.com/chainonyourdoor/AnyKernel3-Luminaire
+
 case "${KERNEL_VARIANT}" in
     KSU)      ZIP_VARIANT_TAG="KSU" ;;
     KOWSU)    ZIP_VARIANT_TAG="KOWSU" ;;

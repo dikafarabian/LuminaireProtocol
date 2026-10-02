@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 📦 ADDON — Droidspaces (container namespace and cgroup support)
+# ======================================================
+
 log "Enabling Droidspaces support..."
 
 case "${KERNEL_VERSION}" in

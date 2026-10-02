@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 📦 ADDON — MGLRU (force-enable)
+# ======================================================
+
 VMSCAN_C="${KERNEL_SRC}/mm/vmscan.c"
 PATCHER="${LUMINAIRE_PATCH_DIR}/kernel/addons/mglru/patch.py"
 

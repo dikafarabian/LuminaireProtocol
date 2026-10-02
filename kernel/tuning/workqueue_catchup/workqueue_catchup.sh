@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🩹 TUNING — Workqueue (stable catch-up)
+# ======================================================
+
 WORKQUEUE_CATCHUP_PATCH="${PATCHES_DIR}/tuning/workqueue_catchup.patch"
 
 log "🩹 Applying Workqueue stable catch-up..."

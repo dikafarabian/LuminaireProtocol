@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+# ======================================================
+# ✨ BUILD — Luminaire Pipeline
+# ======================================================
+# Flow: setup → branding → root solution → core → tuning → addons → build → post-build
+
 set -eo pipefail
 
 exec 2>&1

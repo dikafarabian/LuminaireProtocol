@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 💽 TUNING — ADIOS (I/O scheduler, tunable latency model)
+# ======================================================
+
 ADIOS_PATCH="${PATCHES_DIR}/tuning/adios-v3.2.0.patch"
 ADIOS_TUNABLE_PATCH="${PATCHES_DIR}/tuning/adios-tunable-v1.patch"
 

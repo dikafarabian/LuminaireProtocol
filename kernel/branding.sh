@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🏷️ BRANDING — Build Identity
+# ======================================================
+# SUBLEVEL, KMI generation, build user/host and LOCALVERSION
+
 SUBLEVEL="$(grep '^SUBLEVEL = ' "${KERNEL_SRC}/Makefile" | awk '{print $3}')" || true
 [ -n "$SUBLEVEL" ] || error "SUBLEVEL not found in kernel Makefile — kernel source may be missing or corrupted!"
 KMI_GENERATION="$(grep '^KMI_GENERATION=' \

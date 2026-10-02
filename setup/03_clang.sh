@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🧰 SETUP — Clang Toolchain
+# ======================================================
+
 [ "$BUILD_SYSTEM" = "KLEAF" ] && return 0
 
 CLANG_CACHE_DIR="${HOME}/clang-cache"

@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# ⚙️ CONFIG — Luminaire Defconfig
+# ======================================================
+# Merges luminaire.fragment, then applies LTO mode and feature configs
+
 config() {
     "${KERNEL_SRC}/scripts/config" --file "${OUT_DIR}/.config" "$@"
 }

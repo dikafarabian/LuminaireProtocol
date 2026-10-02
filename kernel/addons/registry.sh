@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# ======================================================
+# 🗂️ REGISTRY — Addons
+# ======================================================
+# Supported kernel versions, order, conflict rules and run_addons
+
 declare -A ADDON_SUPPORTED_VERSIONS=(
     [nomount]="5.10 5.15 6.1 6.6 6.12"
     [zeromount]="5.10 5.15 6.1 6.6 6.12"
