@@ -16,11 +16,10 @@ BANNER_NAMES = ("banner.jpg", "banner.jpeg", "banner.png")
 def load_metas(stage_dir: str) -> list:
     metas = []
     for path in glob.glob(os.path.join(stage_dir, "**", "*.zip"), recursive=True):
-        try:
-            with zipfile.ZipFile(path) as archive:
-                meta = json.loads(archive.read(META_NAME))
-        except KeyError:
-            sys.exit(f"post_card: {os.path.basename(path)} has no {META_NAME}")
+        with zipfile.ZipFile(path) as archive:
+            if META_NAME not in archive.namelist():
+                continue
+            meta = json.loads(archive.read(META_NAME))
         meta["zip_path"] = path
         meta["zip_name"] = os.path.basename(path)
         metas.append(meta)
