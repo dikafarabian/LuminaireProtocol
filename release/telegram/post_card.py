@@ -13,7 +13,7 @@ BANNER_NAMES = ("banner.jpg", "banner.jpeg", "banner.png")
 
 def load_metas(stage_dir: str) -> list:
     metas = []
-    for path in glob.glob(os.path.join(stage_dir, "**", "meta.json"), recursive=True):
+    for path in glob.glob(os.path.join(stage_dir, "**", "meta-*.json"), recursive=True):
         with open(path, encoding="utf-8") as f:
             meta = json.load(f)
         meta["zip_path"] = os.path.join(os.path.dirname(path), meta["zip_name"])

@@ -43,12 +43,8 @@ jq -n \
     --arg skipped_addons "${SKIPPED_ADDONS:-}" \
     --arg applied_tuning "${APPLIED_TUNING:-}" \
     --arg skipped_tuning "${SKIPPED_TUNING:-}" \
-    '$ARGS.named' > "${STAGE_DIR}/meta.json" \
-    || error "Post staging: meta.json creation failed!"
-
-if [ -n "${GITHUB_OUTPUT:-}" ]; then
-    echo "artifact_name=${ZIP_NAME%.zip}" >> "$GITHUB_OUTPUT"
-fi
+    '$ARGS.named' > "${STAGE_DIR}/meta-${VARIANT_KEY}.json" \
+    || error "Post staging: meta file creation failed!"
 
 log "Post stage ready: ${ZIP_NAME} (${VARIANT_KEY}) ✅"
 

@@ -400,14 +400,22 @@ jobs:
           ccache-filename: ccache-data-${{ needs.prepare-matrix.outputs.resolved_kernel_branch }}-${{ matrix.kernel_variant }}${{ matrix.susfs && '+SUSFS' || '' }}-${{ steps.setup-build-env.outputs.clang-variant-upper }}${{ inputs.lto_mode != 'NONE' && format('-{0}', inputs.lto_mode) || '' }}-${{ needs.prepare-matrix.outputs.safe_ref }}.tar.zst
           gh-token:       ${{ secrets.PERSONAL_TOKEN }}
 
-      - name: "Upload Post Stage"
-        if: (inputs.run_mode == 'Build' || inputs.run_mode == 'Release') && steps.build.outputs.artifact_name != ''
+      - name: "Upload Zip"
+        if: inputs.run_mode == 'Build' || inputs.run_mode == 'Release'
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ steps.build.outputs.artifact_name }}
-          path: post-stage/
+          path: post-stage/*.zip
+          archive: false
           retention-days: 1
-          compression-level: 0
+          if-no-files-found: ignore
+
+      - name: "Upload Meta"
+        if: inputs.run_mode == 'Build' || inputs.run_mode == 'Release'
+        uses: actions/upload-artifact@v7
+        with:
+          path: post-stage/meta-*.json
+          archive: false
+          retention-days: 1
           if-no-files-found: ignore
 
   # ======================================================
@@ -426,8 +434,8 @@ jobs:
       - name: "Download Post Stage"
         uses: actions/download-artifact@v8
         with:
-          pattern: Ak3-*
           path: /tmp/post-stage
+          merge-multiple: true
 
       - name: "Start Local Bot API"
         env:

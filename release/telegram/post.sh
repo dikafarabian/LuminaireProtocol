@@ -52,7 +52,7 @@ assert_all_variants_staged() {
     [ -n "${EXPECTED_MATRIX_JSON:-}" ] || return 0
     missing="$(jq -nr \
         --argjson expected "$EXPECTED_MATRIX_JSON" \
-        --slurpfile staged <(find "$STAGE_DIR" -name meta.json -exec cat {} +) '
+        --slurpfile staged <(find "$STAGE_DIR" -name 'meta-*.json' -exec cat {} +) '
         ($staged | map(.variant)) as $have
         | $expected.include
         | map(if (.susfs == true and .kernel_variant != "VANILLA") then "\(.kernel_variant)_SUSFS" else .kernel_variant end)
@@ -65,7 +65,7 @@ if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
     warn "Skipping post: TELEGRAM_BOT_TOKEN not set"
     exit 0
 fi
-if [ ! -d "$STAGE_DIR" ] || [ -z "$(find "$STAGE_DIR" -name meta.json -print -quit)" ]; then
+if [ ! -d "$STAGE_DIR" ] || [ -z "$(find "$STAGE_DIR" -name 'meta-*.json' -print -quit)" ]; then
     warn "Skipping post: no staged variants in ${STAGE_DIR}"
     exit 0
 fi
