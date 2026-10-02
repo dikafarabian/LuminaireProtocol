@@ -200,7 +200,7 @@ def features_details(env) -> str:
     out += core_features_folds()
     out += tuning_fold(env)
     out += [""]
-    out.append(addon_table(env))
+    out.append(addon_table(env, link_engine=True))
     out.append("</details>")
     return "\n".join(out)
 
