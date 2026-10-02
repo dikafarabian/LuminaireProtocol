@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "KSU": "https://github.com/tiann/KernelSU/releases",
+    "KOWSU": "https://t.me/kowsu_build",
+    "KSUNEXT": "https://t.me/ksunext_ci",
+    "SUKISU": "https://t.me/Sukiksu",
+    "RESUKISU": "https://t.me/ReSukiSU"
+  },
+  "mountless": {
+    "NoMount": "https://github.com/maxsteeel/nomount/releases",
+    "ZeroMount": "https://github.com/Enginex0/zeromount/releases"
+  }
+}

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+import os
+
 import caption
 
 VARIANT_DISPLAY_PLAIN = {
@@ -16,18 +19,18 @@ VARIANT_DISPLAY_PLAIN = {
     "VANILLA": "Vanilla",
 }
 
-VARIANT_RELEASE_URL = {
-    "KSU": "https://github.com/tiann/KernelSU/releases",
-    "KOWSU": "https://github.com/KOWX712/KernelSU/releases",
-    "KSUNEXT": "https://github.com/KernelSU-Next/KernelSU-Next/releases",
-    "SUKISU": "https://github.com/SukiSU-Ultra/SukiSU-Ultra/releases",
-    "RESUKISU": "https://github.com/ReSukiSU/ReSukiSU/releases",
-}
+LINKS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "links.json")
 
-MOUNTLESS_RELEASE_URL = {
-    "NoMount": "https://github.com/maxsteeel/nomount/releases",
-    "ZeroMount": "https://github.com/Enginex0/zeromount/releases",
-}
+
+def load_links() -> dict:
+    try:
+        with open(LINKS_PATH, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+LINKS = load_links()
 
 BUG_REPORT_NOTE = (
     "If you encounter any issues or unexpected behavior, please report them "
@@ -115,7 +118,7 @@ def chip(text: str, style: str = "") -> str:
 
 def release_url(key: str) -> str:
     base = key[:-len("_SUSFS")] if key.endswith("_SUSFS") else key
-    return VARIANT_RELEASE_URL.get(base, "")
+    return LINKS.get("variants", {}).get(base, "")
 
 
 def variant_header(title: str, build_mode: bool, url: str = "") -> str:
@@ -166,7 +169,7 @@ def addon_section(env) -> list:
     return [addon_table(env)]
 
 def engine_chip(engine: str, link: bool) -> str:
-    url = MOUNTLESS_RELEASE_URL.get(engine, "") if link else ""
+    url = LINKS.get("mountless", {}).get(engine, "") if link else ""
     if not url:
         return chip(engine, "primary" if engine != "None" else "")
     return f'<tg-button type="url" style="primary" url="{url}">{html_cell(engine)}</tg-button>'
