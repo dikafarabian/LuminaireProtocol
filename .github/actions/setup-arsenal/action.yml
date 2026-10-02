@@ -22,7 +22,7 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: "Derive Clang Variant"  # keep in sync with setup-build-env
+    - name: "Derive Clang Variant"
       id: clang-key
       if: startsWith(inputs.build-system, 'Make')
       shell: bash
@@ -31,7 +31,7 @@ runs:
         variant="${variant#Make - }"
         echo "clang_variant=${variant}" >> $GITHUB_OUTPUT
 
-    - name: "Derive Cache Keys"  # keep in sync with setup-build-env
+    - name: "Derive Cache Keys"
       id: cache-keys
       shell: bash
       working-directory: ${{ github.workspace }}
@@ -41,7 +41,6 @@ runs:
         KERNEL_BRANCH_OVERRIDE="${{ inputs.kernel-branch-override }}"
         KERNEL_BRANCH="$(resolve_kernel_branch)"
         echo "arsenal_key=arsenal" >> $GITHUB_OUTPUT
-        # Kleaf = full repo-synced GKI workspace, Make = plain clone — separate keys
         if [ "${{ startsWith(inputs.build-system, 'Make') }}" = "true" ]; then
           echo "kernel_key=kernel-${KERNEL_BRANCH}" >> $GITHUB_OUTPUT
         else
@@ -68,14 +67,14 @@ runs:
           done < <(gh release view cache -R "${{ github.repository }}" --json assets -q '.assets[].name' 2>/dev/null | grep -E '^(ccache|lto)-data-' || true)
         fi
 
-    - name: "Cache Clang"  # restores if present; auto-saves at end of job if it was missing
+    - name: "Cache Clang"
       if: startsWith(inputs.build-system, 'Make')
       uses: actions/cache@v6
       with:
         path: ~/clang-cache
         key: clang-${{ steps.clang-key.outputs.clang_variant }}
 
-    - name: "Cache Arsenal"  # restores if present; auto-saves at end of job if it was missing — tools only (ccache binary, AK3, apt deps), no kernel source
+    - name: "Cache Arsenal"
       uses: actions/cache@v6
       with:
         path: |
@@ -84,7 +83,7 @@ runs:
           ~/.apt-cache
         key: ${{ steps.cache-keys.outputs.arsenal_key }}
 
-    - name: "Cache Kernel Source"  # restores if present; auto-saves at end of job if it was missing — one cache per resolved kernel branch, never shared across branches
+    - name: "Cache Kernel Source"
       uses: actions/cache@v6
       with:
         path: ~/kernel-cache

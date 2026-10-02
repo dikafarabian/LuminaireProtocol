@@ -62,14 +62,6 @@ mirror_promote() {
         git init -q
         git remote add src "$src"
         git remote add dst "$dst"
-        # Always a full (non-shallow) fetch, not shallow --depth=1. A shallow
-        # fetch immediately pushed to a *different* remote/host routinely
-        # fails with "did not receive expected object" / "index-pack
-        # failed" — the destination can't reliably reconstruct a pack built
-        # against a shallow boundary it doesn't share. Same conclusion
-        # kernel-source.yml already reached for the same reason (see its
-        # comments). These mirror source repos are small (seconds, low
-        # single-digit MB), so there's no real cost to skipping shallow.
         run_quiet git fetch src "$ref" || exit 1
         git push -q dst "${ref}:refs/heads/$(mirror_branch "$key" "$version_label")" --force
     ) || rc=$?

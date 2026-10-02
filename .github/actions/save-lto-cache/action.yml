@@ -16,9 +16,6 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.gh-token }}
       run: |
-        # Same reasoning as save-caches: no write-scoped token means
-        # release create/upload can't succeed, so skip cleanly instead of
-        # hard-failing after 3 retries.
         if [ -z "${GH_TOKEN:-}" ]; then
           echo "⚠️ No gh-token provided — skipping LTO cache save (expected on forks without PERSONAL_TOKEN)"
           exit 0
@@ -46,10 +43,6 @@ runs:
         fi
         echo "✅ LTO cache size: ${SIZE_MB}MB"
 
-        # All matrix variants upload to this same shared "cache" release at
-        # roughly the same time. A single attempt can stall or get rejected
-        # under that contention, so retry with backoff instead of failing
-        # (or hanging) on the first attempt.
         for i in 1 2 3; do
           gh release view cache --repo "${{ github.repository }}" > /dev/null 2>&1 && break
           gh release create cache \

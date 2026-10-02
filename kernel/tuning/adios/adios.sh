@@ -7,12 +7,6 @@ log "📦 Applying ADIOS I/O scheduler patch (with tunable latency-model sysfs).
 [ -f "$ADIOS_PATCH" ] || error "ADIOS: not backported for kernel ${KERNEL_VERSION} yet (expected ${ADIOS_PATCH}) — this feature should have been gated out before reaching here (check run_tuning()'s support map)."
 [ -f "$ADIOS_TUNABLE_PATCH" ] || error "ADIOS: tunable patch missing (expected ${ADIOS_TUNABLE_PATCH})."
 
-# Kept as two sequential patch files/applies (not one merged file): both
-# diffs touch block/adios.c, and GNU patch's --dry-run doesn't persist
-# changes between hunks within a single invocation, so a merged file
-# fails the dry-run-based already-applied check below even though the
-# real (non-dry-run) apply would succeed. Splitting keeps each file's
-# own dry-run check valid. Still one log group, one feature.
 if patch -p1 --fuzz=3 --dry-run --reverse -d "$KERNEL_SRC" < "$ADIOS_PATCH" > /dev/null 2>&1; then
     log "ADIOS: base patch already applied, skipping."
 elif patch -p1 --fuzz=3 --dry-run --forward -d "$KERNEL_SRC" < "$ADIOS_PATCH" > /dev/null 2>&1; then

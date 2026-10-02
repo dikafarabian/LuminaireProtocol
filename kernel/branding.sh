@@ -38,17 +38,10 @@ else
 fi
 export KBUILD_BUILD_TIMESTAMP="$(date '+%a %b %d %T %Z %Y')"
 
-# -------------------------------------------------------
-# MAKE
-# -------------------------------------------------------
 if [ "$BUILD_SYSTEM" != "KLEAF" ]; then
     log "Branding: ${BUILD_USER:-(stock)}@${BUILD_HOST:-(stock)} | ${LOCALVERSION:-(stock, no LOCALVERSION)} ✅"
     return 0
 fi
-
-# -------------------------------------------------------
-# KLEAF
-# -------------------------------------------------------
 
 touch "${KERNEL_SRC}/.scmversion"
 

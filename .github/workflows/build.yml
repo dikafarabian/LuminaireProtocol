@@ -198,22 +198,12 @@ jobs:
           matrix_json=$(printf '%s\n' "${variants[@]}" | jq -cs '{include: .}')
           echo "matrix=${matrix_json}" >> $GITHUB_OUTPUT
 
-          # Single source of truth for the ADDONS list — reused by Start-Build
-          # via this job's output, instead of rebuilding the same string
-          # from inputs independently.
           ADDONS="${{ inputs.rekernel && 'rekernel,' || '' }}${{ inputs.droidspaces && 'droidspaces,' || '' }}${{ inputs.ntsync && 'ntsync,' || '' }}${{ inputs.lz4zstd && 'lz4zstd,' || '' }}${{ inputs.lz4kd && 'lz4kd,' || '' }}${{ inputs.mountless_engine != 'none' && format('{0},', inputs.mountless_engine) || '' }}${{ inputs.mglru && 'mglru,' || '' }}"
           echo "addons=${ADDONS}" >> $GITHUB_OUTPUT
 
-          # "/" -> "-" so this is safe to use as a filesystem path component
-          # (cache asset filenames) wherever ref_name is needed downstream.
           SAFE_REF="$(echo '${{ github.ref_name }}' | tr '/' '-')"
           echo "safe_ref=${SAFE_REF}" >> $GITHUB_OUTPUT
 
-          # Full resolved kernel source branch — same value setup-arsenal
-          # uses for the kernel-cache key, so ccache/LTO cache names reuse
-          # it directly instead of re-deriving kernel_version + a separate
-          # branch suffix (which duplicated the kernel_version that's
-          # already embedded in the branch name itself).
           source functions.sh
           KERNEL_VERSION="${{ inputs.kernel_version }}"
           KERNEL_BRANCH_OVERRIDE="${{ inputs.kernel_branch_override }}"
@@ -221,7 +211,7 @@ jobs:
           verify_kernel_branch "$RESOLVED_KERNEL_BRANCH"
           echo "resolved_kernel_branch=${RESOLVED_KERNEL_BRANCH}" >> $GITHUB_OUTPUT
 
-      - name: "Setup Arsenal"  # restores clang+arsenal cache (auto-saved if missing), then runs arsenal.sh
+      - name: "Setup Arsenal"
         id: setup-arsenal
         uses: ./.github/actions/setup-arsenal
         with:
@@ -301,10 +291,10 @@ jobs:
           sudo swapon /mnt/swapfile
           free -h
 
-      - name: "Tune Swappiness"  # push pages to swap earlier, before the OOM killer
+      - name: "Tune Swappiness"
         run: sudo sysctl -w vm.swappiness=80
 
-      - name: "Setup Build Environment"  # restore-only: clang, arsenal, ccache, lto
+      - name: "Setup Build Environment"
         id: setup-build-env
         uses: ./.github/actions/setup-build-env
         with:
@@ -319,7 +309,7 @@ jobs:
       - name: "Disk Usage"
         run: df -h && du -sh ~/kernel-cache/ 2>/dev/null || true
 
-      - name: "Scout Upstream Refs"  # decides pinned vs candidate ref for KSU fork / SuSFS
+      - name: "Scout Upstream Refs"
         if: matrix.kernel_variant != 'VANILLA'
         run: bash kernel/ksu/checkpoint/scout.sh
 
@@ -331,7 +321,7 @@ jobs:
         if: always() && env.IS_MAKE == 'true'
         run: ~/ccache-bin/ccache --show-stats
 
-      - name: "Checkpoint (Promote/Blacklist)"  # updates manifest.json, files an issue on failed candidates
+      - name: "Checkpoint (Promote/Blacklist)"
         if: always() && matrix.kernel_variant != 'VANILLA' && inputs.run_mode != 'Dry Run'
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
@@ -378,7 +368,7 @@ jobs:
 
           bash kernel/ksu/checkpoint/engine.sh "$OUTCOME" $COMPONENTS
 
-      - name: "Save Build Caches"  # LTO and ccache, both to GH Release
+      - name: "Save Build Caches"
         if: always() && env.IS_MAKE == 'true'
         timeout-minutes: 15
         uses: ./.github/actions/save-build-caches

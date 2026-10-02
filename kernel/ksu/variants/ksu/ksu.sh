@@ -28,8 +28,6 @@ verify_pinned_ref "KernelSU" "$KSU_DIR" "${KSU_REF:-}"
 cd "$ROOT_DIR"
 log "KernelSU integrated ✅"
 
-# Note: official KernelSU's Kbuild only exposes KSU_VERSION (numeric), no
-# version-tag string to suffix — branding intentionally skipped, same as KowSU.
 log "Branding skipped (official KernelSU exposes no version-tag string) ✅"
 
 KSU_TAG_NAME=$(git -C "$KSU_DIR" describe --tags --abbrev=0 2>/dev/null || echo "v0.9.5")

@@ -18,7 +18,6 @@ runs:
         ASSET_NAME="${{ inputs.ccache-filename }}"
         cd "${{ github.workspace }}"
 
-        # Try own release cache
         if gh release view cache --repo "${{ github.repository }}" > /dev/null 2>&1; then
           echo "Checking for ccache asset: ${ASSET_NAME}"
           if gh release download cache \

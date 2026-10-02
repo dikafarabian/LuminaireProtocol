@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-# SuSFS — shared apply logic (any KSU fork, android16-6.12).
-# Repo: https://gitlab.com/simonpunk/susfs4ksu
-# No blk.h workaround here (6.1-specific history, doesn't apply). See CODEX.md.
-
 if [ "$KERNEL_VARIANT" = "KSU" ]; then
     SUSFS_REF="${SUSFS_KSU_REF:-}"
     SUSFS_REPO="https://gitlab.com/simonpunk/susfs4ksu.git"

@@ -41,7 +41,6 @@ case "${KERNEL_VERSION}" in
     *) error "LZ4KD: no known SukiSU_patch zram_patch/ for kernel ${KERNEL_VERSION} yet — this addon should have been gated out before reaching here (check registry.sh's ADDON_SUPPORTED_VERSIONS)." ;;
 esac
 
-# Upstream only publishes zram_patch/ per bare kernel version (e.g. "6.6"),
 LZ4KD_UPSTREAM_VERSION="${KERNEL_VERSION}"
 
 LZ4KD_PATCH=$(curl -LSs --fail --retry 3 --retry-all-errors --connect-timeout 30 \

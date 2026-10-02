@@ -11,11 +11,6 @@ jobs:
   on-push:
     name: "Push"
     runs-on: ubuntu-24.04
-    # Skip at job level instead of filtering the trigger itself — a bare
-    # `on: push:` (no branches/tags filters) is the config with a long
-    # track record of reliably firing on this repo. Tag pushes (e.g. the
-    # ccache release tag) still queue the job, but it exits immediately
-    # without posting anything, so no message goes out for them.
     if: github.ref_type == 'branch'
 
     steps:

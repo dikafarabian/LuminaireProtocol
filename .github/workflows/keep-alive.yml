@@ -50,8 +50,5 @@ jobs:
       - name: "♻️ Restore (touch) ${{ matrix.key }}"
         uses: actions/cache/restore@v6
         with:
-          # Dummy path — we only care about the restore hit bumping the
-          # cache's last-accessed timestamp server-side, not the extracted
-          # contents (which are discarded when the runner is torn down).
           path: /tmp/keep-alive-dummy
           key: ${{ matrix.key }}

@@ -1,7 +1,5 @@
 import sys
 
-# Fixes a mis-landed SUSFS patch hunk in show_smap()/task_mmu.c. See CODEX.md.
-
 SUS_MAP_GUARD = (
     "#ifdef CONFIG_KSU_SUSFS_SUS_MAP\n"
     "\tif (vma->vm_file) {\n"
@@ -48,10 +46,8 @@ def main():
         print("ERROR: show_smap() anchor not found — can't safely re-insert SUS_MAP guard!", file=sys.stderr)
         sys.exit(1)
 
-    # Remove the mis-landed guard, restoring the original SEQ_PUT_DEC call.
     content = content.replace(BROKEN_BLOCK, FIXED_BLOCK, 1)
 
-    # Re-insert it where it actually belongs: right after `mss = {};` in show_smap().
     content = content.replace(SHOW_SMAP_ANCHOR, SHOW_SMAP_ANCHOR + SUS_MAP_GUARD + "\n", 1)
 
     with open(path, "w") as f:

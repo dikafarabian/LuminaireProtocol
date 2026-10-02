@@ -1,9 +1,5 @@
 import sys
 
-# Fixes KSUNEXT's static/extern with_policy linkage mismatch in
-# selinux_hide.c (android15-6.6/android16-6.12 only). See CODEX.md
-# (kernel/ksu/susfs/{android15-6.6,android16-6.12}/susfs.sh section).
-
 TARGETS = [
     (
         "static int security_context_to_sid_with_policy(struct selinux_policy *policy, "

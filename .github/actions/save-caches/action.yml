@@ -15,12 +15,6 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.gh-token }}
       run: |
-        # No write-scoped token (expected on a fork without PERSONAL_TOKEN
-        # configured) — release create/upload can't possibly succeed, so
-        # skip instead of burning 3 retries into a hard failure. Restore
-        # already degrades the same way; this just matches it on the save
-        # side, so a fork with zero secrets gets a cold-but-green build
-        # every run instead of a red one.
         if [ -z "${GH_TOKEN:-}" ]; then
           echo "⚠️ No gh-token provided — skipping ccache save (expected on forks without PERSONAL_TOKEN)"
           exit 0
@@ -29,20 +23,17 @@ runs:
         ASSET_NAME="${{ inputs.ccache-filename }}"
         cd "${{ github.workspace }}"
         
-        # Check ccache exists
         if [ ! -d ".ccache" ]; then
           echo "⚠️ .ccache directory not found — skipping save"
           exit 0
         fi
         
-        # Compress
         echo "Compressing ccache..."
         tar --zstd -cf "/tmp/${ASSET_NAME}" .ccache/ || {
           echo "❌ Failed to compress ccache"
           exit 1
         }
         
-        # Check size
         SIZE=$(stat -f%z "/tmp/${ASSET_NAME}" 2>/dev/null || stat -c%s "/tmp/${ASSET_NAME}" 2>/dev/null || echo 0)
         SIZE_MB=$((SIZE / 1024 / 1024))
         
@@ -53,10 +44,6 @@ runs:
         fi
         echo "✅ ccache size: ${SIZE_MB}MB"
         
-        # All matrix variants upload to this same shared "cache" release at
-        # roughly the same time. A single attempt can stall or get rejected
-        # under that contention, so retry with backoff instead of failing
-        # (or hanging) on the first attempt.
         for i in 1 2 3; do
           gh release view cache --repo "${{ github.repository }}" > /dev/null 2>&1 && break
           gh release create cache \
@@ -73,7 +60,6 @@ runs:
           fi
         done
 
-        # Upload
         echo "Uploading ccache asset..."
         for i in 1 2 3; do
           gh release upload cache "/tmp/${ASSET_NAME}" \
