@@ -427,6 +427,7 @@ jobs:
         with:
           path: /tmp/post-stage
           merge-multiple: true
+          skip-decompress: true
 
       - name: "Start Local Bot API"
         env:
