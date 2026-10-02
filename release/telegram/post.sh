@@ -78,7 +78,7 @@ esac
 
 trap cleanup EXIT
 
-if [ "${DELIVERY_TARGET:-Group}" = "Private" ]; then
+if [ "${DELIVERY_TARGET:-Community}" = "Private" ]; then
     [ -n "${TELEGRAM_PERSONAL_CHAT_ID:-}" ] || error "DELIVERY_TARGET=Private but TELEGRAM_PERSONAL_CHAT_ID not set"
     PRIVATE_BANNER=0
     [ "$RUN_MODE_UPPER" = "RELEASE" ] && PRIVATE_BANNER=1

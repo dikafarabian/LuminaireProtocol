@@ -121,9 +121,9 @@ on:
       delivery_target:
         description: "Send Result To"
         type: choice
-        default: "Group"
+        default: "Community"
         options:
-          - "Group"
+          - "Community"
           - "Private"
       update_arsenal:
         description: "Update Arsenal"
@@ -401,10 +401,10 @@ jobs:
           gh-token:       ${{ secrets.PERSONAL_TOKEN }}
 
       - name: "Upload Post Stage"
-        if: inputs.run_mode == 'Build' || inputs.run_mode == 'Release'
+        if: (inputs.run_mode == 'Build' || inputs.run_mode == 'Release') && steps.build.outputs.artifact_name != ''
         uses: actions/upload-artifact@v7
         with:
-          name: post-${{ matrix.kernel_variant }}${{ matrix.susfs && '-susfs' || '' }}
+          name: ${{ steps.build.outputs.artifact_name }}
           path: post-stage/
           retention-days: 1
           compression-level: 0
@@ -426,7 +426,7 @@ jobs:
       - name: "Download Post Stage"
         uses: actions/download-artifact@v8
         with:
-          pattern: post-*
+          pattern: Ak3-*
           path: /tmp/post-stage
 
       - name: "Start Local Bot API"

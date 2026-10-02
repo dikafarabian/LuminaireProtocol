@@ -46,6 +46,10 @@ jq -n \
     '$ARGS.named' > "${STAGE_DIR}/meta.json" \
     || error "Post staging: meta.json creation failed!"
 
+if [ -n "${GITHUB_OUTPUT:-}" ]; then
+    echo "artifact_name=${ZIP_NAME%.zip}" >> "$GITHUB_OUTPUT"
+fi
+
 log "Post stage ready: ${ZIP_NAME} (${VARIANT_KEY}) ✅"
 
 return 0
