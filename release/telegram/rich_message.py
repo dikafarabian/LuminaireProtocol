@@ -33,7 +33,7 @@ LINKS = load_links()
 
 BUG_REPORT_NOTE = (
     "If you encounter any issues or unexpected behavior, please report them "
-    "through the [Luminaire Lab]({group_url}) discussion group."
+    'through the <tg-button type="url" style="primary" url="{group_url}">Luminaire Lab</tg-button> discussion group.'
 )
 
 def variant_display(key: str) -> str:
@@ -222,6 +222,7 @@ def compose_markdown(env, variants_block, has_banner=True) -> str:
     major_minor = ".".join(linux_ver.split(".")[:2]) + ".x"
     group_url = "https://t.me/{}".format(env.get("TELEGRAM_GROUP", ""))
     support_url = "https://sociabuzz.com/chainonyourdoor"
+    artifact_url = "https://t.me/LuminaireCI"
 
     build_mode = is_build_mode(env)
 
@@ -247,7 +248,7 @@ def compose_markdown(env, variants_block, has_banner=True) -> str:
     if not build_mode:
         parts.append(button_row([
             ("Support", support_url, "primary"),
-            ("Join", group_url, "primary"),
+            ("Luminaire Artifact", artifact_url, "primary"),
         ]))
         parts.append("> " + BUG_REPORT_NOTE.format(group_url=group_url))
         parts.append("\\#GKI \\#Kernel \\#Luminaire")
