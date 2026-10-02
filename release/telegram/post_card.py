@@ -46,12 +46,9 @@ def shared_env(first: dict) -> dict:
     return env
 
 
-def variant_title(meta: dict, build_mode: bool) -> str:
+def variant_title(meta: dict) -> str:
     key = meta["variant"]
     version = meta.get("variant_version", "")
-    if not build_mode:
-        title = rm.variant_display(key)
-        return f"{title} \u00b7 {version}" if version else title
     has_susfs = key.endswith("_SUSFS")
     base = key[: -len("_SUSFS")] if has_susfs else key
     parts = [" ".join(p for p in (rm.variant_display(base), version) if p)]
@@ -60,11 +57,10 @@ def variant_title(meta: dict, build_mode: bool) -> str:
     return " \u00b7 ".join(parts)
 
 
-def variant_block(meta: dict, index: int, build_mode: bool) -> str:
-    title = variant_title(meta, build_mode)
+def variant_block(meta: dict, index: int) -> str:
     return "\n".join(
         [
-            rm.variant_header(title, build_mode, rm.release_url(meta["variant"])),
+            rm.variant_header(variant_title(meta), rm.release_url(meta["variant"])),
             "",
             f"![](tg://document?id=zip{index})",
             "",
@@ -93,8 +89,7 @@ def banner_requested() -> bool:
 
 
 def build_payload(metas: list, env: dict, has_banner: bool) -> dict:
-    build_mode = rm.is_build_mode(env)
-    blocks = "\n".join(variant_block(m, i, build_mode) for i, m in enumerate(metas, 1))
+    blocks = "\n".join(variant_block(m, i) for i, m in enumerate(metas, 1))
     markdown = rm.compose_markdown(env, blocks, has_banner=has_banner)
     media = []
     if has_banner:

@@ -5,17 +5,12 @@ import os
 
 import caption
 
-VARIANT_DISPLAY_PLAIN = {
+VARIANT_DISPLAY = {
     "KSU": "KernelSU",
-    "KSU_SUSFS": "KernelSU+SUSFS",
     "KOWSU": "KowSU",
-    "KOWSU_SUSFS": "KowSU+SUSFS",
     "KSUNEXT": "KernelSU-Next",
-    "KSUNEXT_SUSFS": "KernelSU-Next+SUSFS",
     "SUKISU": "SukiSU-Ultra",
-    "SUKISU_SUSFS": "SukiSU-Ultra+SUSFS",
     "RESUKISU": "ReSukiSU",
-    "RESUKISU_SUSFS": "ReSukiSU+SUSFS",
     "VANILLA": "Vanilla",
 }
 
@@ -38,7 +33,7 @@ BUG_REPORT_NOTE = (
 )
 
 def variant_display(key: str) -> str:
-    return VARIANT_DISPLAY_PLAIN.get(key, key)
+    return VARIANT_DISPLAY.get(key, key)
 
 
 def is_build_mode(env) -> bool:
@@ -97,14 +92,13 @@ def build_info_table(env, with_header: bool = True) -> str:
     body = "".join(f"<tr><td>{html_cell(k)}</td><td>{v}</td></tr>" for k, v in rows)
     return f"<table bordered>{head}{body}</table>"
 
-def button_row(buttons, align: str = "") -> str:
+def button_row(buttons) -> str:
     if isinstance(buttons, tuple):
         buttons = [buttons]
     live = [(t, u, s) for t, u, s in buttons if u]
     if not live:
         return ""
-    align_attr = f' align="{align}"' if align else ""
-    out = [f"<tg-button-row{align_attr}>"]
+    out = ["<tg-button-row>"]
     for text, url, style in live:
         style_attr = f' style="{style}"' if style else ""
         out.append(f'  <tg-button type="url"{style_attr} url="{url}">{text}</tg-button>')
@@ -121,14 +115,12 @@ def release_url(key: str) -> str:
     return LINKS.get("variants", {}).get(base, "")
 
 
-def variant_header(title: str, build_mode: bool, url: str = "") -> str:
-    if build_mode:
-        action = f'type="url" url="{url}"' if url else 'type="callback_data" data="x"'
-        return (
-            f'<tg-button-row><tg-button {action} '
-            f'style="primary">{html_cell(title)}</tg-button></tg-button-row>'
-        )
-    return f'<table bordered><tr><th align="center">{html_cell(title)}</th></tr></table>'
+def variant_header(title: str, url: str = "") -> str:
+    action = f'type="url" url="{url}"' if url else 'type="callback_data" data="x"'
+    return (
+        f'<tg-button-row><tg-button {action} '
+        f'style="primary">{html_cell(title)}</tg-button></tg-button-row>'
+    )
 
 
 def core_features_folds() -> list:
@@ -165,9 +157,6 @@ def tuning_fold(env) -> list:
         "</details>",
     ]
 
-def addon_section(env) -> list:
-    return [addon_table(env)]
-
 def engine_chip(engine: str, link: bool) -> str:
     url = LINKS.get("mountless", {}).get(engine, "") if link else ""
     if not url:
@@ -195,7 +184,7 @@ def addon_table(env, link_engine: bool = False) -> str:
     body = "".join(f"<tr><td>{html_cell(k)}</td><td>{v}</td></tr>" for k, v in rows)
     return f"<table bordered>{body}</table>"
 
-def features_details(env, style: str = "") -> str:
+def features_details(env) -> str:
     out = [
         "<details>",
         '<summary><tg-button type="disabled" style="primary">'
@@ -207,7 +196,7 @@ def features_details(env, style: str = "") -> str:
     out += core_features_folds()
     out += tuning_fold(env)
     out += [""]
-    out += addon_section(env)
+    out.append(addon_table(env))
     out.append("</details>")
     return "\n".join(out)
 

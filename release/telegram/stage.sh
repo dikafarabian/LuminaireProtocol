@@ -38,7 +38,6 @@ META_FILE="$(mktemp -d)/luminaire.json"
 
 jq -n \
     --arg variant "$VARIANT_KEY" \
-    --arg zip_name "$ZIP_NAME" \
     --arg variant_version "$KERNEL_VARIANT_VERSION" \
     --arg susfs_version "$SUSFS_VERSION_TAG" \
     --arg linux_ver "${KERNEL_VERSION}.${SUBLEVEL}" \
