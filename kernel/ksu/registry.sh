@@ -10,7 +10,7 @@ declare -A KSU_VARIANT_SUPPORTED_VERSIONS=(
     [kowsu]="5.10 5.15 6.1 6.6 6.12"
     [ksunext]="5.10 5.15 6.1 6.6 6.12"
     [sukisu]="5.10 5.15 6.1 6.6 6.12"
-    [resukisu]="5.10 5.15 6.1 6.6 6.12"
+    [bakasu]="5.10 5.15 6.1 6.6 6.12"
 )
 
 ksu_variant_supports_kernel_version() {

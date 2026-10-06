@@ -50,8 +50,8 @@ on:
         description: "SukiSU-Ultra"
         type: boolean
         default: true
-      resukisu:
-        description: "ReSukiSU"
+      bakasu:
+        description: "BakaSU"
         type: boolean
         default: true
       vanilla:
@@ -187,7 +187,7 @@ jobs:
           ${{ inputs.kowsu }}   && variants+=("{\"kernel_variant\":\"KOWSU\",\"susfs\":${SUSFS_ENABLED}}")
           ${{ inputs.ksunext }} && variants+=("{\"kernel_variant\":\"KSUNEXT\",\"susfs\":${SUSFS_ENABLED}}")
           ${{ inputs.sukisu }}   && variants+=("{\"kernel_variant\":\"SUKISU\",\"susfs\":${SUSFS_ENABLED}}")
-          ${{ inputs.resukisu }} && variants+=("{\"kernel_variant\":\"RESUKISU\",\"susfs\":${SUSFS_ENABLED}}")
+          ${{ inputs.bakasu }} && variants+=("{\"kernel_variant\":\"BAKASU\",\"susfs\":${SUSFS_ENABLED}}")
           ${{ inputs.vanilla }}  && variants+=("{\"kernel_variant\":\"VANILLA\",\"susfs\":false}")
 
           if [ ${#variants[@]} -eq 0 ]; then
@@ -357,11 +357,11 @@ jobs:
                 COMPONENTS="sukisu"
               fi
               ;;
-            RESUKISU)
+            BAKASU)
               if [ "${{ matrix.susfs }}" = "true" ]; then
-                COMPONENTS="resukisu susfs_resukisu"
+                COMPONENTS="bakasu susfs_bakasu"
               else
-                COMPONENTS="resukisu"
+                COMPONENTS="bakasu"
               fi
               ;;
           esac

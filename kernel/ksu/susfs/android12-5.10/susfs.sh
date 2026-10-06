@@ -27,10 +27,10 @@ elif [ "$KERNEL_VARIANT" = "SUKISU" ]; then
     SUSFS_BRANCH="gki-android12-5.10"
     SUSFS_MIRROR_KEY="susfs_sukisu"
 else
-    SUSFS_REF="${SUSFS_RESUKISU_REF:-}"
+    SUSFS_REF="${SUSFS_BAKASU_REF:-}"
     SUSFS_REPO="https://gitlab.com/simonpunk/susfs4ksu.git"
     SUSFS_BRANCH="gki-android12-5.10"
-    SUSFS_MIRROR_KEY="susfs_resukisu"
+    SUSFS_MIRROR_KEY="susfs_bakasu"
 
 
 fi

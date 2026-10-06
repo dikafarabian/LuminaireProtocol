@@ -15,7 +15,7 @@
     "good": "4c5853188012f63a1a1fedd4a57fda6375fecb38",
     "bad": []
   },
-  "resukisu": {
+  "bakasu": {
     "good": "83850e8e93c5f7cfaec69cf03707f13e799df36a",
     "bad": []
   },
@@ -39,7 +39,7 @@
     "good": "e0296724d4714286eeecbf2f153c29398ea8d0cd",
     "bad": []
   },
-  "susfs_resukisu": {
+  "susfs_bakasu": {
     "good": "a0f9c59e2243f8a5db955f4ad1686d5e0ad26e1a",
     "bad": []
   },

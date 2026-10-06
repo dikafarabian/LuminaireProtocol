@@ -6,12 +6,12 @@
 # See docs/CODEX.md for the full rationale.
 
 declare -gA MIRROR_SOURCE_URL=(
-    [resukisu]="https://github.com/ReSukiSU/ReSukiSU"
+    [bakasu]="https://github.com/Baka-SU/BakaSU"
     [sukisu_builtin]="https://github.com/SukiSU-Ultra/SukiSU-Ultra"
     [ksunext_susfs_fork]="https://github.com/pershoot/KernelSU-Next"
     [kowsu]="https://github.com/KOWX712/KernelSU"
     [ksu]="https://github.com/tiann/KernelSU"
-    [susfs_resukisu]="https://gitlab.com/simonpunk/susfs4ksu.git"
+    [susfs_bakasu]="https://gitlab.com/simonpunk/susfs4ksu.git"
     [susfs_sukisu]="https://gitlab.com/simonpunk/susfs4ksu.git"
     [susfs_ksunext]="https://gitlab.com/simonpunk/susfs4ksu.git"
     [susfs_kowsu]="https://gitlab.com/simonpunk/susfs4ksu.git"
@@ -19,12 +19,12 @@ declare -gA MIRROR_SOURCE_URL=(
 )
 
 declare -gA MIRROR_REPO=(
-    [resukisu]="dikafarabian/ReSukiSU"
+    [bakasu]="dikafarabian/BakaSU"
     [sukisu_builtin]="dikafarabian/SukiSU-Ultra"
     [ksunext_susfs_fork]="dikafarabian/KernelSU-Next"
     [kowsu]="dikafarabian/KernelSU"
     [ksu]="dikafarabian/KernelSU"
-    [susfs_resukisu]="dikafarabian/susfs4ksu-mirror"
+    [susfs_bakasu]="dikafarabian/susfs4ksu-mirror"
     [susfs_sukisu]="dikafarabian/susfs4ksu-mirror"
     [susfs_ksunext]="dikafarabian/susfs4ksu-mirror"
     [susfs_kowsu]="dikafarabian/susfs4ksu-mirror"

@@ -163,16 +163,16 @@ case "$KERNEL_VARIANT" in
             resolve_component "sukisu" "SUKISU" "$latest"
         fi
         ;;
-    RESUKISU)
-        latest=$(latest_sha_or_empty "ReSukiSU" \
-            "https://api.github.com/repos/ReSukiSU/ReSukiSU/commits/main" '.sha')
-        resolve_component "resukisu" "RESUKISU" "$latest"
+    BAKASU)
+        latest=$(latest_sha_or_empty "BakaSU" \
+            "https://api.github.com/repos/Baka-SU/BakaSU/commits/main" '.sha')
+        resolve_component "bakasu" "BAKASU" "$latest"
 
         if [ "$SUSFS_ENABLED" = "true" ]; then
             SUSFS_GKI_BRANCH="gki-$(resolve_android_version)-${KERNEL_VERSION}"
-            latest=$(latest_sha_or_empty "SuSFS (ReSukiSU pairing)" \
+            latest=$(latest_sha_or_empty "SuSFS (BakaSU pairing)" \
                 "https://gitlab.com/api/v4/projects/simonpunk%2Fsusfs4ksu/repository/commits/${SUSFS_GKI_BRANCH}" '.id')
-            resolve_component "susfs_resukisu" "SUSFS_RESUKISU" "$latest"
+            resolve_component "susfs_bakasu" "SUSFS_BAKASU" "$latest"
         fi
         ;;
     VANILLA)

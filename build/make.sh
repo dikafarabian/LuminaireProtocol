@@ -107,7 +107,7 @@ if [ "${DRY_RUN:-false}" != "true" ] && [ -f "${KBUILD_LOG:-}" ]; then
         KOWSU)    version_var="KOWSU_VERSION_DISPLAY";    real_code=$(grep -oP -- '-- KernelSU version: \K[0-9]+' "$KBUILD_LOG" | tail -1) ;;
         KSUNEXT)  version_var="KSUNEXT_VERSION_DISPLAY";  real_code=$(grep -oP -- '-- KernelSU-Next version: \K[0-9]+' "$KBUILD_LOG" | tail -1) ;;
         SUKISU)   version_var="SUKISU_VERSION_DISPLAY";   real_code=$(grep -oP -- '-- SukiSU-Ultra version: \K[0-9]+' "$KBUILD_LOG" | tail -1) ;;
-        RESUKISU) version_var="RESUKISU_VERSION_DISPLAY"; real_code=$(grep -oP -- '-- ReSukiSU version code: \K[0-9]+' "$KBUILD_LOG" | tail -1) ;;
+        BAKASU) version_var="BAKASU_VERSION_DISPLAY"; real_code=$(grep -oP -- '-- (?:ReSukiSU|BakaSU) version code: \K[0-9]+' "$KBUILD_LOG" | tail -1) ;;
         *) version_var="" ;;
     esac
     if [ -n "$real_code" ] && [ -n "${version_var}" ] && [ -n "${KSU_TAG_NAME:-}" ]; then
