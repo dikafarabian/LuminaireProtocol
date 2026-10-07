@@ -117,9 +117,18 @@ if [ "$KERNEL_VARIANT" = "KSU" ] || [ "$KERNEL_VARIANT" = "KOWSU" ]; then
         log "SuSFS: 10_enable already applied to KernelSU, skipping."
     else
         log "Applying SuSFS 10_enable KernelSU patch (${KERNEL_VARIANT})..."
+        KSU_INIT_C="${KSU_DIR}/kernel/core/init.c"
+        if [ "$KERNEL_VARIANT" = "KSU" ] && [ -f "$KSU_INIT_C" ]; then
+            python3 "${KSU_SHARED_DIR}/init_banner.py" strip "$KSU_INIT_C" \
+                || error "SuSFS: init.c banner strip failed!"
+        fi
         patch -p1 --fuzz=3 --forward -d "$KSU_DIR" < "$KSU_PATCH" \
             && log "SuSFS 10_enable applied ✅" \
             || error "SuSFS: mandatory 10_enable patch failed on ${KERNEL_VARIANT} (${KSU_PATCH}); reject files preserved in ${KSU_DIR}"
+        if [ "$KERNEL_VARIANT" = "KSU" ] && [ -f "$KSU_INIT_C" ]; then
+            python3 "${KSU_SHARED_DIR}/init_banner.py" restore "$KSU_INIT_C" \
+                || error "SuSFS: init.c banner restore failed!"
+        fi
     fi
 fi
 
