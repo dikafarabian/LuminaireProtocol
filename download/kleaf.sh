@@ -22,13 +22,13 @@ else
         -b "${KLEAF_MANIFEST_BRANCH}" \
         --depth=1 -q || error "repo init failed! (see output above)"
 
-    log "Overriding common/ with LuminaireKernel-${KERNEL_VERSION}..."
+    log "Overriding common/ with $(kernel_source_repo)..."
     mkdir -p .repo/local_manifests
     cat > .repo/local_manifests/luminaire.xml << MANIFEST_EOF
 <manifest>
-  <remote name="github" fetch="https://github.com/chainonyourdoor"/>
+  <remote name="github" fetch="https://github.com/${KERNEL_SOURCE_OWNER}"/>
   <remove-project name="kernel/common"/>
-  <project name="LuminaireKernel-${KERNEL_VERSION}"
+  <project name="$(kernel_source_repo)"
            path="common"
            remote="github"
            revision="${KERNEL_BRANCH}"/>

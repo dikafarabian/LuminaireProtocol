@@ -55,40 +55,25 @@ def variant_sort_key(key: str):
         return len(VARIANT_ORDER)
 
 
-def source_branch(env) -> str:
-    explicit = env.get("KERNEL_BRANCH", "").strip()
-    if explicit:
-        return explicit
-    override = env.get("KERNEL_SOURCE_BRANCH", "").strip()
-    if override:
-        return override
-    kv = env.get("KERNEL_VERSION", "").strip()
-    return f"android14-{kv}-luminaire" if kv else ""
-
 def commits_url(env) -> str:
-    explicit = env.get("COMMITS_URL", "").strip()
-    if explicit:
-        return explicit
-    server = env.get("GITHUB_SERVER_URL", "https://github.com").rstrip("/")
-    owner = env.get("KERNEL_SOURCE_OWNER", "").strip() or "chainonyourdoor"
-    kv = env.get("KERNEL_VERSION", "").strip()
-    branch = source_branch(env)
-    if not owner or not kv or not branch:
+    owner = env.get("KERNEL_SOURCE_OWNER", "").strip()
+    repo = env.get("KERNEL_SOURCE_REPO", "").strip()
+    branch = env.get("KERNEL_BRANCH", "").strip()
+    if not (owner and repo and branch):
         return ""
-    return f"{server}/{owner}/LuminaireKernel-{kv}/commits/{branch}"
+    return f"https://github.com/{owner}/{repo}/commits/{branch}"
 
 def html_cell(text: str) -> str:
     return caption.html_escape(str(text)).replace("\n", " ").strip()
 
 def build_info_table(env) -> str:
-    kv = env.get("KERNEL_VERSION", "").strip()
     lto_raw = env.get("LTO_MODE", "").strip()
     lto_display = caption.LTO_DISPLAY.get(lto_raw, lto_raw or "N/A")
     lto_chip = chip(lto_display, caption.LTO_CHIP_STYLE.get(lto_raw, ""))
     rows = [
         ("Kernel", html_cell("Linux " + (env.get("LINUX_VER", "").strip() or "N/A"))),
-        ("Source", html_cell(caption.kernel_source_repo(kv))),
-        ("Branch", html_cell(source_branch(env) or "N/A")),
+        ("Source", html_cell(env.get("KERNEL_SOURCE_REPO", "").strip() or "N/A")),
+        ("Branch", html_cell(env.get("KERNEL_BRANCH", "").strip() or "N/A")),
         ("Toolchain", html_cell(env.get("COMPILER_STRING", "").strip() or "N/A")),
         ("LTO", lto_chip),
     ]

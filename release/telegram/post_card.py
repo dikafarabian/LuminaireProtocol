@@ -40,6 +40,8 @@ def shared_env(first: dict) -> dict:
             "LINUX_VER": first.get("linux_ver", ""),
             "KERNEL_VERSION": first.get("kernel_version", ""),
             "KERNEL_BRANCH": first.get("kernel_branch", ""),
+            "KERNEL_SOURCE_OWNER": first.get("kernel_source_owner", ""),
+            "KERNEL_SOURCE_REPO": first.get("kernel_source_repo", ""),
             "COMPILER_STRING": first.get("compiler_string", ""),
             "LTO_MODE": first.get("lto_mode", ""),
             "ADDONS": first.get("addons", ""),

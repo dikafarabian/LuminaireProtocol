@@ -71,10 +71,19 @@ resolve_kernel_branch() {
     esac
 }
 
+KERNEL_SOURCE_OWNER="chainonyourdoor"
+
+kernel_source_repo() {
+    echo "LuminaireKernel-${KERNEL_VERSION}"
+}
+
+kernel_source_url() {
+    echo "https://github.com/${KERNEL_SOURCE_OWNER}/$(kernel_source_repo)"
+}
+
 verify_kernel_branch() {
-    git ls-remote --exit-code --heads \
-        "https://github.com/chainonyourdoor/LuminaireKernel-${KERNEL_VERSION}" "refs/heads/$1" >/dev/null 2>&1 \
-        || error "Kernel branch $1 not found in LuminaireKernel-${KERNEL_VERSION}"
+    git ls-remote --exit-code --heads "$(kernel_source_url)" "refs/heads/$1" >/dev/null 2>&1 \
+        || error "Kernel branch $1 not found in $(kernel_source_repo)"
 }
 
 run_setup() {

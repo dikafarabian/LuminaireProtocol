@@ -171,10 +171,6 @@ def truncate(caption, limit, suffix="\n\u2026\n```"):
         current_len += ch_len
     return "".join(result) + suffix
 
-def kernel_source_repo(kernel_ver):
-    return f"LuminaireKernel-{kernel_ver}" if kernel_ver else "N/A"
-
-
 def build_push_caption(env):
     branch_raw = env.get("BRANCH", "")
     author     = env.get("AUTHOR", "")

@@ -3,7 +3,7 @@
 # ======================================================
 # 📥 DOWNLOAD — MAKE (Kernel Source Clone)
 # ======================================================
-# Repo: https://github.com/chainonyourdoor/LuminaireKernel-<version>
+# Source: kernel_source_url (functions.sh)
 
 if [ "${USE_KERNEL_CACHE}" = "true" ] && [ -d "${HOME}/kernel-cache/common" ]; then
     log "Restoring kernel source from cache..."
@@ -11,7 +11,7 @@ if [ "${USE_KERNEL_CACHE}" = "true" ] && [ -d "${HOME}/kernel-cache/common" ]; t
     log "Kernel source restored ✅ ($(cache_freshness_note))"
 else
     log "Cloning kernel source..."
-    KERNEL_REPO_URL="https://github.com/chainonyourdoor/LuminaireKernel-${KERNEL_VERSION}"
+    KERNEL_REPO_URL="$(kernel_source_url)"
     log "Source: ${KERNEL_REPO_URL} @ ${KERNEL_BRANCH}"
     git config --global http.connectTimeout 30
     git config --global http.lowSpeedLimit 100

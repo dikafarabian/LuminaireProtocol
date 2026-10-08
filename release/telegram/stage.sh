@@ -61,6 +61,8 @@ jq -n \
     --arg linux_ver "${KERNEL_VERSION}.${SUBLEVEL}" \
     --arg kernel_version "$KERNEL_VERSION" \
     --arg kernel_branch "${KERNEL_BRANCH:-}" \
+    --arg kernel_source_owner "$KERNEL_SOURCE_OWNER" \
+    --arg kernel_source_repo "$(kernel_source_repo)" \
     --arg compiler_string "${COMPILER_STRING:-}" \
     --arg lto_mode "${LTO_MODE:-}" \
     --arg addons "${ADDONS:-}" \
