@@ -213,7 +213,12 @@ def changelog_block(env) -> str:
     body = "\n".join(f"\u2022 {e}" for e in entries)
     return "```\n" + body + "\n```"
 
-def compose_markdown(env, variants_block, has_banner=True) -> str:
+def banner_slideshow(banner_ids) -> str:
+    slides = "\n".join(f'<img src="tg://photo?id={banner_id}" tg-spoiler/>' for banner_id in banner_ids)
+    return f"<tg-slideshow>\n{slides}\n</tg-slideshow>"
+
+
+def compose_markdown(env, variants_block, banner_ids=()) -> str:
     linux_ver = env.get("LINUX_VER", "N/A")
     kernel_ver = env.get("KERNEL_VERSION", "")
     android_ver = caption.KERNEL_VERSION_TO_ANDROID.get(kernel_ver, "?")
@@ -228,8 +233,8 @@ def compose_markdown(env, variants_block, has_banner=True) -> str:
     if build_mode:
         parts += [build_info_table(env), addon_table(env, link_engine=True), variants_block]
     else:
-        if has_banner:
-            parts.append("![](tg://photo?id=banner)")
+        if banner_ids:
+            parts.append(banner_slideshow(banner_ids))
         parts.append(f"# Luminaire Protocol | {linux_ver}")
         parts.append(f"> GKI Kernel | Android {android_ver} | Linux {major_minor}")
         parts.append(features_details(env))

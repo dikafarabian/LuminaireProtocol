@@ -7,6 +7,7 @@ from __future__ import annotations
 import glob
 import json
 import os
+import random
 import sys
 import zipfile
 
@@ -14,7 +15,8 @@ import rich_message as rm
 
 RICH_LIMIT = 32768
 META_NAME = "luminaire.json"
-BANNER_NAMES = ("banner.jpg", "banner.jpeg", "banner.png")
+BANNER_DIR = "banner"
+BANNER_PATTERNS = ("*.png", "*.jpg", "*.jpeg")
 
 
 def load_metas(stage_dir: str) -> list:
@@ -74,32 +76,34 @@ def variant_block(meta: dict, index: int) -> str:
     )
 
 
-def attachment_specs(metas: list, banner: str) -> list:
-    specs = [f"banner_file=@{banner}"] if banner else []
+def attachment_specs(metas: list, banners: list) -> list:
+    specs = [f"banner_file{i}=@{path}" for i, path in enumerate(banners, 1)]
     for i, meta in enumerate(metas, 1):
         specs.append(f"zip_{i}=@{meta['zip_path']};filename={meta['zip_name']}")
     return specs
 
 
-def find_banner() -> str:
-    base = os.path.dirname(os.path.abspath(__file__))
-    for name in BANNER_NAMES:
-        candidate = os.path.join(base, name)
-        if os.path.isfile(candidate):
-            return candidate
-    sys.exit(f"post_card: banner requested but none of {BANNER_NAMES} found in {base}")
+def find_banners() -> list:
+    base = os.path.join(os.path.dirname(os.path.abspath(__file__)), BANNER_DIR)
+    banners = sorted({p for pattern in BANNER_PATTERNS for p in glob.glob(os.path.join(base, pattern))})
+    if not banners:
+        sys.exit(f"post_card: banner requested but no {BANNER_PATTERNS} found in {base}")
+    random.shuffle(banners)
+    return banners
 
 
 def banner_requested() -> bool:
     return os.environ.get("POST_BANNER", "0").lower() in ("1", "true", "yes")
 
 
-def build_payload(metas: list, env: dict, has_banner: bool) -> dict:
+def build_payload(metas: list, env: dict, banner_count: int) -> dict:
     blocks = "\n".join(variant_block(m, i) for i, m in enumerate(metas, 1))
-    markdown = rm.compose_markdown(env, blocks, has_banner=has_banner)
-    media = []
-    if has_banner:
-        media.append({"id": "banner", "media": {"type": "photo", "media": "attach://banner_file"}})
+    banner_ids = [f"banner{i}" for i in range(1, banner_count + 1)]
+    markdown = rm.compose_markdown(env, blocks, banner_ids=banner_ids)
+    media = [
+        {"id": f"banner{i}", "media": {"type": "photo", "media": f"attach://banner_file{i}"}}
+        for i in range(1, banner_count + 1)
+    ]
     for i in range(1, len(metas) + 1):
         media.append({"id": f"zip{i}", "media": {"type": "document", "media": f"attach://zip_{i}"}})
     return {"markdown": markdown, "media": media}
@@ -114,18 +118,18 @@ def main() -> None:
     if not metas:
         sys.exit("post_card: no staged variants found")
 
-    banner = find_banner() if banner_requested() else ""
-    payload = build_payload(metas, shared_env(metas[0]), bool(banner))
+    banners = find_banners() if banner_requested() else []
+    payload = build_payload(metas, shared_env(metas[0]), len(banners))
     if len(payload["markdown"]) > RICH_LIMIT:
         sys.exit(f"post_card: {len(payload['markdown'])} chars exceeds {RICH_LIMIT}")
 
     with open(payload_path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False)
     with open(attachments_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(attachment_specs(metas, banner)) + "\n")
+        f.write("\n".join(attachment_specs(metas, banners)) + "\n")
 
     print(
-        f"[info] post_card: {len(metas)} variant(s), banner={'yes' if banner else 'no'}, {len(payload['markdown'])} chars (limit {RICH_LIMIT}) \u2705",
+        f"[info] post_card: {len(metas)} variant(s), banners={len(banners)}, {len(payload['markdown'])} chars (limit {RICH_LIMIT}) \u2705",
         file=sys.stderr,
         flush=True,
     )
