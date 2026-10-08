@@ -321,7 +321,7 @@ jobs:
         if: always() && env.IS_MAKE == 'true'
         run: ~/ccache-bin/ccache --show-stats
 
-      - name: "Checkpoint (Promote/Blacklist)"
+      - name: "Checkpoint (Sync/Promote/Blacklist)"
         if: always() && matrix.kernel_variant != 'VANILLA' && inputs.run_mode != 'Dry Run'
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}

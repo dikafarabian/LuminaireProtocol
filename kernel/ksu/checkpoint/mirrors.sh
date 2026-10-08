@@ -71,6 +71,15 @@ mirror_promote() {
         || warn "mirror: ${key} — copy to mirror failed (non-fatal, manifest pin was still updated)"
 }
 
+mirror_sync() {
+    local key="$1" ref="$2" version_label="$3"
+    local url; url="$(mirror_clone_url "$key" 2>/dev/null)" || return 0
+    local mirrored_ref
+    mirrored_ref="$(git ls-remote --heads "$url" "refs/heads/$(mirror_branch "$key" "$version_label")" 2>/dev/null | awk '{print $1}')" || true
+    [ "$mirrored_ref" = "$ref" ] && return 0
+    mirror_promote "$key" "$ref" "$version_label"
+}
+
 mirror_preseed() {
     local key="$1" target_dir="$2" ref="$3" is_candidate="$4" version_label="$5"
     [ "$is_candidate" = "true" ] && return 1

@@ -3,7 +3,7 @@
 # ======================================================
 # 🚦 CHECKPOINT — Engine
 # ======================================================
-# Promotes or blacklists pinned refs in the manifest after a build
+# Syncs pinned refs to their mirrors, then promotes or blacklists candidates in the manifest after a build
 
 set -eo pipefail
 
@@ -19,6 +19,14 @@ COMPONENTS=("$@")
 [ -n "${KERNEL_VERSION:-}" ] || error "checkpoint: KERNEL_VERSION not set"
 MANIFEST_REL="kernel/ksu/manifests/$(resolve_android_version)-${KERNEL_VERSION}.json"
 MANIFEST="${LUMINAIRE_PATCH_DIR}/${MANIFEST_REL}"
+
+MIRROR_LABEL="$(resolve_android_version)-${KERNEL_VERSION}"
+
+for key in "${COMPONENTS[@]}"; do
+    pinned_ref="$(jq -r ".${key}.good // \"\"" "$MANIFEST" 2>/dev/null || true)"
+    [ -n "$pinned_ref" ] || continue
+    mirror_sync "$key" "$pinned_ref" "$MIRROR_LABEL"
+done
 
 any_candidate_used="false"
 for key in "${COMPONENTS[@]}"; do
@@ -108,7 +116,7 @@ for key in "${COMPONENTS[@]}"; do
     if [ "$BUILD_OUTCOME" = "success" ]; then
         log "checkpoint: promoting ${key} pin to ${ref:0:12} (kernel ${KERNEL_VERSION})"
         apply_and_push ".${key}.good = \"${ref}\" | .${key}.bad = ((.${key}.bad // []) - [\"${ref}\"])" "chore: bump ${key} pin to ${ref:0:12} for kernel ${KERNEL_VERSION} (verified via run ${GITHUB_RUN_ID})"
-        mirror_promote "$key" "$ref" "$(resolve_android_version)-${KERNEL_VERSION}"
+        mirror_promote "$key" "$ref" "$MIRROR_LABEL"
         close_issue_if_open "$key"
         continue
     fi
