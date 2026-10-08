@@ -160,18 +160,21 @@ def tuning_fold(env) -> list:
         "</details>",
     ]
 
-def engine_chip(engine: str, link: bool) -> str:
+def engine_chip(engine: str, link: bool, version: str = "") -> str:
+    label = f"{engine} {version}" if version else engine
     url = LINKS.get("mountless", {}).get(engine, "") if link else ""
     if not url:
-        return chip(engine, "primary" if engine != "None" else "")
-    return f'<tg-button type="url" style="primary" url="{url}">{html_cell(engine)}</tg-button>'
+        return chip(label, "primary" if engine != "None" else "")
+    return f'<tg-button type="url" style="primary" url="{url}">{html_cell(label)}</tg-button>'
 
 def addon_table(env, link_engine: bool = False) -> str:
     addon_tokens = [t for t in env.get("ADDONS", "").split(",") if t]
     skipped_addons = [t for t in env.get("SKIPPED_ADDONS", "").split(",") if t]
 
     engine = caption.resolve_mountless_engine(env)
-    engine_cell = engine_chip(engine, link_engine)
+    engine_token = caption.resolve_mountless_token(env)
+    engine_version = caption.addon_version(env, engine_token) if engine_token else ""
+    engine_cell = engine_chip(engine, link_engine, engine_version)
     rows = [("Mountless Engine", engine_cell)]
 
     for token in caption.toggle_addon_order(env):

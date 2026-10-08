@@ -45,4 +45,10 @@ CONFIG_NOMOUNT=y
 CONFIGS
 fi
 
+NOMOUNT_VERSION="$(sed -n 's/^version=//p' "${KERNEL_SRC}/NoMount/module/module.prop" 2>/dev/null | head -n 1 | tr -d '[:space:]')" || true
+if [ -n "$NOMOUNT_VERSION" ]; then
+    echo "NOMOUNT_VERSION=${NOMOUNT_VERSION}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
+    log "NoMount version: ${NOMOUNT_VERSION}"
+fi
+
 log "NoMount setup done ✅"

@@ -49,14 +49,25 @@ def addon_display_name(token):
         return ADDON_DISPLAY_NAMES[token]
     return " ".join(w.capitalize() for w in token.split("_"))
 
-def resolve_mountless_engine(env):
+def resolve_mountless_token(env):
     addon_tokens = [t for t in env.get("ADDONS", "").split(",") if t]
     skipped_tokens = [t for t in env.get("SKIPPED_ADDONS", "").split(",") if t]
     mountless_tokens = addon_mountless_tokens(env)
     for token in addon_tokens:
         if token in mountless_tokens and token not in skipped_tokens:
-            return addon_display_name(token)
-    return "None"
+            return token
+    return ""
+
+def resolve_mountless_engine(env):
+    token = resolve_mountless_token(env)
+    return addon_display_name(token) if token else "None"
+
+def addon_version(env, token):
+    for pair in env.get("ADDON_VERSIONS", "").split(","):
+        name, _, version = pair.partition("=")
+        if name == token:
+            return version.strip()
+    return ""
 
 TUNING_DISPLAY_NAMES = {
     "bore":                     "BORE",

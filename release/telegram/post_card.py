@@ -43,6 +43,7 @@ def shared_env(first: dict) -> dict:
             "ADDONS": first.get("addons", ""),
             "ADDON_ORDER": first.get("addon_order", ""),
             "SKIPPED_ADDONS": first.get("skipped_addons", ""),
+            "ADDON_VERSIONS": first.get("addon_versions", ""),
             "APPLIED_TUNING": first.get("applied_tuning", ""),
             "SKIPPED_TUNING": first.get("skipped_tuning", ""),
         }
