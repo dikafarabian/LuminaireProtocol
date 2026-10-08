@@ -62,12 +62,15 @@ def resolve_mountless_engine(env):
     token = resolve_mountless_token(env)
     return addon_display_name(token) if token else "None"
 
-def addon_version(env, token):
-    for pair in env.get("ADDON_VERSIONS", "").split(","):
+def lookup_version(raw, token):
+    for pair in raw.split(","):
         name, _, version = pair.partition("=")
         if name == token:
             return version.strip()
     return ""
+
+def addon_version(env, token):
+    return lookup_version(env.get("ADDON_VERSIONS", ""), token)
 
 TUNING_DISPLAY_NAMES = {
     "bore":                     "BORE",
@@ -98,7 +101,7 @@ def tuning_display_name(token):
 
 def tuning_active_line(env, token):
     name = tuning_display_name(token)
-    version = env.get(f"{token.upper()}_VERSION", "").strip()
+    version = lookup_version(env.get("TUNING_VERSIONS", ""), token)
     return f"{name} {version}" if version else name
 
 FRAGMENT_FEATURES = {

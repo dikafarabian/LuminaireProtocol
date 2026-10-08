@@ -34,13 +34,19 @@ if [ "${SUSFS_ENABLED:-false}" = "true" ] && [ "$KERNEL_VARIANT" != "VANILLA" ];
     SUSFS_VERSION_TAG="$(sed -n 's/^#define SUSFS_VERSION "\(.*\)"/\1/p' "${KERNEL_SRC:-}/include/linux/susfs.h" 2>/dev/null | head -n 1)" || true
 fi
 
-ADDON_VERSIONS=""
-for addon_token in ${ADDON_ORDER//,/ }; do
-    addon_version_var="${addon_token^^}_VERSION"
-    if [ -n "${!addon_version_var:-}" ]; then
-        ADDON_VERSIONS="${ADDON_VERSIONS:+${ADDON_VERSIONS},}${addon_token}=${!addon_version_var}"
-    fi
-done
+collect_versions() {
+    local tokens="$1" token version_var collected=""
+    for token in ${tokens//,/ }; do
+        version_var="${token^^}_VERSION"
+        if [ -n "${!version_var:-}" ]; then
+            collected="${collected:+${collected},}${token}=${!version_var}"
+        fi
+    done
+    echo "$collected"
+}
+
+ADDON_VERSIONS="$(collect_versions "${ADDON_ORDER:-}")"
+TUNING_VERSIONS="$(collect_versions "${APPLIED_TUNING:-}")"
 
 STAGE_DIR="${GITHUB_WORKSPACE:-$PWD}/post-stage"
 mkdir -p "$STAGE_DIR"
@@ -61,6 +67,7 @@ jq -n \
     --arg addon_order "${ADDON_ORDER:-}" \
     --arg skipped_addons "${SKIPPED_ADDONS:-}" \
     --arg addon_versions "$ADDON_VERSIONS" \
+    --arg tuning_versions "$TUNING_VERSIONS" \
     --arg applied_tuning "${APPLIED_TUNING:-}" \
     --arg skipped_tuning "${SKIPPED_TUNING:-}" \
     '$ARGS.named' > "$META_FILE" \
