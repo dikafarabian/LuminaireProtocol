@@ -9,7 +9,6 @@
 #   SUSFS_KSU_ENABLE_VARIANTS   variants that need the 10_enable KernelSU patch
 #   susfs_before_kernel_patch   runs before the kernel patch is applied
 #   susfs_after_kernel_patch    runs after the kernel patch is applied
-#   susfs_extra_fixes           runs after the namespace.c fix
 #   susfs_after_ksu_enable      runs after the 10_enable step
 
 KSU_DIR="${KSU_DIR:-${KERNEL_SRC}/KernelSU}"
@@ -31,7 +30,6 @@ fi
 SUSFS_KSU_ENABLE_VARIANTS=""
 susfs_before_kernel_patch() { :; }
 susfs_after_kernel_patch() { :; }
-susfs_extra_fixes() { :; }
 susfs_after_ksu_enable() { :; }
 
 SUSFS_QUIRKS="${SUSFS_LOCAL_DIR}/quirks/${KERNEL_VERSION}.sh"
@@ -95,8 +93,6 @@ else
 
     susfs_after_kernel_patch
 fi
-
-susfs_extra_fixes
 
 if [[ " ${SUSFS_KSU_ENABLE_VARIANTS} " == *" ${KERNEL_VARIANT} "* ]]; then
     if [ "$KERNEL_VARIANT" = "KOWSU" ]; then
