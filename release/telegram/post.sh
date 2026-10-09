@@ -4,9 +4,9 @@
 # 📨 TELEGRAM — Post Sender (Build / Release)
 # ======================================================
 
-TELEGRAM_DIR="${LUMINAIRE_PATCH_DIR}/release/telegram"
+TELEGRAM_DIR="${ROOT_DIR}/release/telegram"
 
-source "${LUMINAIRE_PATCH_DIR}/functions.sh"
+source "${ROOT_DIR}/functions.sh"
 source "${TELEGRAM_DIR}/config.sh"
 source "${TELEGRAM_DIR}/common.sh"
 

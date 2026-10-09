@@ -38,7 +38,7 @@ while IFS= read -r line; do
         sed -i "/^${key}[= ]/d;/^# ${key} is not set/d" "$DEFCONFIG_FILE"
         echo "# ${key} is not set" >> "$DEFCONFIG_FILE"
     fi
-done < <(grep -E '^CONFIG_|^# CONFIG_' "${LUMINAIRE_PATCH_DIR}/kernel/config/luminaire.fragment")
+done < <(grep -E '^CONFIG_|^# CONFIG_' "${ROOT_DIR}/kernel/config/luminaire.fragment")
 log "Fragment applied ✅"
 
 if [ "${BBG_ENABLED:-false}" = "true" ]; then

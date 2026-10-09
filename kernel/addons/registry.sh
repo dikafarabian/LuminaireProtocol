@@ -44,7 +44,7 @@ run_addons() {
     for addon in "${ADDON_LIST[@]}"; do
         addon="${addon// /}"
         [ -z "$addon" ] && continue
-        local script="${LUMINAIRE_PATCH_DIR}/kernel/addons/${addon}/${addon}.sh"
+        local script="${ROOT_DIR}/kernel/addons/${addon}/${addon}.sh"
         if [ ! -f "$script" ]; then
             log "⚠️ Addon not found: ${addon}"
             continue

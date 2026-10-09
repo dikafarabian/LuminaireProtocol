@@ -88,7 +88,7 @@ verify_kernel_branch() {
 
 run_setup() {
     echo "::group::📦 Setup"
-    for script in "${LUMINAIRE_PATCH_DIR}/setup/"*.sh; do
+    for script in "${ROOT_DIR}/setup/"*.sh; do
         source "$script" || error "Setup failed: $(basename "$script")"
     done
     echo "::endgroup::"
@@ -131,7 +131,7 @@ wait_for_apt() {
 apply_required_patches() {
     local name patch
     for name in "${KABI_PATCHES[@]}"; do
-        patch="${LUMINAIRE_PATCH_DIR}/kernel/patches/${name}.patch"
+        patch="${ROOT_DIR}/kernel/patches/${name}.patch"
         [ -f "$patch" ] || error "KaBI patch missing: ${name}.patch"
         log "Applying: $(basename "$patch")..."
         if patch -p1 --fuzz=3 --dry-run --forward -d "$KERNEL_SRC" < "$patch" > /dev/null 2>&1; then

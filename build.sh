@@ -17,11 +17,10 @@ ANDROID_VERSION="$(resolve_android_version)"
 KERNEL_BRANCH="$(resolve_kernel_branch)"
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
-LUMINAIRE_PATCH_DIR="${ROOT_DIR}"
 
-source "${LUMINAIRE_PATCH_DIR}/kernel/addons/registry.sh"
-source "${LUMINAIRE_PATCH_DIR}/kernel/patches/registry.sh"
-source "${LUMINAIRE_PATCH_DIR}/kernel/ksu/registry.sh"
+source "${ROOT_DIR}/kernel/addons/registry.sh"
+source "${ROOT_DIR}/kernel/patches/registry.sh"
+source "${ROOT_DIR}/kernel/ksu/registry.sh"
 
 main() {
     echo "========================================"
@@ -40,7 +39,7 @@ main() {
     wait_for_apt
     echo "::endgroup::"
 
-    KSU_MANIFEST="${LUMINAIRE_PATCH_DIR}/kernel/ksu/manifests/${ANDROID_VERSION}-${KERNEL_VERSION}.json"
+    KSU_MANIFEST="${ROOT_DIR}/kernel/ksu/manifests/${ANDROID_VERSION}-${KERNEL_VERSION}.json"
     [ -f "$KSU_MANIFEST" ] \
         || error "Kernel version ${KERNEL_VERSION} is not yet supported — missing ${KSU_MANIFEST} (no KSU/patches implemented for this version)"
 
@@ -78,9 +77,9 @@ main() {
 restore_kernel_source() {
     echo "::group::📥 Kernel Source"
     if [ "$BUILD_SYSTEM" = "KLEAF" ]; then
-        source "${LUMINAIRE_PATCH_DIR}/build/kleaf/download.sh"
+        source "${ROOT_DIR}/build/kleaf/download.sh"
     else
-        source "${LUMINAIRE_PATCH_DIR}/build/make/download.sh"
+        source "${ROOT_DIR}/build/make/download.sh"
     fi
     log "Kernel source ready ✅"
     echo "::endgroup::"
@@ -88,7 +87,7 @@ restore_kernel_source() {
 
 run_branding() {
     echo "::group::🔖 Branding"
-    source "${LUMINAIRE_PATCH_DIR}/kernel/branding/branding.sh" || error "Branding failed!"
+    source "${ROOT_DIR}/kernel/branding/branding.sh" || error "Branding failed!"
     echo "::endgroup::"
 }
 
@@ -106,18 +105,18 @@ run_variant() {
 
     ksu_variant_supports_kernel_version "${KERNEL_VARIANT,,}" \
         || error "Root solution '${KERNEL_VARIANT}' is not available for kernel ${KERNEL_VERSION} — not listed in KSU_VARIANT_SUPPORTED_VERSIONS (kernel/ksu/registry.sh)."
-    local script="${LUMINAIRE_PATCH_DIR}/kernel/ksu/variants/${KERNEL_VARIANT,,}/${KERNEL_VARIANT,,}.sh"
+    local script="${ROOT_DIR}/kernel/ksu/variants/${KERNEL_VARIANT,,}/${KERNEL_VARIANT,,}.sh"
     run_step "🍀" "Root Solution (${KERNEL_VARIANT})" "$script" \
         "Root solution '${KERNEL_VARIANT}' is marked supported for kernel ${KERNEL_VERSION} in KSU_VARIANT_SUPPORTED_VERSIONS but ${script} doesn't exist — the map is out of sync with kernel/ksu/variants/."
 
     [ "$SUSFS_ENABLED" = "true" ] || return 0
-    local susfs_script="${LUMINAIRE_PATCH_DIR}/kernel/ksu/susfs/susfs.sh"
+    local susfs_script="${ROOT_DIR}/kernel/ksu/susfs/susfs.sh"
     run_step "🧬" "SuSFS" "$susfs_script" "SuSFS script not found: $(basename "$susfs_script")"
 }
 
 run_core() {
     echo "::group::🔧 Core"
-    local core_dir="${LUMINAIRE_PATCH_DIR}/kernel/core"
+    local core_dir="${ROOT_DIR}/kernel/core"
     local features=(dirty_flag glibc protected_exports compiler_string module_bypass openssl3_compat)
     local feature script
     for feature in "${features[@]}"; do
@@ -131,9 +130,9 @@ run_core() {
 run_build() {
     echo "::group::🏗️ Build Kernel (${BUILD_SYSTEM})"
     if [ "$BUILD_SYSTEM" = "KLEAF" ]; then
-        source "${LUMINAIRE_PATCH_DIR}/build/kleaf/build.sh"
+        source "${ROOT_DIR}/build/kleaf/build.sh"
     else
-        source "${LUMINAIRE_PATCH_DIR}/build/make/build.sh"
+        source "${ROOT_DIR}/build/make/build.sh"
     fi
     echo "::endgroup::"
 }
@@ -149,7 +148,7 @@ run_postbuild() {
         addon="${addon// /}"
         [ -z "$addon" ] && continue
 
-        script="${LUMINAIRE_PATCH_DIR}/kernel/addons/${addon}/postbuild.sh"
+        script="${ROOT_DIR}/kernel/addons/${addon}/postbuild.sh"
         [ -f "$script" ] || continue
 
         log "🧩 Post-build: ${addon}"
@@ -161,8 +160,8 @@ run_postbuild() {
 
 run_release() {
     echo "::group::🚀 Release"
-    source "${LUMINAIRE_PATCH_DIR}/release/anykernel.sh" || error "Release failed: anykernel.sh"
-    source "${LUMINAIRE_PATCH_DIR}/release/telegram/stage.sh"  || error "Release failed: stage.sh"
+    source "${ROOT_DIR}/release/anykernel.sh" || error "Release failed: anykernel.sh"
+    source "${ROOT_DIR}/release/telegram/stage.sh"  || error "Release failed: stage.sh"
     echo "::endgroup::"
 }
 

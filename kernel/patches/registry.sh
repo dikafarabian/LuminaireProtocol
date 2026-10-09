@@ -32,7 +32,7 @@ run_patches() {
             SKIPPED_PATCHES="${SKIPPED_PATCHES:+${SKIPPED_PATCHES},}${feature}"
             continue
         fi
-        local script="${LUMINAIRE_PATCH_DIR}/kernel/patches/${feature}/${feature}.sh"
+        local script="${ROOT_DIR}/kernel/patches/${feature}/${feature}.sh"
         [ -f "$script" ] || error "Patch feature '${feature}' is marked supported for kernel ${KERNEL_VERSION} in PATCH_SUPPORTED_VERSIONS but ${script} doesn't exist — the map is out of sync with kernel/patches/."
         source "$script" || error "Patch feature failed: ${feature}"
         APPLIED_PATCHES="${APPLIED_PATCHES:+${APPLIED_PATCHES},}${feature}"

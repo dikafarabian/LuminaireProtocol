@@ -28,6 +28,8 @@ export BUILD_SYSTEM CLANG_VARIANT
 
 KLEAF_MANIFEST_BRANCH="common-${ANDROID_VERSION}-${KERNEL_VERSION}-lts"
 
+: "${ROOT_DIR:?ROOT_DIR must be set by the entrypoint before run_setup() runs}"
+
 WORKSPACE_DIR="${ROOT_DIR}/workspace"
 KERNEL_DIR="${WORKSPACE_DIR}/kernel"
 KERNEL_SRC="${KERNEL_DIR}/common"
@@ -35,7 +37,6 @@ OUT_DIR="${WORKSPACE_DIR}/out"
 KLEAF_OUT_DIR="${KERNEL_DIR}/bazel-bin/common/kernel_aarch64"
 LTO_CACHE_DIR="/dev/shm/ldcache"
 
-LUMINAIRE_PATCH_DIR="${LUMINAIRE_PATCH_DIR:?LUMINAIRE_PATCH_DIR must be set by the entrypoint before run_setup() runs}"
 case "${KERNEL_VERSION}" in
     5.10)              KABI_PATCHES=(sysvipc_below_6_12 posix_mqueue_5_10) ;;
     5.15|6.1|6.6)      KABI_PATCHES=(sysvipc_below_6_12) ;;

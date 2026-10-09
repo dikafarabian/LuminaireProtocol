@@ -8,7 +8,7 @@
 [ "$BUILD_SYSTEM" = "KLEAF" ] && return 0
 
 EXTRACT_CERT="${KERNEL_SRC}/certs/extract-cert.c"
-PATCHER="${LUMINAIRE_PATCH_DIR}/kernel/core/openssl3_compat/patch.py"
+PATCHER="${ROOT_DIR}/kernel/core/openssl3_compat/patch.py"
 
 [ -f "$EXTRACT_CERT" ] || { warn "extract-cert.c not found, skipping OpenSSL 3 compat patch"; return 0; }
 

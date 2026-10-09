@@ -5,7 +5,7 @@
 # ======================================================
 
 VMSCAN_C="${KERNEL_SRC}/mm/vmscan.c"
-PATCHER="${LUMINAIRE_PATCH_DIR}/kernel/addons/mglru/patch.py"
+PATCHER="${ROOT_DIR}/kernel/addons/mglru/patch.py"
 
 [ -f "$VMSCAN_C" ] || { warn "mm/vmscan.c not found, skipping mglru"; return 0; }
 

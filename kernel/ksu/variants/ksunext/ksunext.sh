@@ -7,7 +7,7 @@
 
 KSU_DIR="${KERNEL_SRC}/KernelSU-Next"
 PATCHER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${LUMINAIRE_PATCH_DIR}/kernel/ksu/checkpoint/mirrors.sh"
+source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 
 log "Integrating KernelSU-Next..."
 cd "$KERNEL_SRC"

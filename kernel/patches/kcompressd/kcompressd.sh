@@ -4,7 +4,7 @@
 # ⚙️ PATCH — Kcompressd
 # ======================================================
 
-KCOMPRESSD_PATCH="${LUMINAIRE_PATCH_DIR}/kernel/patches/kcompressd/kcompressd-v0.5.patch"
+KCOMPRESSD_PATCH="${ROOT_DIR}/kernel/patches/kcompressd/kcompressd-v0.5.patch"
 
 log "⚙️ Applying Kcompressd patch..."
 [ -f "$KCOMPRESSD_PATCH" ] || error "kcompressd: not backported for kernel ${KERNEL_VERSION} yet (expected ${KCOMPRESSD_PATCH}) — this feature should have been gated out before reaching here (check run_patches()'s support map)."

@@ -16,7 +16,7 @@ echo "$BBG_SETUP" | bash || error "BBG: setup.sh failed!"
 [ -L "${KERNEL_SRC}/security/baseband-guard" ] \
     || error "BBG: inject failed — security/baseband-guard symlink not found!"
 
-PATCHER="${LUMINAIRE_PATCH_DIR}/kernel/patches/bbg/kconfig_inject.py"
+PATCHER="${ROOT_DIR}/kernel/patches/bbg/kconfig_inject.py"
 python3 "$PATCHER" "${KERNEL_SRC}/security/Kconfig" \
     || error "BBG: Kconfig inject failed!"
 

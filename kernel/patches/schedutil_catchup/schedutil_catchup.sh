@@ -4,7 +4,7 @@
 # 🩹 PATCH — Schedutil (stable catch-up)
 # ======================================================
 
-SCHEDUTIL_CATCHUP_PATCH="${LUMINAIRE_PATCH_DIR}/kernel/patches/schedutil_catchup/schedutil_catchup.patch"
+SCHEDUTIL_CATCHUP_PATCH="${ROOT_DIR}/kernel/patches/schedutil_catchup/schedutil_catchup.patch"
 
 log "🩹 Applying Schedutil stable catch-up..."
 [ -f "$SCHEDUTIL_CATCHUP_PATCH" ] || error "Schedutil catch-up: not backported for kernel ${KERNEL_VERSION} yet (expected ${SCHEDUTIL_CATCHUP_PATCH}) — this feature should have been gated out before reaching here (check run_patches()'s support map)."

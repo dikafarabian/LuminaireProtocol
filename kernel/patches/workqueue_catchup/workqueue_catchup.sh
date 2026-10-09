@@ -4,7 +4,7 @@
 # 🩹 PATCH — Workqueue (stable catch-up)
 # ======================================================
 
-WORKQUEUE_CATCHUP_PATCH="${LUMINAIRE_PATCH_DIR}/kernel/patches/workqueue_catchup/workqueue_catchup.patch"
+WORKQUEUE_CATCHUP_PATCH="${ROOT_DIR}/kernel/patches/workqueue_catchup/workqueue_catchup.patch"
 
 log "🩹 Applying Workqueue stable catch-up..."
 [ -f "$WORKQUEUE_CATCHUP_PATCH" ] || error "Workqueue catch-up: not backported for kernel ${KERNEL_VERSION} yet (expected ${WORKQUEUE_CATCHUP_PATCH}) — this feature should have been gated out before reaching here (check run_patches()'s support map)."

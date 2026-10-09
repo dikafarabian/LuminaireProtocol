@@ -14,7 +14,7 @@
 
 KSU_DIR="${KSU_DIR:-${KERNEL_SRC}/KernelSU}"
 SUSFS_DIR="/tmp/susfs4ksu"
-SUSFS_LOCAL_DIR="${LUMINAIRE_PATCH_DIR}/kernel/ksu/susfs"
+SUSFS_LOCAL_DIR="${ROOT_DIR}/kernel/ksu/susfs"
 
 SUSFS_REF_VAR="SUSFS_${KERNEL_VARIANT}_REF"
 SUSFS_REF="${!SUSFS_REF_VAR:-}"
@@ -48,7 +48,7 @@ susfs_fix_ksunext_linkage() {
         || error "SuSFS: KernelSU-Next with_policy linkage fix failed!"
 }
 
-source "${LUMINAIRE_PATCH_DIR}/kernel/ksu/checkpoint/mirrors.sh"
+source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 CANDIDATE_VAR="CANDIDATE_${SUSFS_MIRROR_KEY^^}"
 SUSFS_MIRRORED="false"
 mirror_preseed "$SUSFS_MIRROR_KEY" "$SUSFS_DIR" "$SUSFS_REF" "${!CANDIDATE_VAR:-false}" "$(resolve_android_version)-${KERNEL_VERSION}" && SUSFS_MIRRORED="true"

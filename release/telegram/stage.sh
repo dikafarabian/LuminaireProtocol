@@ -4,7 +4,7 @@
 # 📨 TELEGRAM — Post Staging
 # ======================================================
 
-source "${LUMINAIRE_PATCH_DIR:-.}/functions.sh"
+source "${ROOT_DIR:-.}/functions.sh"
 
 if [ "${DRY_RUN:-false}" = "true" ]; then
     log "Skipping post staging: Dry Run mode (pipeline test only)"

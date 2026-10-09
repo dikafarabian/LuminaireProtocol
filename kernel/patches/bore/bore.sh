@@ -4,7 +4,7 @@
 # 🔥 PATCH — BORE (CPU scheduler)
 # ======================================================
 
-BORE_PATCH="${LUMINAIRE_PATCH_DIR}/kernel/patches/bore/bore-v6.8.0-rc1.patch"
+BORE_PATCH="${ROOT_DIR}/kernel/patches/bore/bore-v6.8.0-rc1.patch"
 
 log "🔥 Applying BORE CPU scheduler patch..."
 [ -f "$BORE_PATCH" ] || error "BORE: not backported for kernel ${KERNEL_VERSION} yet (expected ${BORE_PATCH}) — this feature should have been gated out before reaching here (check run_patches()'s support map)."

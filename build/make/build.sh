@@ -59,7 +59,7 @@ log "Generating defconfig..."
 make "${MAKE_ARGS[@]}" "$DEFCONFIG" || error "Defconfig failed!"
 
 log "Applying Luminaire configs..."
-source "${LUMINAIRE_PATCH_DIR}/kernel/config/defconfig.sh"
+source "${ROOT_DIR}/kernel/config/defconfig.sh"
 
 log "Syncing config..."
 make "${MAKE_ARGS[@]}" olddefconfig || error "olddefconfig failed!"

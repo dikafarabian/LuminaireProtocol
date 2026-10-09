@@ -59,7 +59,7 @@ if [ "${KERNEL_VERSION}" = "5.10" ]; then
     fi
 fi
 
-python3 "${LUMINAIRE_PATCH_DIR}/kernel/patches/bbrv3/enforcer.py" "${KERNEL_SRC}/net/ipv4/tcp_cong.c" \
+python3 "${ROOT_DIR}/kernel/patches/bbrv3/enforcer.py" "${KERNEL_SRC}/net/ipv4/tcp_cong.c" \
     || error "BBRv3: enforcer injection into tcp_cong.c failed!"
 
 cd "${ROOT_DIR}"

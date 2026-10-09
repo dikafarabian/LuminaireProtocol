@@ -4,7 +4,7 @@
 # 🛡️ PATCH — le9uo (working set protection)
 # ======================================================
 
-LE9UO_PATCH="${LUMINAIRE_PATCH_DIR}/kernel/patches/le9uo/le9uo-v1.15.patch"
+LE9UO_PATCH="${ROOT_DIR}/kernel/patches/le9uo/le9uo-v1.15.patch"
 
 log "🛡️ Applying le9uo working set protection patch..."
 [ -f "$LE9UO_PATCH" ] || error "le9uo: not backported for kernel ${KERNEL_VERSION} yet (expected ${LE9UO_PATCH}) — this feature should have been gated out before reaching here (check run_patches()'s support map)."

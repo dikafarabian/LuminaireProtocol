@@ -4,7 +4,7 @@
 # 🩹 PATCH — UFS / WriteBooster (stable catch-up)
 # ======================================================
 
-UFS_WRITEBOOSTER_CATCHUP_PATCH="${LUMINAIRE_PATCH_DIR}/kernel/patches/ufs_writebooster_catchup/ufs_writebooster_catchup.patch"
+UFS_WRITEBOOSTER_CATCHUP_PATCH="${ROOT_DIR}/kernel/patches/ufs_writebooster_catchup/ufs_writebooster_catchup.patch"
 
 log "🩹 Applying UFS / WriteBooster stable catch-up..."
 [ -f "$UFS_WRITEBOOSTER_CATCHUP_PATCH" ] || error "UFS/WriteBooster catch-up: not backported for kernel ${KERNEL_VERSION} yet (expected ${UFS_WRITEBOOSTER_CATCHUP_PATCH}) — this feature should have been gated out before reaching here (check run_patches()'s support map)."

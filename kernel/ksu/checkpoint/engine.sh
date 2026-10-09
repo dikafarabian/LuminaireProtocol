@@ -7,10 +7,10 @@
 
 set -eo pipefail
 
-LUMINAIRE_PATCH_DIR="${LUMINAIRE_PATCH_DIR:-$GITHUB_WORKSPACE}"
-source "${LUMINAIRE_PATCH_DIR}/functions.sh"
-source "${LUMINAIRE_PATCH_DIR}/kernel/ksu/checkpoint/mirrors.sh"
-cd "$LUMINAIRE_PATCH_DIR"
+ROOT_DIR="${ROOT_DIR:-$GITHUB_WORKSPACE}"
+source "${ROOT_DIR}/functions.sh"
+source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
+cd "$ROOT_DIR"
 
 BUILD_OUTCOME="$1"
 shift
@@ -18,7 +18,7 @@ COMPONENTS=("$@")
 
 [ -n "${KERNEL_VERSION:-}" ] || error "checkpoint: KERNEL_VERSION not set"
 MANIFEST_REL="kernel/ksu/manifests/$(resolve_android_version)-${KERNEL_VERSION}.json"
-MANIFEST="${LUMINAIRE_PATCH_DIR}/${MANIFEST_REL}"
+MANIFEST="${ROOT_DIR}/${MANIFEST_REL}"
 
 MIRROR_LABEL="$(resolve_android_version)-${KERNEL_VERSION}"
 

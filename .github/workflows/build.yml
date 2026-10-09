@@ -436,7 +436,7 @@ jobs:
           TELEGRAM_CHANNEL_ID:       ${{ secrets.TELEGRAM_CHANNEL_ID }}
           TELEGRAM_PERSONAL_CHAT_ID: ${{ secrets.TELEGRAM_PERSONAL_CHAT_ID }}
           DELIVERY_TARGET:           ${{ inputs.delivery_target }}
-          LUMINAIRE_PATCH_DIR:       ${{ github.workspace }}
+          ROOT_DIR:                  ${{ github.workspace }}
           STAGE_DIR:                 /tmp/post-stage
           RUN_MODE:                  ${{ inputs.run_mode }}
           KERNEL_VERSION:            ${{ inputs.kernel_version }}

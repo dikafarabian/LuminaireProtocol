@@ -17,7 +17,6 @@ ANDROID_VERSION="$(resolve_android_version)"
 KERNEL_BRANCH="$(resolve_kernel_branch)"
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
-LUMINAIRE_PATCH_DIR="${ROOT_DIR}"
 
 main() {
     echo "========================================"
@@ -49,7 +48,7 @@ run_download() {
     if [ "$BUILD_SYSTEM" = "KLEAF" ]; then
         log "Kleaf: workspace sync skipped in Prepare Arsenal (runner disk too small) — each build job syncs it directly"
     else
-        source "${LUMINAIRE_PATCH_DIR}/build/make/download.sh"
+        source "${ROOT_DIR}/build/make/download.sh"
     fi
     log "Arsenal downloaded ✅"
     echo "::endgroup::"
