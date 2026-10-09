@@ -18,7 +18,6 @@ KERNEL_VERSION_TO_ANDROID = {
 ADDON_DISPLAY_NAMES = {
     "rekernel":    "Re:Kernel",
     "droidspaces": "Droidspaces",
-    "zeromount":   "ZeroMount",
     "nomount":     "NoMount",
     "ntsync":      "NTSync",
     "lz4zstd":     "LZ4+ZSTD",
@@ -38,7 +37,7 @@ def addon_order(env):
 def addon_mountless_tokens(env):
     raw = env.get("ADDON_MOUNTLESS_TOKENS", "")
     tokens = [t for t in raw.split(",") if t]
-    return tuple(tokens) if tokens else ("nomount", "zeromount")
+    return tuple(tokens) if tokens else ("nomount",)
 
 def toggle_addon_order(env):
     mountless = set(addon_mountless_tokens(env))
@@ -72,9 +71,8 @@ def lookup_version(raw, token):
 def addon_version(env, token):
     return lookup_version(env.get("ADDON_VERSIONS", ""), token)
 
-TUNING_DISPLAY_NAMES = {
+PATCH_DISPLAY_NAMES = {
     "bore":                     "BORE",
-    "adios":                    "ADIOS",
     "le9uo":                    "le9uo",
     "kcompressd":               "Kcompressd",
     "workqueue_catchup":        "Workqueue Catch-up",
@@ -85,23 +83,23 @@ TUNING_DISPLAY_NAMES = {
     "wireguard":                "WireGuard",
 }
 
-def tuning_order(env):
-    raw = env.get("TUNING_FEATURE_ORDER", "")
+def patch_order(env):
+    raw = env.get("PATCH_FEATURE_ORDER", "")
     order = [t for t in raw.split(",") if t]
     if order:
         return order
-    applied = [t for t in env.get("APPLIED_TUNING", "").split(",") if t]
-    skipped = [t for t in env.get("SKIPPED_TUNING", "").split(",") if t]
+    applied = [t for t in env.get("APPLIED_PATCHES", "").split(",") if t]
+    skipped = [t for t in env.get("SKIPPED_PATCHES", "").split(",") if t]
     return applied + skipped
 
-def tuning_display_name(token):
-    if token in TUNING_DISPLAY_NAMES:
-        return TUNING_DISPLAY_NAMES[token]
+def patch_display_name(token):
+    if token in PATCH_DISPLAY_NAMES:
+        return PATCH_DISPLAY_NAMES[token]
     return " ".join(w.capitalize() for w in token.split("_"))
 
-def tuning_active_line(env, token):
-    name = tuning_display_name(token)
-    version = lookup_version(env.get("TUNING_VERSIONS", ""), token)
+def patch_active_line(env, token):
+    name = patch_display_name(token)
+    version = lookup_version(env.get("PATCH_VERSIONS", ""), token)
     return f"{name} {version}" if version else name
 
 FRAGMENT_FEATURES = {

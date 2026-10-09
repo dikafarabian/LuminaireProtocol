@@ -3,7 +3,7 @@
 # ======================================================
 # ✨ BUILD — Luminaire Pipeline
 # ======================================================
-# Flow: setup → branding → root solution → core → tuning → addons → build → post-build
+# Flow: setup → branding → root solution → core → patches → addons → build → post-build
 
 set -eo pipefail
 
@@ -20,7 +20,7 @@ ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LUMINAIRE_PATCH_DIR="${ROOT_DIR}"
 
 source "${LUMINAIRE_PATCH_DIR}/kernel/addons/registry.sh"
-source "${LUMINAIRE_PATCH_DIR}/kernel/tuning/registry.sh"
+source "${LUMINAIRE_PATCH_DIR}/kernel/patches/registry.sh"
 source "${LUMINAIRE_PATCH_DIR}/kernel/ksu/registry.sh"
 
 main() {
@@ -52,7 +52,7 @@ main() {
     run_variant
     mark_stage_ok CHECKPOINT_VARIANT_OK
     run_core
-    run_tuning
+    run_patches
     run_addons
     mark_stage_ok CHECKPOINT_ADDONS_OK
     run_build
@@ -78,9 +78,9 @@ main() {
 restore_kernel_source() {
     echo "::group::📥 Kernel Source"
     if [ "$BUILD_SYSTEM" = "KLEAF" ]; then
-        source "${LUMINAIRE_PATCH_DIR}/download/kleaf.sh"
+        source "${LUMINAIRE_PATCH_DIR}/build/kleaf/download.sh"
     else
-        source "${LUMINAIRE_PATCH_DIR}/download/make.sh"
+        source "${LUMINAIRE_PATCH_DIR}/build/make/download.sh"
     fi
     log "Kernel source ready ✅"
     echo "::endgroup::"
@@ -88,7 +88,7 @@ restore_kernel_source() {
 
 run_branding() {
     echo "::group::🔖 Branding"
-    source "${LUMINAIRE_PATCH_DIR}/kernel/branding.sh" || error "Branding failed!"
+    source "${LUMINAIRE_PATCH_DIR}/kernel/branding/branding.sh" || error "Branding failed!"
     echo "::endgroup::"
 }
 
@@ -111,24 +111,19 @@ run_variant() {
         "Root solution '${KERNEL_VARIANT}' is marked supported for kernel ${KERNEL_VERSION} in KSU_VARIANT_SUPPORTED_VERSIONS but ${script} doesn't exist — the map is out of sync with kernel/ksu/variants/."
 
     [ "$SUSFS_ENABLED" = "true" ] || return 0
-    local susfs_script="${LUMINAIRE_PATCH_DIR}/kernel/ksu/susfs/${ANDROID_VERSION}-${KERNEL_VERSION}/susfs.sh"
+    local susfs_script="${LUMINAIRE_PATCH_DIR}/kernel/ksu/susfs/susfs.sh"
     run_step "🧬" "SuSFS" "$susfs_script" "SuSFS script not found: $(basename "$susfs_script")"
 }
 
 run_core() {
     echo "::group::🔧 Core"
     local core_dir="${LUMINAIRE_PATCH_DIR}/kernel/core"
-    local scripts=(
-        "${core_dir}/dirty_flag.sh"
-        "${core_dir}/glibc.sh"
-        "${core_dir}/protected_exports.sh"
-        "${core_dir}/compiler_string/compiler_string.sh"
-        "${core_dir}/module_bypass/module_bypass.sh"
-        "${core_dir}/openssl3_compat/openssl3_compat.sh"
-    )
-    for script in "${scripts[@]}"; do
-        [ -f "$script" ] || { warn "Core script not found: $(basename "$script") — skipping"; continue; }
-        source "$script" || error "Core script failed: $(basename "$script")"
+    local features=(dirty_flag glibc protected_exports compiler_string module_bypass openssl3_compat)
+    local feature script
+    for feature in "${features[@]}"; do
+        script="${core_dir}/${feature}/${feature}.sh"
+        [ -f "$script" ] || { warn "Core feature not found: ${feature} — skipping"; continue; }
+        source "$script" || error "Core feature failed: ${feature}"
     done
     echo "::endgroup::"
 }
@@ -136,9 +131,9 @@ run_core() {
 run_build() {
     echo "::group::🏗️ Build Kernel (${BUILD_SYSTEM})"
     if [ "$BUILD_SYSTEM" = "KLEAF" ]; then
-        source "${LUMINAIRE_PATCH_DIR}/build/kleaf.sh"
+        source "${LUMINAIRE_PATCH_DIR}/build/kleaf/build.sh"
     else
-        source "${LUMINAIRE_PATCH_DIR}/build/make.sh"
+        source "${LUMINAIRE_PATCH_DIR}/build/make/build.sh"
     fi
     echo "::endgroup::"
 }

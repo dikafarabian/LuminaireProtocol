@@ -46,7 +46,7 @@ collect_versions() {
 }
 
 ADDON_VERSIONS="$(collect_versions "${ADDON_ORDER:-}")"
-TUNING_VERSIONS="$(collect_versions "${APPLIED_TUNING:-}")"
+PATCH_VERSIONS="$(collect_versions "${APPLIED_PATCHES:-}")"
 
 STAGE_DIR="${GITHUB_WORKSPACE:-$PWD}/post-stage"
 mkdir -p "$STAGE_DIR"
@@ -69,9 +69,9 @@ jq -n \
     --arg addon_order "${ADDON_ORDER:-}" \
     --arg skipped_addons "${SKIPPED_ADDONS:-}" \
     --arg addon_versions "$ADDON_VERSIONS" \
-    --arg tuning_versions "$TUNING_VERSIONS" \
-    --arg applied_tuning "${APPLIED_TUNING:-}" \
-    --arg skipped_tuning "${SKIPPED_TUNING:-}" \
+    --arg patch_versions "$PATCH_VERSIONS" \
+    --arg applied_patches "${APPLIED_PATCHES:-}" \
+    --arg skipped_patches "${SKIPPED_PATCHES:-}" \
     '$ARGS.named' > "$META_FILE" \
     || error "Post staging: meta file creation failed!"
 

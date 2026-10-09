@@ -127,11 +127,11 @@ def core_features_folds() -> list:
         out.append("</details>")
     return out
 
-def tuning_fold(env) -> list:
-    applied = [t for t in env.get("APPLIED_TUNING", "").split(",") if t]
+def patch_fold(env) -> list:
+    applied = [t for t in env.get("APPLIED_PATCHES", "").split(",") if t]
     rows = [
-        caption.tuning_active_line(env, t)
-        for t in caption.tuning_order(env)
+        caption.patch_active_line(env, t)
+        for t in caption.patch_order(env)
         if t in applied
     ]
     if not rows:
@@ -139,7 +139,7 @@ def tuning_fold(env) -> list:
     body = "".join(f"<tr><td>{html_cell(r)}</td></tr>" for r in rows)
     return [
         "<details>",
-        "<summary>Luminaire Tuning</summary>",
+        "<summary>Luminaire Patches</summary>",
         "",
         f"<table bordered>{body}</table>",
         "</details>",
@@ -183,7 +183,7 @@ def features_details(env) -> str:
         "",
     ]
     out += core_features_folds()
-    out += tuning_fold(env)
+    out += patch_fold(env)
     out.append("</details>")
     return "\n".join(out)
 

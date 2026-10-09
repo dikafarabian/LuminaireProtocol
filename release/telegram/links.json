@@ -7,7 +7,6 @@
     "BAKASU": "https://t.me/BakaSU_Grp"
   },
   "mountless": {
-    "NoMount": "https://github.com/maxsteeel/nomount/releases",
-    "ZeroMount": "https://github.com/Enginex0/zeromount/releases"
+    "NoMount": "https://github.com/maxsteeel/nomount/releases"
   }
 }

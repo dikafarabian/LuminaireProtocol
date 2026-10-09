@@ -7,7 +7,6 @@
 
 declare -A ADDON_SUPPORTED_VERSIONS=(
     [nomount]="5.10 5.15 6.1 6.6 6.12"
-    [zeromount]="5.10 5.15 6.1 6.6 6.12"
     [droidspaces]="5.10 5.15 6.1 6.6 6.12"
     [rekernel]="5.10 5.15 6.1 6.6 6.12"
     [ntsync]="5.10 5.15 6.1 6.6"
@@ -16,9 +15,9 @@ declare -A ADDON_SUPPORTED_VERSIONS=(
     [mglru]="6.1 6.6 6.12"
 )
 
-ADDON_ORDER=(nomount zeromount droidspaces rekernel ntsync lz4zstd lz4kd mglru)
+ADDON_ORDER=(nomount droidspaces rekernel ntsync lz4zstd lz4kd mglru)
 
-ADDON_MOUNTLESS_TOKENS=(nomount zeromount)
+ADDON_MOUNTLESS_TOKENS=(nomount)
 
 addon_supports_kernel_version() {
     local addon="$1"
@@ -39,18 +38,7 @@ run_addons() {
     [ -z "${ADDONS}" ] && return 0
     echo "::group::⚡ Addons"
 
-    if [[ ",${ADDONS}," == *,nomount,* ]] && [[ ",${ADDONS}," == *,zeromount,* ]]; then
-        error "Addon conflict: 'nomount' and 'zeromount' both redirect VFS paths and cannot be combined — pick one."
-    fi
-
     export APPLIED_ADDONS="" SKIPPED_ADDONS=""
-
-    if [[ ",${ADDONS}," == *,zeromount,* ]] && addon_supports_kernel_version "zeromount" \
-            && [ "${SUSFS_ENABLED:-false}" != "true" ]; then
-        warn "Addon 'zeromount' requires SuSFS (its readdir.c/namei.c/task_mmu.c hooks are SuSFS-baseline only, no non-SuSFS fallback) — skipping (SuSFS not enabled for this build)."
-        ADDONS="$(printf ',%s,' "$ADDONS" | sed 's/,zeromount,/,/g' | sed 's/^,//;s/,$//')"
-        SKIPPED_ADDONS="zeromount"
-    fi
 
     IFS=',' read -ra ADDON_LIST <<< "$ADDONS"
     for addon in "${ADDON_LIST[@]}"; do

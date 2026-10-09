@@ -36,7 +36,11 @@ KLEAF_OUT_DIR="${KERNEL_DIR}/bazel-bin/common/kernel_aarch64"
 LTO_CACHE_DIR="/dev/shm/ldcache"
 
 LUMINAIRE_PATCH_DIR="${LUMINAIRE_PATCH_DIR:?LUMINAIRE_PATCH_DIR must be set by the entrypoint before run_setup() runs}"
-PATCHES_DIR="${LUMINAIRE_PATCH_DIR}/kernel/patches/${ANDROID_VERSION}-${KERNEL_VERSION}"
+case "${KERNEL_VERSION}" in
+    5.10)              KABI_PATCHES=(sysvipc_below_6_12 posix_mqueue_5_10) ;;
+    5.15|6.1|6.6)      KABI_PATCHES=(sysvipc_below_6_12) ;;
+    6.12)              KABI_PATCHES=(sysvipc_6_12) ;;
+esac
 
 DEFCONFIG="gki_defconfig"
 ARCH="arm64"

@@ -72,7 +72,6 @@ on:
         options:
           - "none"
           - "nomount"
-          - "zeromount"
       rekernel:
         description: "Re:Kernel"
         type: boolean

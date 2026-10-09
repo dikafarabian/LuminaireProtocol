@@ -49,7 +49,7 @@ run_download() {
     if [ "$BUILD_SYSTEM" = "KLEAF" ]; then
         log "Kleaf: workspace sync skipped in Prepare Arsenal (runner disk too small) — each build job syncs it directly"
     else
-        source "${LUMINAIRE_PATCH_DIR}/download/make.sh"
+        source "${LUMINAIRE_PATCH_DIR}/build/make/download.sh"
     fi
     log "Arsenal downloaded ✅"
     echo "::endgroup::"
