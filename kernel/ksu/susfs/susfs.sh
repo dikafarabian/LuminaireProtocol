@@ -124,6 +124,12 @@ if [[ " ${SUSFS_KSU_ENABLE_VARIANTS} " == *" ${KERNEL_VARIANT} "* ]]; then
         log "SuSFS: 10_enable already applied to KernelSU, skipping."
     else
         log "Applying SuSFS 10_enable KernelSU patch (${KERNEL_VARIANT})..."
+        SELINUX_HIDE_C="${KSU_DIR}/kernel/feature/selinux_hide.c"
+        if grep -q "sync to global sidtab" "$SELINUX_HIDE_C" 2>/dev/null; then
+            log "Reverting upstream selinux_hide sidtab sync (removed by 10_enable)..."
+            patch -p1 -R --forward -d "$KSU_DIR" < "${SUSFS_LOCAL_DIR}/fixes/selinux_hide_sidtab_sync.patch" \
+                || error "SuSFS: selinux_hide sidtab revert failed on ${KERNEL_VARIANT}!"
+        fi
         KSU_INIT_C="${KSU_DIR}/kernel/core/init.c"
         if [ "$KERNEL_VARIANT" = "KSU" ] && [ -f "$KSU_INIT_C" ]; then
             python3 "${SUSFS_LOCAL_DIR}/fixes/init_banner.py" strip "$KSU_INIT_C" \
