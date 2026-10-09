@@ -33,6 +33,13 @@ verify_pinned_ref "SukiSU-Ultra" "$KSU_DIR" "${SUKISU_REF:-}"
 cd "$ROOT_DIR"
 log "SukiSU-Ultra integrated ✅"
 
+if [ -z "$(find "${KSU_DIR}/kernel" -name arch.h -print -quit 2>/dev/null)" ] \
+    && grep -q '"arch.h"' "${KSU_DIR}/kernel/kernel_includes.h" 2>/dev/null; then
+    log "Adding missing arch.h..."
+    cp "${PATCHER_DIR}/arch.h" "${KSU_DIR}/kernel/include/arch.h" \
+        || error "SukiSU-Ultra: arch.h copy failed!"
+fi
+
 log "Applying Luminaire branding..."
 if [ "${SUSFS_ENABLED:-false}" = "true" ]; then
     BRANDING_TARGET="${KSU_DIR}/kernel/Makefile"
