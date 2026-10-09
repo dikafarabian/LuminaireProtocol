@@ -128,23 +128,6 @@ wait_for_apt() {
     fi
 }
 
-apply_required_patches() {
-    local name patch
-    for name in "${KABI_PATCHES[@]}"; do
-        patch="${ROOT_DIR}/kernel/patches/${name}.patch"
-        [ -f "$patch" ] || error "KaBI patch missing: ${name}.patch"
-        log "Applying: $(basename "$patch")..."
-        if patch -p1 --fuzz=3 --dry-run --forward -d "$KERNEL_SRC" < "$patch" > /dev/null 2>&1; then
-            patch -p1 --fuzz=3 -d "$KERNEL_SRC" < "$patch" || error "Patch failed: $(basename "$patch")"
-            log "$(basename "$patch") applied ✅"
-        elif patch -p1 --fuzz=3 --dry-run --reverse -d "$KERNEL_SRC" < "$patch" > /dev/null 2>&1; then
-            log "$(basename "$patch") already applied, skipping."
-        else
-            error "$(basename "$patch") failed — conflict!"
-        fi
-    done
-}
-
 retry() {
     local max_attempts="$1"; shift
     local attempt=1 delay=5 rc=0

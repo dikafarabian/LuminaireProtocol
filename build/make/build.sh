@@ -69,8 +69,8 @@ grep -E "^CONFIG_DEBUG_INFO|^# CONFIG_DEBUG_INFO" "${OUT_DIR}/.config" | while r
     log "  ${line}"
 done
 
-log "Applying required patches..."
-apply_required_patches
+log "Applying KaBI patches..."
+apply_kabi_patches
 
 CC_ARG="${TOOL_CCACHE_WRAPPERS}/clang"
 

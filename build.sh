@@ -20,6 +20,7 @@ ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 source "${ROOT_DIR}/kernel/addons/registry.sh"
 source "${ROOT_DIR}/kernel/patches/registry.sh"
+source "${ROOT_DIR}/kernel/kabi/registry.sh"
 source "${ROOT_DIR}/kernel/ksu/registry.sh"
 
 main() {

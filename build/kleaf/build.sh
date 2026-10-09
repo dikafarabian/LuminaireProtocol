@@ -73,8 +73,8 @@ fi
 
 cd "$ROOT_DIR"
 
-log "Applying required patches..."
-apply_required_patches
+log "Applying KaBI patches..."
+apply_kabi_patches
 
 log "Building kernel with Kleaf (Bazel)..."
 START_TIME=$(date +%s)
