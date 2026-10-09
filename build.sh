@@ -3,7 +3,7 @@
 # ======================================================
 # ✨ BUILD — Luminaire Pipeline
 # ======================================================
-# Flow: setup → branding → root solution → core → patches → addons → build → post-build
+# Flow: setup → branding → root solution → core → patches → addons → build → release
 
 set -eo pipefail
 
@@ -57,7 +57,6 @@ main() {
     mark_stage_ok CHECKPOINT_ADDONS_OK
     run_build
     mark_stage_ok CHECKPOINT_BUILD_OK
-    run_postbuild
 
     if [ "${RUN_MODE^^}" = "WARM RUN" ]; then
         echo "========================================"
@@ -135,27 +134,6 @@ run_build() {
     else
         source "${ROOT_DIR}/build/make/build.sh"
     fi
-    echo "::endgroup::"
-}
-
-run_postbuild() {
-    [ "${DRY_RUN:-false}" = "true" ] && return 0
-    [ -z "${APPLIED_ADDONS:-}" ] && return 0
-
-    echo "::group::🧩 Post-Build"
-
-    IFS=',' read -ra ADDON_LIST <<< "$APPLIED_ADDONS"
-    for addon in "${ADDON_LIST[@]}"; do
-        addon="${addon// /}"
-        [ -z "$addon" ] && continue
-
-        script="${ROOT_DIR}/kernel/addons/${addon}/postbuild.sh"
-        [ -f "$script" ] || continue
-
-        log "🧩 Post-build: ${addon}"
-        source "$script" || error "Post-build step failed: ${addon}"
-    done
-
     echo "::endgroup::"
 }
 

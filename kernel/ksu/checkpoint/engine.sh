@@ -132,7 +132,7 @@ for key in "${COMPONENTS[@]}"; do
     fi
 
     if [ "${CHECKPOINT_ADDONS_OK:-false}" = "true" ] && [ "${CHECKPOINT_BUILD_OK:-false}" = "true" ]; then
-        log "checkpoint: ${key} candidate ${ref:0:12} left untouched — build failed in an unrelated stage (run_postbuild), not in run_variant/run_build (kernel ${KERNEL_VERSION})"
+        log "checkpoint: ${key} candidate ${ref:0:12} left untouched — build failed in an unrelated stage (run_release), not in run_variant/run_build (kernel ${KERNEL_VERSION})"
         continue
     fi
 
