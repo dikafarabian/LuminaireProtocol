@@ -325,8 +325,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         run: |
-          OUTCOME="${{ steps.build.outcome }}"
-          [ "$OUTCOME" = "success" ] && OUTCOME="success" || OUTCOME="failure"
+          case "${{ steps.build.outcome }}" in
+            success) OUTCOME="success" ;;
+            failure) OUTCOME="failure" ;;
+            *)       OUTCOME="inconclusive" ;;
+          esac
           case "${{ matrix.kernel_variant }}" in
             KSU)
               if [ "${{ matrix.susfs }}" = "true" ]; then

@@ -1,0 +1,73 @@
+name: "🚫 Approve Bad Pin"
+run-name: "🚫 Approve Bad Pin | issue #${{ github.event.issue.number }}"
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  approve:
+    name: "Mark Known-Bad"
+    if: >-
+      github.event.label.name == 'approve-bad' &&
+      github.event.sender.login == github.repository_owner &&
+      contains(github.event.issue.labels.*.name, 'upstream-broken')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: "Read Proposal"
+        id: proposal
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          marker="$(printf '%s' "$ISSUE_BODY" | grep -o '<!-- luminaire-bad [^>]*-->' | head -n1)"
+          [ -n "$marker" ] || { echo "No proposal marker found in issue body"; exit 1; }
+          key="$(sed -n 's/.* key=\([a-z0-9_]*\) .*/\1/p' <<< "$marker")"
+          ref="$(sed -n 's/.* ref=\([0-9a-f]*\) .*/\1/p' <<< "$marker")"
+          kernel="$(sed -n 's/.* kernel=\([0-9.]*\) .*/\1/p' <<< "$marker")"
+          [[ "$key" =~ ^[a-z0-9_]+$ ]]      || { echo "Invalid key in marker"; exit 1; }
+          [[ "$ref" =~ ^[0-9a-f]{40}$ ]]    || { echo "Invalid ref in marker"; exit 1; }
+          [[ "$kernel" =~ ^[0-9]+\.[0-9]+$ ]] || { echo "Invalid kernel in marker"; exit 1; }
+          {
+            echo "key=${key}"
+            echo "ref=${ref}"
+            echo "kernel=${kernel}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: "Mark Known-Bad"
+        id: mark
+        env:
+          PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          ROOT_DIR:       ${{ github.workspace }}
+          KERNEL_VERSION: ${{ steps.proposal.outputs.kernel }}
+          PIN_KEY:        ${{ steps.proposal.outputs.key }}
+          PIN_REF:        ${{ steps.proposal.outputs.ref }}
+        run: bash kernel/ksu/checkpoint/engine.sh approve-bad "$PIN_KEY" "$PIN_REF"
+
+      - name: "Report"
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO:  ${{ github.repository }}
+          ISSUE:    ${{ github.event.issue.number }}
+          RUN_URL:  ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          PIN_KEY:  ${{ steps.proposal.outputs.key }}
+          PIN_REF:  ${{ steps.proposal.outputs.ref }}
+          OUTCOME:  ${{ steps.mark.outcome }}
+        run: |
+          if [ "$OUTCOME" = "success" ]; then
+            gh issue comment "$ISSUE" --body "🚫 Approved: \`${PIN_REF}\` is now known-bad for \`${PIN_KEY}\` ($RUN_URL)."
+          else
+            gh issue comment "$ISSUE" --body "⚠️ Approval did not go through — manifest unchanged ($RUN_URL). Re-add the \`approve-bad\` label to retry."
+          fi
+          gh issue edit "$ISSUE" --remove-label approve-bad
