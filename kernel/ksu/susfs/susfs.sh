@@ -96,11 +96,6 @@ else
     susfs_after_kernel_patch
 fi
 
-log "Fixing namespace.c susfs declarations (safety fallback)..."
-python3 "${SUSFS_LOCAL_DIR}/fixes/fix_namespace.py" "${KERNEL_SRC}/fs/namespace.c" \
-    || error "SuSFS: namespace.c fix failed!"
-log "namespace.c fixed ✅"
-
 susfs_extra_fixes
 
 if [[ " ${SUSFS_KSU_ENABLE_VARIANTS} " == *" ${KERNEL_VARIANT} "* ]]; then
