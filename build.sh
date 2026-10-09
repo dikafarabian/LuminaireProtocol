@@ -118,9 +118,9 @@ run_variant() {
 run_build() {
     echo "::group::🏗️ Build Kernel (${BUILD_SYSTEM})"
     if [ "$BUILD_SYSTEM" = "KLEAF" ]; then
-        source "${ROOT_DIR}/build/kleaf/build.sh"
+        source "${ROOT_DIR}/build/kleaf/compile.sh"
     else
-        source "${ROOT_DIR}/build/make/build.sh"
+        source "${ROOT_DIR}/build/make/compile.sh"
     fi
     echo "::endgroup::"
 }
