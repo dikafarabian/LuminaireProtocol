@@ -39,15 +39,6 @@ if [ -f "$SUSFS_QUIRKS" ]; then
     source "$SUSFS_QUIRKS"
 fi
 
-susfs_fix_ksunext_linkage() {
-    [ "$KERNEL_VARIANT" = "KSUNEXT" ] || return 0
-    local selinux_hide_c="${KSU_DIR}/kernel/feature/selinux_hide.c"
-    [ -f "$selinux_hide_c" ] || return 0
-    log "Fixing KernelSU-Next with_policy static/extern linkage (kernel >=6.6 only, safety fallback)..."
-    python3 "${SUSFS_LOCAL_DIR}/fixes/fix_ksunext_with_policy_linkage.py" "$selinux_hide_c" \
-        || error "SuSFS: KernelSU-Next with_policy linkage fix failed!"
-}
-
 source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 CANDIDATE_VAR="CANDIDATE_${SUSFS_MIRROR_KEY^^}"
 SUSFS_MIRRORED="false"

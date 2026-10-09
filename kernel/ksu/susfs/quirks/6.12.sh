@@ -9,5 +9,4 @@ susfs_extra_fixes() {
     python3 "${SUSFS_LOCAL_DIR}/fixes/fix_task_mmu_sus_map.py" "${KERNEL_SRC}/fs/proc/task_mmu.c" \
         || error "SuSFS: task_mmu.c SUS_MAP fix failed!"
     log "task_mmu.c fixed ✅"
-    susfs_fix_ksunext_linkage
 }
