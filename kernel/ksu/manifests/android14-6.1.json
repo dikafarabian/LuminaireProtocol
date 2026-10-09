@@ -35,10 +35,7 @@
   },
   "kowsu": {
     "good": "a0bcb1ddd7cfb526c2dec164b705e86f3b5098c3",
-    "bad": [
-      "9e5e33a2767643b63b706f55680cc16f8f4b0ba1",
-      "ac324d9327b6eab642b58cee45573ed1af289d9e"
-    ]
+    "bad": []
   },
   "susfs_kowsu": {
     "good": "24743360ea08d98f6ad72b856851abed8de5854f",
@@ -46,12 +43,7 @@
   },
   "ksu": {
     "good": "24d9bc37c23f6f82aeae8b99347497081597fd02",
-    "bad": [
-      "a05b1d7f0b641a7b485c5c41add8b45de9febc15",
-      "a810677b847ba564c5f9d3fa0fbabe54794b8eef",
-      "ab23091edfeddc774e1e880b0919b211808a193e",
-      "df03912f70d92ff2aa9762ef82d607033d37e1da"
-    ]
+    "bad": []
   },
   "susfs_ksu": {
     "good": "24743360ea08d98f6ad72b856851abed8de5854f",
