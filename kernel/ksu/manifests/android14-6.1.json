@@ -36,7 +36,8 @@
   "kowsu": {
     "good": "a0bcb1ddd7cfb526c2dec164b705e86f3b5098c3",
     "bad": [
-      "9e5e33a2767643b63b706f55680cc16f8f4b0ba1"
+      "9e5e33a2767643b63b706f55680cc16f8f4b0ba1",
+      "ac324d9327b6eab642b58cee45573ed1af289d9e"
     ]
   },
   "susfs_kowsu": {
