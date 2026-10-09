@@ -139,15 +139,10 @@ fi
 
 rm -rf "$SUSFS_DIR"
 
-log "Ensuring KSU_SUSFS Kconfig declarations exist..."
 KSU_KCONFIG="${KSU_DIR}/kernel/Kconfig"
-if [ -f "$KSU_KCONFIG" ] && grep -q "^config KSU_SUSFS$" "$KSU_KCONFIG"; then
-    log "KSU_SUSFS already declared by this fork, skipping injection."
-else
-    python3 "${SUSFS_LOCAL_DIR}/fixes/kconfig_inject.py" "$KSU_KCONFIG" \
-        || error "SuSFS: Kconfig inject failed!"
-    log "KSU_SUSFS Kconfig injected ✅"
-fi
+grep -q "^config KSU_SUSFS$" "$KSU_KCONFIG" 2>/dev/null \
+    || error "SuSFS: KSU_SUSFS Kconfig symbol missing in ${KERNEL_VARIANT}!"
+log "KSU_SUSFS Kconfig declaration verified ✅"
 
 log "Enabling SuSFS configs..."
 if ! grep -q "^CONFIG_KSU_SUSFS=y" "${KERNEL_SRC}/arch/arm64/configs/gki_defconfig"; then
