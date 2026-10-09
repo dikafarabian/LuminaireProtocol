@@ -27,6 +27,7 @@ addon_supports_kernel_version() {
 }
 
 run_addons() {
+    local ordered=("${ADDON_ORDER[@]}") addon selected script
     IFS=, ; ADDON_ORDER_STR="${ADDON_ORDER[*]}"; ADDON_MOUNTLESS_TOKENS_STR="${ADDON_MOUNTLESS_TOKENS[*]}"; unset IFS
     unset ADDON_ORDER ADDON_MOUNTLESS_TOKENS
     export ADDON_ORDER="${ADDON_ORDER_STR}" ADDON_MOUNTLESS_TOKENS="${ADDON_MOUNTLESS_TOKENS_STR}"
@@ -40,11 +41,9 @@ run_addons() {
 
     export APPLIED_ADDONS="" SKIPPED_ADDONS=""
 
-    IFS=',' read -ra ADDON_LIST <<< "$ADDONS"
-    for addon in "${ADDON_LIST[@]}"; do
-        addon="${addon// /}"
-        [ -z "$addon" ] && continue
-        local script="${ROOT_DIR}/kernel/addons/${addon}/${addon}.sh"
+    for addon in "${ordered[@]}"; do
+        [[ ",${ADDONS}," == *",${addon},"* ]] || continue
+        script="${ROOT_DIR}/kernel/addons/${addon}/${addon}.sh"
         if [ ! -f "$script" ]; then
             log "⚠️ Addon not found: ${addon}"
             continue
@@ -56,6 +55,11 @@ run_addons() {
         fi
         source "$script" || error "Addon failed: ${addon}"
         APPLIED_ADDONS="${APPLIED_ADDONS:+${APPLIED_ADDONS},}${addon}"
+    done
+
+    IFS=',' read -ra ADDON_LIST <<< "$ADDONS"
+    for selected in "${ADDON_LIST[@]}"; do
+        [[ ",${ADDON_ORDER_STR}," == *",${selected},"* ]] || warn "Addon '${selected}' is not listed in ADDON_ORDER (kernel/addons/registry.sh) — ignored."
     done
 
     echo "APPLIED_ADDONS=${APPLIED_ADDONS}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
