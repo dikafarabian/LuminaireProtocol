@@ -18,6 +18,7 @@ KERNEL_BRANCH="$(resolve_kernel_branch)"
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+source "${ROOT_DIR}/kernel/core/registry.sh"
 source "${ROOT_DIR}/kernel/addons/registry.sh"
 source "${ROOT_DIR}/kernel/patches/registry.sh"
 source "${ROOT_DIR}/kernel/kabi/registry.sh"
@@ -112,19 +113,6 @@ run_variant() {
     [ "$SUSFS_ENABLED" = "true" ] || return 0
     local susfs_script="${ROOT_DIR}/kernel/ksu/susfs/susfs.sh"
     run_step "🧬" "SuSFS" "$susfs_script" "SuSFS script not found: $(basename "$susfs_script")"
-}
-
-run_core() {
-    echo "::group::🔧 Core"
-    local core_dir="${ROOT_DIR}/kernel/core"
-    local features=(dirty_flag glibc protected_exports compiler_string module_bypass openssl3_compat)
-    local feature script
-    for feature in "${features[@]}"; do
-        script="${core_dir}/${feature}/${feature}.sh"
-        [ -f "$script" ] || { warn "Core feature not found: ${feature} — skipping"; continue; }
-        source "$script" || error "Core feature failed: ${feature}"
-    done
-    echo "::endgroup::"
 }
 
 run_build() {
