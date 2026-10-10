@@ -19,15 +19,12 @@ if [ ! -f "$MANIFEST" ]; then
     echo '{}' > "$MANIFEST"
 fi
 
-GH_API_AUTH=()
-[ -n "${PERSONAL_TOKEN:-}" ] && GH_API_AUTH=(-H "Authorization: Bearer ${PERSONAL_TOKEN}")
-
 latest_sha_or_empty() {
     local label="$1" url="$2" jq_filter="$3"
     local body_file http_code curl_exit sha auth_args=()
 
     case "$url" in
-        https://api.github.com/*) auth_args=("${GH_API_AUTH[@]}") ;;
+        https://api.github.com/*) auth_args=("${GITHUB_AUTH_ARGS[@]}") ;;
     esac
 
     body_file="$(mktemp)"

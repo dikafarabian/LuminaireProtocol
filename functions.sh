@@ -158,6 +158,33 @@ retry() {
     done
 }
 
+GITHUB_AUTH_ARGS=()
+if [ -n "${PERSONAL_TOKEN:-}" ]; then
+    GITHUB_AUTH_ARGS=(-H "Authorization: Bearer ${PERSONAL_TOKEN}")
+fi
+
+github_api() {
+    retry 3 curl -fsSL --connect-timeout 15 --max-time 30 "${GITHUB_AUTH_ARGS[@]}" "$1"
+}
+
+github_commit_count() {
+    local repo="$1" branch="$2"
+    curl -sI --connect-timeout 15 --max-time 30 "${GITHUB_AUTH_ARGS[@]}" \
+        "https://api.github.com/repos/${repo}/commits?sha=${branch}&per_page=1" 2>/dev/null \
+        | sed -n 's/^[Ll]ink:.*page=\([0-9]*\)>; rel="last".*/\1/p'
+}
+
+github_latest_release_tag() {
+    github_api "https://api.github.com/repos/$1/releases/latest" 2>/dev/null \
+        | jq -r '.tag_name // empty'
+}
+
+latest_release_asset_url() {
+    local repo="$1" suffix="$2"
+    github_api "https://api.github.com/repos/${repo}/releases/latest" \
+        | jq -r --arg suffix "$suffix" '[.assets[]? | select(.name | endswith($suffix)) | .browser_download_url][0] // empty'
+}
+
 cache_freshness_note() {
     if [ "${CACHE_REFRESHED:-false}" = "true" ]; then
         echo "pre-warmed fresh by Prepare Arsenal this run"

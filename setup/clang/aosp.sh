@@ -6,8 +6,7 @@
 
 log "Downloading AOSP Clang..."
 
-AOSP_URL=$(curl -fsSL https://api.github.com/repos/bachnxuan/aosp_clang_mirror/releases/latest \
-    | python3 -c "import json,sys; d=json.load(sys.stdin); print(next((x['browser_download_url'] for x in d.get('assets',[]) if x['name'].endswith('.tar.gz')), ''))") \
+AOSP_URL=$(latest_release_asset_url "bachnxuan/aosp_clang_mirror" ".tar.gz") \
     || error "AOSP: failed to query GitHub API!"
 [ -n "$AOSP_URL" ] || error "AOSP: no .tar.gz asset found in latest release!"
 

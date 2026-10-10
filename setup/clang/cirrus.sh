@@ -6,8 +6,7 @@
 
 log "Downloading Cirrus Clang..."
 
-CIRRUS_URL=$(curl -fsSL https://api.github.com/repos/greenforce-project/greenforce_clang/releases/latest \
-    | python3 -c "import json,sys; d=json.load(sys.stdin); print(next((x['browser_download_url'] for x in d.get('assets',[]) if x['name'].endswith('.tar.gz')), ''))") \
+CIRRUS_URL=$(latest_release_asset_url "greenforce-project/greenforce_clang" ".tar.gz") \
     || error "Cirrus: failed to query GitHub API!"
 [ -n "$CIRRUS_URL" ] || error "Cirrus: no .tar.gz asset found in latest release!"
 
