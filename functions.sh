@@ -48,11 +48,23 @@ run_quiet() {
     return "$rc"
 }
 
+github_env() {
+    [ -n "${GITHUB_ENV:-}" ] || return 0
+    echo "$1=$2" >> "$GITHUB_ENV"
+}
+
+github_path() {
+    [ -n "${GITHUB_PATH:-}" ] || return 0
+    echo "$1" >> "$GITHUB_PATH"
+}
+
 mark_stage_ok() {
-    local marker="$1"
-    if [ -n "${GITHUB_ENV:-}" ]; then
-        echo "${marker}=true" >> "$GITHUB_ENV"
-    fi
+    github_env "$1" true
+}
+
+join_csv() {
+    local IFS=,
+    echo "$*"
 }
 
 write_dry_run_image() {
@@ -183,6 +195,68 @@ latest_release_asset_url() {
     local repo="$1" suffix="$2"
     github_api "https://api.github.com/repos/${repo}/releases/latest" \
         | jq -r --arg suffix "$suffix" '[.assets[]? | select(.name | endswith($suffix)) | .browser_download_url][0] // empty'
+}
+
+fetch() {
+    curl -LSs --fail --retry 3 --retry-all-errors --connect-timeout 30 "$@"
+}
+
+apply_patch() {
+    local label="$1" patch_file="$2" dir="$3"
+    shift 3
+    [ -f "$patch_file" ] || error "${label}: patch file not found: ${patch_file}"
+    if patch -p1 "$@" --dry-run --reverse -d "$dir" < "$patch_file" > /dev/null 2>&1; then
+        log "${label}: patch already applied, skipping."
+    elif patch -p1 "$@" --dry-run --forward -d "$dir" < "$patch_file" > /dev/null 2>&1; then
+        patch -p1 "$@" --forward -d "$dir" < "$patch_file" \
+            || error "${label}: patch apply failed!"
+        log "${label}: patch applied ✅"
+    else
+        error "${label}: patch does not apply cleanly — conflict or unsupported kernel source!"
+    fi
+}
+
+apply_remote_patch() {
+    local label="$1" url="$2" dir="$3" tmp
+    shift 3
+    tmp="$(mktemp)"
+    fetch -o "$tmp" "$url" || { rm -f "$tmp"; error "${label}: failed to download patch!"; }
+    [ -s "$tmp" ] || { rm -f "$tmp"; error "${label}: downloaded patch is empty!"; }
+    apply_patch "$label" "$tmp" "$dir" "$@"
+    rm -f "$tmp"
+}
+
+run_upstream_setup() {
+    local label="$1" url="$2" ref="${3:-}" script
+    script="$(fetch "$url")" || error "${label}: failed to download setup.sh!"
+    [ -n "$script" ] || error "${label}: setup.sh is empty!"
+    grep -q "^#!" <<< "$script" || error "${label}: setup.sh looks invalid (no shebang)!"
+    if [ -n "$ref" ]; then
+        log "Pinning ${label} to ${ref}"
+        printf '%s\n' "$script" | bash -s -- "$ref" || error "${label}: setup.sh failed!"
+    else
+        printf '%s\n' "$script" | bash || error "${label}: setup.sh failed!"
+    fi
+}
+
+gki_defconfig_enable() {
+    local defconfig="${KERNEL_SRC}/arch/arm64/configs/gki_defconfig" option
+    for option in "$@"; do
+        grep -q "^${option}=y" "$defconfig" || echo "${option}=y" >> "$defconfig"
+    done
+}
+
+ksu_uapi_version() {
+    grep -oP 'KERNEL_SU_UAPI_VERSION\s*=\s*\K[0-9]+' "$1/uapi/supercall.h" 2>/dev/null || true
+}
+
+format_ksu_version() {
+    local tag="$1" code="$2" uapi="${3:-}"
+    if [ -n "$uapi" ]; then
+        echo "${tag} (${code}/${uapi})"
+    else
+        echo "${tag} (${code})"
+    fi
 }
 
 cache_freshness_note() {
