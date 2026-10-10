@@ -42,6 +42,7 @@
   "ksu": {
     "good": "6a2f63240397ea647ede981e0669231c8bf17fee",
     "bad": [
+      "6e3860443f8fea7c5fc226277e53888033796488",
       "a85dcbcfc3b09ae410f31aae124d04f3777fdf1c"
     ]
   },
