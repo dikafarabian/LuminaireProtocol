@@ -98,7 +98,8 @@ prune_proposal_branches() {
 
 file_proposal() {
     local key="$1" ref="$2" others="$3"
-    local branch="$(proposal_prefix "$key")${ref:0:12}"
+    local branch
+    branch="$(proposal_prefix "$key")${ref:0:12}"
     local run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
     local stage existing body tree
 

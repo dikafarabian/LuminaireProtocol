@@ -85,8 +85,8 @@ resolve_component() {
         fi
     fi
 
-    echo "${prefix}_REF=${ref}"       >> "$GITHUB_ENV"
-    echo "CANDIDATE_${prefix}=${candidate}" >> "$GITHUB_ENV"
+    github_env "${prefix}_REF" "$ref"
+    github_env "CANDIDATE_${prefix}" "$candidate"
 }
 
 case "$KERNEL_VARIANT" in

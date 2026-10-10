@@ -13,21 +13,9 @@ log "Integrating SukiSU-Ultra..."
 cd "$KERNEL_SRC"
 if [ "${SUSFS_ENABLED:-false}" = "true" ]; then
     mirror_preseed "sukisu_builtin" "$KSU_DIR" "${SUKISU_BUILTIN_REF:-}" "${CANDIDATE_SUKISU_BUILTIN:-false}" "$(resolve_android_version)-${KERNEL_VERSION}" || true
-fi
-SUKISU_SETUP=$(curl -LSs --fail --retry 3 --retry-all-errors --connect-timeout 30 \
-    "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh") \
-    || error "SukiSU-Ultra: failed to download setup.sh!"
-[ -n "$SUKISU_SETUP" ] || error "SukiSU-Ultra: setup.sh is empty!"
-echo "$SUKISU_SETUP" | grep -q "^#!" || error "SukiSU-Ultra: setup.sh looks invalid (no shebang)!"
-if [ "${SUSFS_ENABLED:-false}" = "true" ]; then
     SUKISU_REF="${SUKISU_BUILTIN_REF:-builtin}"
 fi
-if [ -n "${SUKISU_REF:-}" ]; then
-    log "Pinning SukiSU-Ultra to ${SUKISU_REF}"
-    echo "$SUKISU_SETUP" | bash -s -- "$SUKISU_REF" || error "SukiSU-Ultra: setup.sh failed!"
-else
-    echo "$SUKISU_SETUP" | bash || error "SukiSU-Ultra: setup.sh failed!"
-fi
+run_upstream_setup "SukiSU-Ultra" "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" "${SUKISU_REF:-}"
 [ -d "${KERNEL_SRC}/KernelSU" ] || error "SukiSU-Ultra: KernelSU dir not found after setup!"
 verify_pinned_ref "SukiSU-Ultra" "$KSU_DIR" "${SUKISU_REF:-}"
 cd "$ROOT_DIR"
@@ -73,23 +61,13 @@ fi
 KSU_TAG_NAME="v${SUKISU_RELEASE_TAG#v}"
 [ "$KSU_TAG_NAME" != "v" ] || KSU_TAG_NAME="unknown"
 
-KSU_UAPI_VERSION=$(grep -oP 'KERNEL_SU_UAPI_VERSION\s*=\s*\K[0-9]+' "${KSU_DIR}/uapi/supercall.h" 2>/dev/null || echo "")
-
-if [ -n "$KSU_UAPI_VERSION" ]; then
-    SUKISU_VERSION_DISPLAY="${KSU_TAG_NAME} (${KSU_VERSION_CODE}/${KSU_UAPI_VERSION})"
-else
-    SUKISU_VERSION_DISPLAY="${KSU_TAG_NAME} (${KSU_VERSION_CODE})"
-fi
-echo "SUKISU_VERSION_DISPLAY=${SUKISU_VERSION_DISPLAY}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
+KSU_UAPI_VERSION="$(ksu_uapi_version "$KSU_DIR")"
+SUKISU_VERSION_DISPLAY="$(format_ksu_version "$KSU_TAG_NAME" "$KSU_VERSION_CODE" "$KSU_UAPI_VERSION")"
+github_env SUKISU_VERSION_DISPLAY "${SUKISU_VERSION_DISPLAY}"
 log "Version: ${SUKISU_VERSION_DISPLAY}"
 
 log "Enabling KSU configs..."
-if ! grep -q "^CONFIG_KSU=y" "${KERNEL_SRC}/arch/arm64/configs/gki_defconfig"; then
-    cat >> "${KERNEL_SRC}/arch/arm64/configs/gki_defconfig" << 'CONFIGS'
-CONFIG_KSU=y
-CONFIG_KPM=y
-CONFIGS
-fi
+gki_defconfig_enable CONFIG_KSU CONFIG_KPM
 log "Configs enabled ✅"
 
 log "SukiSU-Ultra ready ✅"

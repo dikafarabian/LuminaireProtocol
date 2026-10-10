@@ -16,17 +16,7 @@ source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 log "Integrating KowSU..."
 cd "$KERNEL_SRC"
 mirror_preseed "kowsu" "$KSU_DIR" "${KOWSU_REF:-}" "${CANDIDATE_KOWSU:-false}" "$(resolve_android_version)-${KERNEL_VERSION}" || true
-KOWSU_SETUP=$(curl -LSs --fail --retry 3 --retry-all-errors --connect-timeout 30 \
-    "https://raw.githubusercontent.com/KOWX712/KernelSU/main/kernel/setup.sh") \
-    || error "KowSU: failed to download setup.sh!"
-[ -n "$KOWSU_SETUP" ] || error "KowSU: setup.sh is empty!"
-echo "$KOWSU_SETUP" | grep -q "^#!" || error "KowSU: setup.sh looks invalid (no shebang)!"
-if [ -n "${KOWSU_REF:-}" ]; then
-    log "Pinning KowSU to ${KOWSU_REF}"
-    echo "$KOWSU_SETUP" | bash -s -- "$KOWSU_REF" || error "KowSU: setup.sh failed!"
-else
-    echo "$KOWSU_SETUP" | bash || error "KowSU: setup.sh failed!"
-fi
+run_upstream_setup "KowSU" "https://raw.githubusercontent.com/KOWX712/KernelSU/main/kernel/setup.sh" "${KOWSU_REF:-}"
 [ -d "$KSU_DIR" ] || error "KowSU: KernelSU dir not found after setup!"
 verify_pinned_ref "KowSU" "$KSU_DIR" "${KOWSU_REF:-}"
 cd "$ROOT_DIR"
@@ -35,22 +25,13 @@ log "KowSU integrated ✅"
 KSU_TAG_NAME=$(git -C "$KSU_DIR" describe --abbrev=0 --tags 2>/dev/null || echo "v0.0.1")
 KSU_LOCAL_VERSION=$(git -C "$KSU_DIR" rev-list --count HEAD 2>/dev/null || echo 0)
 KSU_VERSION_CODE=$((30000 + KSU_LOCAL_VERSION))
-KSU_UAPI_VERSION=$(grep -oP 'KERNEL_SU_UAPI_VERSION\s*=\s*\K[0-9]+' "${KSU_DIR}/uapi/supercall.h" 2>/dev/null || echo "")
-
-if [ -n "$KSU_UAPI_VERSION" ]; then
-    KOWSU_VERSION_DISPLAY="${KSU_TAG_NAME} (${KSU_VERSION_CODE}/${KSU_UAPI_VERSION})"
-else
-    KOWSU_VERSION_DISPLAY="${KSU_TAG_NAME} (${KSU_VERSION_CODE})"
-fi
-echo "KOWSU_VERSION_DISPLAY=${KOWSU_VERSION_DISPLAY}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
+KSU_UAPI_VERSION="$(ksu_uapi_version "$KSU_DIR")"
+KOWSU_VERSION_DISPLAY="$(format_ksu_version "$KSU_TAG_NAME" "$KSU_VERSION_CODE" "$KSU_UAPI_VERSION")"
+github_env KOWSU_VERSION_DISPLAY "${KOWSU_VERSION_DISPLAY}"
 log "Version: ${KOWSU_VERSION_DISPLAY}"
 
 log "Enabling KSU configs..."
-if ! grep -q "^CONFIG_KSU=y" "${KERNEL_SRC}/arch/arm64/configs/gki_defconfig"; then
-    cat >> "${KERNEL_SRC}/arch/arm64/configs/gki_defconfig" << 'CONFIGS'
-CONFIG_KSU=y
-CONFIGS
-fi
+gki_defconfig_enable CONFIG_KSU
 log "Configs enabled ✅"
 
 log "KowSU ready ✅"

@@ -12,17 +12,7 @@ source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 log "Integrating BakaSU..."
 cd "$KERNEL_SRC"
 mirror_preseed "bakasu" "$KSU_DIR" "${BAKASU_REF:-}" "${CANDIDATE_BAKASU:-false}" "$(resolve_android_version)-${KERNEL_VERSION}" || true
-BAKASU_SETUP=$(curl -LSs --fail --retry 3 --retry-all-errors --connect-timeout 30 \
-    "https://raw.githubusercontent.com/Baka-SU/BakaSU/main/kernel/setup.sh") \
-    || error "BakaSU: failed to download setup.sh!"
-[ -n "$BAKASU_SETUP" ] || error "BakaSU: setup.sh is empty!"
-echo "$BAKASU_SETUP" | grep -q "^#!" || error "BakaSU: setup.sh looks invalid (no shebang)!"
-if [ -n "${BAKASU_REF:-}" ]; then
-    log "Pinning BakaSU to ${BAKASU_REF}"
-    echo "$BAKASU_SETUP" | bash -s -- "$BAKASU_REF" || error "BakaSU: setup.sh failed!"
-else
-    echo "$BAKASU_SETUP" | bash || error "BakaSU: setup.sh failed!"
-fi
+run_upstream_setup "BakaSU" "https://raw.githubusercontent.com/Baka-SU/BakaSU/main/kernel/setup.sh" "${BAKASU_REF:-}"
 [ -d "${KERNEL_SRC}/KernelSU" ] || error "BakaSU: KernelSU dir not found after setup!"
 verify_pinned_ref "BakaSU" "$KSU_DIR" "${BAKASU_REF:-}"
 cd "$ROOT_DIR"
@@ -36,14 +26,9 @@ log "Branding applied ✅"
 KSU_TAG_NAME=$(git -C "$KSU_DIR" describe --abbrev=0 --tags 2>/dev/null || echo "v4.1.0")
 KSU_LOCAL_VERSION=$(git -C "$KSU_DIR" rev-list --count HEAD 2>/dev/null || echo 0)
 KSU_VERSION_CODE=$((30000 + KSU_LOCAL_VERSION + 700))
-KSU_UAPI_VERSION=$(grep -oP 'KERNEL_SU_UAPI_VERSION\s*=\s*\K[0-9]+' "${KSU_DIR}/uapi/supercall.h" 2>/dev/null || echo "")
-
-if [ -n "$KSU_UAPI_VERSION" ]; then
-    BAKASU_VERSION_DISPLAY="${KSU_TAG_NAME} (${KSU_VERSION_CODE}/${KSU_UAPI_VERSION})"
-else
-    BAKASU_VERSION_DISPLAY="${KSU_TAG_NAME} (${KSU_VERSION_CODE})"
-fi
-echo "BAKASU_VERSION_DISPLAY=${BAKASU_VERSION_DISPLAY}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
+KSU_UAPI_VERSION="$(ksu_uapi_version "$KSU_DIR")"
+BAKASU_VERSION_DISPLAY="$(format_ksu_version "$KSU_TAG_NAME" "$KSU_VERSION_CODE" "$KSU_UAPI_VERSION")"
+github_env BAKASU_VERSION_DISPLAY "${BAKASU_VERSION_DISPLAY}"
 log "Version: ${BAKASU_VERSION_DISPLAY}"
 
 log "Patching multi-manager support..."
@@ -60,12 +45,7 @@ python3 "${PATCHER_DIR}/ksunext_compat.py" \
 log "KSU-Next compat patched ✅"
 
 log "Enabling KSU configs..."
-if ! grep -q "^CONFIG_KSU=y" "${KERNEL_SRC}/arch/arm64/configs/gki_defconfig"; then
-    cat >> "${KERNEL_SRC}/arch/arm64/configs/gki_defconfig" << 'CONFIGS'
-CONFIG_KSU=y
-CONFIG_KPM=y
-CONFIGS
-fi
+gki_defconfig_enable CONFIG_KSU CONFIG_KPM
 log "Configs enabled ✅"
 
 log "BakaSU ready ✅"
