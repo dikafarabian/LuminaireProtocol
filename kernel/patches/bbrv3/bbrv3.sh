@@ -17,43 +17,16 @@ case "${KERNEL_VERSION}" in
 esac
 
 log "🚀 Applying BBRv3 patch (${BBRV3_PATCH})..."
+apply_remote_patch "BBRv3" "${BBRV3_PATCHES_BASE}/${BBRV3_PATCH}" "$KERNEL_SRC" --no-backup-if-mismatch
+gki_defconfig_enable CONFIG_TCP_CONG_ADVANCED CONFIG_TCP_CONG_BBR3 CONFIG_DEFAULT_BBR3
+
 cd "${KERNEL_SRC}"
-
-PATCH_CONTENT=$(curl -LSs --fail --retry 3 --retry-all-errors --connect-timeout 30 \
-    "${BBRV3_PATCHES_BASE}/${BBRV3_PATCH}") \
-    || error "BBRv3: failed to download patch!"
-
-[ -n "$PATCH_CONTENT" ] || error "BBRv3: downloaded patch is empty!"
-
-if echo "$PATCH_CONTENT" | patch -p1 --dry-run --reverse --no-backup-if-mismatch > /dev/null 2>&1; then
-    log "BBRv3: patch already applied, skipping."
-elif echo "$PATCH_CONTENT" | patch -p1 --dry-run --forward --no-backup-if-mismatch > /dev/null 2>&1; then
-    echo "$PATCH_CONTENT" | patch -p1 --forward --no-backup-if-mismatch \
-        || error "BBRv3: patch apply failed!"
-    log "BBRv3: patch applied ✅"
-else
-    error "BBRv3: patch does not apply cleanly — conflict or unsupported kernel source!"
-fi
-
-GKI_DEFCONFIG="${KERNEL_SRC}/arch/arm64/configs/gki_defconfig"
-if ! grep -q "CONFIG_DEFAULT_BBR3" "$GKI_DEFCONFIG"; then
-    cat >> "$GKI_DEFCONFIG" << 'EOF'
-# BBRv3 as default TCP congestion (Luminaire)
-CONFIG_TCP_CONG_ADVANCED=y
-CONFIG_TCP_CONG_BBR3=y
-CONFIG_DEFAULT_BBR3=y
-EOF
-    log "BBRv3: TCP_CONG_ADVANCED + DEFAULT_BBR3 injected into gki_defconfig ✅"
-fi
-
 if [ "${KERNEL_VERSION}" = "5.10" ]; then
-    SYSCTL_PATCH=$(curl -LSs --fail --retry 3 --retry-all-errors --connect-timeout 30 \
-        "${BBRV3_PATCHES_BASE}/sysctl_add_proc_dou8vec_minmax.patch") || true
+    SYSCTL_PATCH=$(fetch "${BBRV3_PATCHES_BASE}/sysctl_add_proc_dou8vec_minmax.patch") || true
     if [ -n "$SYSCTL_PATCH" ]; then
         if ! grep -qF 'int proc_dou8vec_minmax(' "${KERNEL_SRC}/include/linux/sysctl.h" 2>/dev/null; then
             echo "$SYSCTL_PATCH" | patch -p1 --forward --no-backup-if-mismatch || true
-            SYSCTL_FIX=$(curl -LSs --fail --retry 3 --retry-all-errors --connect-timeout 30 \
-                "${BBRV3_PATCHES_BASE}/sysctl_fix_data-races_in_proc_dou8vec_minmax.patch") || true
+            SYSCTL_FIX=$(fetch "${BBRV3_PATCHES_BASE}/sysctl_fix_data-races_in_proc_dou8vec_minmax.patch") || true
             [ -n "$SYSCTL_FIX" ] && echo "$SYSCTL_FIX" | patch -p1 --forward --no-backup-if-mismatch || true
         fi
     fi
