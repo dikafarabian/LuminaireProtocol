@@ -51,27 +51,27 @@ if [ "${SUSFS_ENABLED:-false}" = "true" ]; then
     log "SuSFS post-execveat compat patched ✅"
 fi
 
-SUKISU_GIT_COMMIT_COUNT=$(git -C "$KSU_DIR" rev-list --count main 2>/dev/null || echo "")
-SUKISU_GITHUB_COMMITS=$(curl -sI --connect-timeout 10 --max-time 15 \
-    "https://api.github.com/repos/SukiSU-Ultra/SukiSU-Ultra/commits?sha=main&per_page=1" 2>/dev/null \
-    | grep -i "link:" | sed -n 's/.*page=\([0-9]*\)>; rel="last".*/\1/p') || true
-SUKISU_LOCAL_COUNT="${SUKISU_GITHUB_COMMITS:-$SUKISU_GIT_COMMIT_COUNT}"
-if [ -n "$SUKISU_LOCAL_COUNT" ]; then
-    KSU_VERSION_CODE=$((40000 + SUKISU_LOCAL_COUNT - 2815))
+SUKISU_REPO="SukiSU-Ultra/SukiSU-Ultra"
+SUKISU_VERSION_BASE=40000
+SUKISU_VERSION_OFFSET=2815
+SUKISU_FALLBACK_VERSION_CODE=13000
+
+SUKISU_COMMIT_COUNT="$(github_commit_count "$SUKISU_REPO" main)"
+if [ -z "$SUKISU_COMMIT_COUNT" ]; then
+    SUKISU_COMMIT_COUNT="$(git -C "$KSU_DIR" rev-list --count origin/main 2>/dev/null || true)"
+fi
+if [ -n "$SUKISU_COMMIT_COUNT" ]; then
+    KSU_VERSION_CODE=$((SUKISU_VERSION_BASE + SUKISU_COMMIT_COUNT - SUKISU_VERSION_OFFSET))
 else
-    KSU_VERSION_CODE=13000
+    KSU_VERSION_CODE=$SUKISU_FALLBACK_VERSION_CODE
 fi
 
-SUKISU_GIT_LATEST_TAG=$(git -C "$KSU_DIR" describe --tags --abbrev=0 2>/dev/null | sed 's/^v//') || true
-SUKISU_GITHUB_VER=$(curl -s --connect-timeout 10 --max-time 15 \
-    "https://api.github.com/repos/SukiSU-Ultra/SukiSU-Ultra/releases/latest" 2>/dev/null \
-    | grep '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/') || true
-if [ "${SUSFS_ENABLED:-false}" = "true" ]; then
-    SUKISU_DEFAULT_TAG="4.1.2"
-else
-    SUKISU_DEFAULT_TAG="4.1.3"
+SUKISU_RELEASE_TAG="$(github_latest_release_tag "$SUKISU_REPO" || true)"
+if [ -z "$SUKISU_RELEASE_TAG" ]; then
+    SUKISU_RELEASE_TAG="$(git -C "$KSU_DIR" tag --sort=-v:refname 2>/dev/null | head -n 1 || true)"
 fi
-KSU_TAG_NAME="v${SUKISU_GITHUB_VER:-${SUKISU_GIT_LATEST_TAG:-$SUKISU_DEFAULT_TAG}}"
+KSU_TAG_NAME="v${SUKISU_RELEASE_TAG#v}"
+[ "$KSU_TAG_NAME" != "v" ] || KSU_TAG_NAME="unknown"
 
 KSU_UAPI_VERSION=$(grep -oP 'KERNEL_SU_UAPI_VERSION\s*=\s*\K[0-9]+' "${KSU_DIR}/uapi/supercall.h" 2>/dev/null || echo "")
 
