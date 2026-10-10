@@ -18,35 +18,9 @@ case "${KERNEL_VERSION}" in
 esac
 
 log "🪟 Applying NTSync patches (base + ${NTSYNC_COMPAT})..."
-cd "${KERNEL_SRC}"
-
 for NTSYNC_PATCH_FILE in "ntsync_base.patch" "${NTSYNC_COMPAT}"; do
-    PATCH_CONTENT=$(curl -LSs --fail --retry 3 --retry-all-errors --connect-timeout 30 \
-        "${NTSYNC_PATCHES_BASE}/${NTSYNC_PATCH_FILE}") \
-        || error "NTSync: failed to download ${NTSYNC_PATCH_FILE}!"
-
-    [ -n "$PATCH_CONTENT" ] || error "NTSync: downloaded patch ${NTSYNC_PATCH_FILE} is empty!"
-
-    if echo "$PATCH_CONTENT" | patch -p1 --dry-run --reverse --no-backup-if-mismatch > /dev/null 2>&1; then
-        log "NTSync: ${NTSYNC_PATCH_FILE} already applied, skipping."
-    elif echo "$PATCH_CONTENT" | patch -p1 --dry-run --forward --no-backup-if-mismatch > /dev/null 2>&1; then
-        echo "$PATCH_CONTENT" | patch -p1 --forward --no-backup-if-mismatch \
-            || error "NTSync: ${NTSYNC_PATCH_FILE} apply failed!"
-        log "NTSync: ${NTSYNC_PATCH_FILE} applied ✅"
-    else
-        error "NTSync: ${NTSYNC_PATCH_FILE} does not apply cleanly — conflict or unsupported kernel source!"
-    fi
+    apply_remote_patch "NTSync (${NTSYNC_PATCH_FILE})" "${NTSYNC_PATCHES_BASE}/${NTSYNC_PATCH_FILE}" "$KERNEL_SRC" --no-backup-if-mismatch
 done
-
-GKI_DEFCONFIG="${KERNEL_SRC}/arch/arm64/configs/gki_defconfig"
-if ! grep -q "^CONFIG_NTSYNC=y" "$GKI_DEFCONFIG"; then
-    cat >> "$GKI_DEFCONFIG" << 'EOF'
-# NTSync (Luminaire)
-CONFIG_NTSYNC=y
-EOF
-    log "NTSync: CONFIG_NTSYNC enabled ✅"
-fi
-
-cd "${ROOT_DIR}"
+gki_defconfig_enable CONFIG_NTSYNC
 
 log "NTSync driver integrated ✅"
