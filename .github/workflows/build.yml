@@ -325,49 +325,24 @@ jobs:
         if: always() && matrix.kernel_variant != 'VANILLA' && inputs.run_mode != 'Dry Run'
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
         run: |
-          case "${{ steps.build.outcome }}" in
-            success) OUTCOME="success" ;;
-            failure) OUTCOME="failure" ;;
-            *)       OUTCOME="inconclusive" ;;
+          case "$BUILD_OUTCOME" in
+            success|failure) OUTCOME="$BUILD_OUTCOME" ;;
+            *)               OUTCOME="inconclusive" ;;
           esac
-          case "${{ matrix.kernel_variant }}" in
-            KSU)
-              if [ "${{ matrix.susfs }}" = "true" ]; then
-                COMPONENTS="ksu susfs_ksu"
-              else
-                COMPONENTS="ksu"
-              fi
-              ;;
-            KOWSU)
-              if [ "${{ matrix.susfs }}" = "true" ]; then
-                COMPONENTS="kowsu susfs_kowsu"
-              else
-                COMPONENTS="kowsu"
-              fi
-              ;;
-            KSUNEXT)
-              if [ "${{ matrix.susfs }}" = "true" ]; then
-                COMPONENTS="ksunext_susfs_fork susfs_ksunext"
-              else
-                COMPONENTS="ksunext"
-              fi
-              ;;
-            SUKISU)
-              if [ "${{ matrix.susfs }}" = "true" ]; then
-                COMPONENTS="sukisu_builtin susfs_sukisu"
-              else
-                COMPONENTS="sukisu"
-              fi
-              ;;
-            BAKASU)
-              if [ "${{ matrix.susfs }}" = "true" ]; then
-                COMPONENTS="bakasu susfs_bakasu"
-              else
-                COMPONENTS="bakasu"
-              fi
-              ;;
-          esac
+
+          VARIANT_KEY="${KERNEL_VARIANT,,}"
+          if [ "$SUSFS_ENABLED" = "true" ]; then
+            case "$VARIANT_KEY" in
+              ksunext) FORK_KEY="ksunext_susfs_fork" ;;
+              sukisu)  FORK_KEY="sukisu_builtin" ;;
+              *)       FORK_KEY="$VARIANT_KEY" ;;
+            esac
+            COMPONENTS="$FORK_KEY susfs_${VARIANT_KEY}"
+          else
+            COMPONENTS="$VARIANT_KEY"
+          fi
 
           bash kernel/ksu/checkpoint/engine.sh "$OUTCOME" $COMPONENTS
 
