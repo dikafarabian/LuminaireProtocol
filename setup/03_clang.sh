@@ -114,14 +114,15 @@ else
 fi
 
 export COMPILER_STRING
-echo "COMPILER_STRING=${COMPILER_STRING}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
+github_env COMPILER_STRING "${COMPILER_STRING}"
 export PATH="${TOOL_CLANG_DIR}/bin:${PATH}"
 
 log "Setting up ccache wrappers..."
 mkdir -p "$TOOL_CCACHE_WRAPPERS"
 
-for tool in $(ls "${TOOL_CLANG_DIR}/bin/" | grep -E "^clang(\+\+)?(-[0-9]+)?$"); do
-    REAL_BIN="${TOOL_CLANG_DIR}/bin/${tool}"
+for REAL_BIN in "${TOOL_CLANG_DIR}"/bin/clang*; do
+    tool="$(basename "$REAL_BIN")"
+    [[ "$tool" =~ ^clang(\+\+)?(-[0-9]+)?$ ]] || continue
     WRAPPER="${TOOL_CCACHE_WRAPPERS}/${tool}"
     cat > "$WRAPPER" << WRAPPER_EOF
 #!/usr/bin/env bash
@@ -130,6 +131,6 @@ WRAPPER_EOF
     chmod +x "$WRAPPER"
 done
 export PATH="${TOOL_CCACHE_WRAPPERS}:${PATH}"
-echo "${TOOL_CCACHE_WRAPPERS}" >> "${GITHUB_PATH:-/dev/null}" 2>/dev/null || true
-echo "${TOOL_CLANG_DIR}/bin" >> "${GITHUB_PATH:-/dev/null}" 2>/dev/null || true
+github_path "${TOOL_CCACHE_WRAPPERS}"
+github_path "${TOOL_CLANG_DIR}/bin"
 log "Clang ready | ${COMPILER_STRING} ✅"

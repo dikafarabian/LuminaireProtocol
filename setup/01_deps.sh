@@ -4,7 +4,7 @@
 # 📚 SETUP — Dependencies (apt packages)
 # ======================================================
 
-PKGS_COMMON=(git curl wget zip patch rsync python3 ca-certificates aria2 pigz cpio g++ libzstd-dev)
+PKGS_COMMON=(git curl zip patch rsync python3 ca-certificates cpio g++ libzstd-dev)
 
 PKGS_MAKE=(bc bison flex libssl-dev libelf-dev libdw-dev dwarves cmake ninja-build gcc-arm-linux-gnueabi)
 
@@ -21,7 +21,7 @@ done
 
 if [ ${#MISSING[@]} -gt 0 ]; then
     log "Installing missing packages (background): ${MISSING[*]}"
-    if ls ~/.apt-cache/*.deb &>/dev/null 2>&1; then
+    if ls ~/.apt-cache/*.deb &>/dev/null; then
         sudo cp -rn ~/.apt-cache/. /var/cache/apt/archives/ 2>/dev/null || true
     fi
     APT_LOG="/tmp/luminaire-apt-install.log"
