@@ -6,17 +6,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ======================================================
-  # LIST — enumerate every arsenal-*/clang-*/kernel-* cache that exists
-  # ======================================================
-  # A plain `restore-keys: arsenal-` only restores (and thus only refreshes
-  # the last-accessed time of) the single most recent matching cache, not
-  # every cache under that prefix. With one arsenal/clang cache per
-  # kernel-version x build-system x branch combination, that left every
-  # other combination's cache un-touched and still eligible for GitHub's
-  # 7-day unused-cache eviction despite this job "running". Listing the
-  # real cache keys via the REST API and fanning out a restore per key
-  # (below) actually touches all of them.
   list-caches:
     name: "List Cache Keys"
     runs-on: ubuntu-24.04
@@ -34,9 +23,6 @@ jobs:
           echo "$KEYS" | jq -r '.[]'
           echo "keys=$(echo "$KEYS" | jq -c .)" >> "$GITHUB_OUTPUT"
 
-  # ======================================================
-  # TOUCH — one restore per real key, refreshes its last-accessed time
-  # ======================================================
   touch-caches:
     name: "Touch ${{ matrix.key }}"
     needs: list-caches

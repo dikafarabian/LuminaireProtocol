@@ -3,7 +3,6 @@
 # ======================================================
 # 🪞 Checkpoint Mirrors
 # ======================================================
-# See docs/CODEX.md for the full rationale.
 
 declare -gA MIRROR_SOURCE_URL=(
     [bakasu]="https://github.com/Baka-SU/BakaSU"
