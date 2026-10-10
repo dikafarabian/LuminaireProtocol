@@ -12,7 +12,7 @@ KMI_GENERATION="$(grep '^KMI_GENERATION=' \
     "${KERNEL_SRC}/build.config.constants" 2>/dev/null | head -1 | cut -d= -f2)" || true
 [ -z "$KMI_GENERATION" ] && error "KMI_GENERATION not found!"
 export SUBLEVEL KMI_GENERATION
-echo "SUBLEVEL=${SUBLEVEL}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
+github_env SUBLEVEL "${SUBLEVEL}"
 
 if [[ "$BUILD_IDENTITY_OVERRIDE" == *"@"* ]]; then
     BUILD_USER_OVERRIDE="${BUILD_IDENTITY_OVERRIDE%%@*}"
@@ -41,7 +41,8 @@ else
     unset LOCALVERSION
     log "LOCALVERSION_OVERRIDE empty — using stock kernel versioning (no custom tag)"
 fi
-export KBUILD_BUILD_TIMESTAMP="$(date '+%a %b %d %T %Z %Y')"
+KBUILD_BUILD_TIMESTAMP="$(date '+%a %b %d %T %Z %Y')"
+export KBUILD_BUILD_TIMESTAMP
 
 if [ "$BUILD_SYSTEM" != "KLEAF" ]; then
     log "Branding: ${BUILD_USER:-(stock)}@${BUILD_HOST:-(stock)} | ${LOCALVERSION:-(stock, no LOCALVERSION)} ✅"

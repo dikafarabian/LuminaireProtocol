@@ -9,7 +9,8 @@ set -eo pipefail
 
 exec 2>&1
 
-source "$(cd "$(dirname "$0")" && pwd)/functions.sh"
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "${ROOT_DIR}/functions.sh"
 enable_error_trace
 
 KERNEL_VERSION="${KERNEL_VERSION:?KERNEL_VERSION is not set}"
@@ -17,19 +18,32 @@ KERNEL_VERSION="${KERNEL_VERSION:?KERNEL_VERSION is not set}"
 ANDROID_VERSION="$(resolve_android_version)"
 KERNEL_BRANCH="$(resolve_kernel_branch)"
 
-ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
-
 source "${ROOT_DIR}/kernel/core/registry.sh"
 source "${ROOT_DIR}/kernel/addons/registry.sh"
 source "${ROOT_DIR}/kernel/patches/registry.sh"
 source "${ROOT_DIR}/kernel/kabi/registry.sh"
 source "${ROOT_DIR}/kernel/ksu/registry.sh"
 
+variant_label() {
+    if [ "$SUSFS_ENABLED" = "true" ] && [ "$KERNEL_VARIANT" != "VANILLA" ]; then
+        echo "${KERNEL_VARIANT}+SUSFS"
+    else
+        echo "${KERNEL_VARIANT}"
+    fi
+}
+
+print_run_complete() {
+    echo "========================================"
+    echo "  $(mode_emoji "$RUN_MODE") ${RUN_MODE} Complete! $(mode_emoji "$RUN_MODE")"
+    echo "  🏷️ $(variant_label)"
+    echo "========================================"
+}
+
 main() {
     echo "========================================"
     echo "  ✨ Luminaire Protocol ✨"
     echo "========================================"
-    echo "  🏷️ ${KERNEL_VARIANT}$([ "$SUSFS_ENABLED" = "true" ] && [ "$KERNEL_VARIANT" != "VANILLA" ] && echo "+SUSFS")"
+    echo "  🏷️ $(variant_label)"
     echo "  $(mode_emoji "$RUN_MODE") ${RUN_MODE}"
     echo "  🖥️ CPU: $(nproc --all) cores"
     echo "  💾 RAM: $(free -h | grep Mem | awk '{print $2}')"
@@ -60,20 +74,11 @@ main() {
     run_build
     mark_stage_ok CHECKPOINT_BUILD_OK
 
-    if [ "${RUN_MODE^^}" = "WARM RUN" ]; then
-        echo "========================================"
-        echo "  $(mode_emoji "$RUN_MODE") ${RUN_MODE} Complete! $(mode_emoji "$RUN_MODE")"
-        echo "  🏷️ ${KERNEL_VARIANT}$([ "$SUSFS_ENABLED" = "true" ] && [ "$KERNEL_VARIANT" != "VANILLA" ] && echo "+SUSFS")"
-        echo "========================================"
-        exit 0
+    if [ "${RUN_MODE^^}" != "WARM RUN" ]; then
+        run_release
     fi
 
-    run_release
-
-    echo "========================================"
-    echo "  $(mode_emoji "$RUN_MODE") ${RUN_MODE} Complete! $(mode_emoji "$RUN_MODE")"
-    echo "  🏷️ ${KERNEL_VARIANT}$([ "$SUSFS_ENABLED" = "true" ] && [ "$KERNEL_VARIANT" != "VANILLA" ] && echo "+SUSFS")"
-    echo "========================================"
+    print_run_complete
 }
 
 restore_kernel_source() {

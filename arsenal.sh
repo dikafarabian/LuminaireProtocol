@@ -9,15 +9,14 @@ set -eo pipefail
 
 exec 2>&1
 
-source "$(cd "$(dirname "$0")" && pwd)/functions.sh"
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "${ROOT_DIR}/functions.sh"
 enable_error_trace
 
 KERNEL_VERSION="${KERNEL_VERSION:?KERNEL_VERSION is not set}"
 
 ANDROID_VERSION="$(resolve_android_version)"
 KERNEL_BRANCH="$(resolve_kernel_branch)"
-
-ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 main() {
     echo "========================================"
@@ -42,7 +41,6 @@ main() {
     echo "  🏷️ ${ANDROID_VERSION}-${KERNEL_VERSION}"
     echo "========================================"
 }
-
 
 run_download() {
     echo "::group::📥 Arsenal Download"

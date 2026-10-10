@@ -66,7 +66,7 @@ tools/bazel build "${KLEAF_ARGS[@]}" //common:kernel_aarch64_config \
 CANONICAL=$(find "${KERNEL_DIR}/out" -path "*/common/defconfig" 2>/dev/null | head -1)
 if [ -n "$CANONICAL" ]; then
     cp "$CANONICAL" "$DEFCONFIG_FILE"
-    log "gki_defconfig canonicalized ✅ (from $(basename $(dirname $CANONICAL))/defconfig)"
+    log "gki_defconfig canonicalized ✅ (from $(basename "$(dirname "$CANONICAL")")/defconfig)"
 else
     error "Canonical defconfig not found — config pass may have failed early"
 fi
@@ -109,7 +109,7 @@ else
     done
     cd "$ROOT_DIR"
 fi
-echo "BUILD_SECONDS=${BUILD_SECONDS}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
+github_env BUILD_SECONDS "${BUILD_SECONDS}"
 
 log "Detecting AOSP Clang version used by Kleaf..."
 AOSP_CLANG_BIN=$(find "${KERNEL_DIR}/prebuilts/clang/host/linux-x86" \
@@ -125,7 +125,7 @@ if [ -n "$AOSP_CLANG_BIN" ]; then
         warn "Could not parse AOSP Clang version from -v output"
     fi
     export COMPILER_STRING
-    echo "COMPILER_STRING=${COMPILER_STRING}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
+    github_env COMPILER_STRING "${COMPILER_STRING}"
     log "Compiler: ${COMPILER_STRING:-N/A} ✅"
 else
     warn "AOSP Clang binary not found — COMPILER_STRING will be unset"

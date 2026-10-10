@@ -21,6 +21,27 @@ MAKE_ARGS=(
     -j"$(nproc --all)"
 )
 
+declare -A KBUILD_VERSION_LABEL=(
+    [KSU]="KernelSU version"
+    [KOWSU]="KernelSU version"
+    [KSUNEXT]="KernelSU-Next version"
+    [SUKISU]="SukiSU-Ultra version"
+    [BAKASU]="BakaSU version code"
+)
+
+correct_version_display() {
+    local label="${KBUILD_VERSION_LABEL[$KERNEL_VARIANT]:-}"
+    local version_var="${KERNEL_VARIANT}_VERSION_DISPLAY" real_code real_display
+    [ -n "$label" ] && [ -n "${KSU_TAG_NAME:-}" ] || return 0
+    real_code="$(grep -oP -- "-- ${label}: \K[0-9]+" "$KBUILD_LOG" | tail -1 || true)"
+    [ -n "$real_code" ] || return 0
+    real_display="$(format_ksu_version "$KSU_TAG_NAME" "$real_code" "${KSU_UAPI_VERSION:-}")"
+    [ "$real_display" = "${!version_var:-}" ] \
+        || log "Correcting ${version_var} to match real Kbuild-computed version: ${real_display} (was: ${!version_var:-unset})"
+    export "${version_var}=${real_display}"
+    github_env "$version_var" "$real_display"
+}
+
 mkdir -p "$LTO_CACHE_DIR"
 
 LD_JOBS=$(( $(nproc --all) / 2 ))
@@ -64,10 +85,10 @@ source "${ROOT_DIR}/kernel/config/defconfig.sh"
 log "Syncing config..."
 make "${MAKE_ARGS[@]}" olddefconfig || error "olddefconfig failed!"
 
-log "Debug-info config (diagnosing link memory usage):"
+log "Debug-info config:"
 grep -E "^CONFIG_DEBUG_INFO|^# CONFIG_DEBUG_INFO" "${OUT_DIR}/.config" | while read -r line; do
     log "  ${line}"
-done
+done || true
 
 log "Applying KaBI patches..."
 apply_kabi_patches
@@ -87,27 +108,8 @@ else
     BUILD_SECONDS=$(( $(date +%s) - START_TIME ))
     log "Build completed in ${BUILD_SECONDS}s ✅"
 fi
-echo "BUILD_SECONDS=${BUILD_SECONDS}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
+github_env BUILD_SECONDS "${BUILD_SECONDS}"
 
 if [ "${DRY_RUN:-false}" != "true" ] && [ -f "${KBUILD_LOG:-}" ]; then
-    real_code=""
-    case "$KERNEL_VARIANT" in
-        KSU)      version_var="KSU_VERSION_DISPLAY";      real_code=$(grep -oP -- '-- KernelSU version: \K[0-9]+' "$KBUILD_LOG" | tail -1) ;;
-        KOWSU)    version_var="KOWSU_VERSION_DISPLAY";    real_code=$(grep -oP -- '-- KernelSU version: \K[0-9]+' "$KBUILD_LOG" | tail -1) ;;
-        KSUNEXT)  version_var="KSUNEXT_VERSION_DISPLAY";  real_code=$(grep -oP -- '-- KernelSU-Next version: \K[0-9]+' "$KBUILD_LOG" | tail -1) ;;
-        SUKISU)   version_var="SUKISU_VERSION_DISPLAY";   real_code=$(grep -oP -- '-- SukiSU-Ultra version: \K[0-9]+' "$KBUILD_LOG" | tail -1) ;;
-        BAKASU) version_var="BAKASU_VERSION_DISPLAY"; real_code=$(grep -oP -- '-- BakaSU version code: \K[0-9]+' "$KBUILD_LOG" | tail -1) ;;
-        *) version_var="" ;;
-    esac
-    if [ -n "$real_code" ] && [ -n "${version_var}" ] && [ -n "${KSU_TAG_NAME:-}" ]; then
-        if [ -n "${KSU_UAPI_VERSION:-}" ]; then
-            real_display="${KSU_TAG_NAME} (${real_code}/${KSU_UAPI_VERSION})"
-        else
-            real_display="${KSU_TAG_NAME} (${real_code})"
-        fi
-        [ "$real_display" = "${!version_var:-}" ] \
-            || log "Correcting ${version_var} to match real Kbuild-computed version: ${real_display} (was: ${!version_var:-unset})"
-        export "${version_var}=${real_display}"
-        echo "${version_var}=${real_display}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
-    fi
+    correct_version_display
 fi

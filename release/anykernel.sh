@@ -63,5 +63,5 @@ zip -r9 "$ZIP_PATH" . -x "*.git*" -x "*.github*" -x "*.md" -x "LICENSE" \
 cd "$ROOT_DIR"
 
 log "ZIP ready: ${ZIP_NAME} ✅"
-echo "ZIP_NAME=${ZIP_NAME}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
-echo "ZIP_PATH=${ZIP_PATH}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
+github_env ZIP_NAME "${ZIP_NAME}"
+github_env ZIP_PATH "${ZIP_PATH}"
