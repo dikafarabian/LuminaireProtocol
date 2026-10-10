@@ -41,7 +41,9 @@
   },
   "ksu": {
     "good": "6a2f63240397ea647ede981e0669231c8bf17fee",
-    "bad": []
+    "bad": [
+      "a85dcbcfc3b09ae410f31aae124d04f3777fdf1c"
+    ]
   },
   "susfs_ksu": {
     "good": "24743360ea08d98f6ad72b856851abed8de5854f",
