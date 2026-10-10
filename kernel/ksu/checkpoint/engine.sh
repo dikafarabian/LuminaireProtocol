@@ -3,7 +3,7 @@
 # ======================================================
 # 🚦 CHECKPOINT — Engine
 # ======================================================
-# Syncs pinned refs to their mirrors, promotes verified candidates, and files known-bad proposals for approval
+# Syncs pinned refs to their mirrors, promotes verified candidates, and opens known-bad proposals as pull requests
 
 set -eo pipefail
 
@@ -22,16 +22,20 @@ MANIFEST="${ROOT_DIR}/${MANIFEST_REL}"
 
 MIRROR_LABEL="$(resolve_android_version)-${KERNEL_VERSION}"
 
-apply_and_push() {
-    local jq_patch="$1" commit_msg="$2"
-    local attempt=1 max_attempts=5
-
-    [ -n "${PERSONAL_TOKEN:-}" ] || error "checkpoint: PERSONAL_TOKEN not set — cannot push manifest update"
+init_remote() {
+    [ -n "${PERSONAL_TOKEN:-}" ] || error "checkpoint: PERSONAL_TOKEN not set — cannot push to ${GITHUB_REPOSITORY}"
 
     git config --global user.name  "luminaire-bot"
     git config --global user.email "luminaire-bot@users.noreply.github.com"
 
     REMOTE="https://x-access-token:${PERSONAL_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+}
+
+apply_and_push() {
+    local jq_patch="$1" commit_msg="$2"
+    local attempt=1 max_attempts=5
+
+    init_remote
 
     while [ "$attempt" -le "$max_attempts" ]; do
         run_quiet git fetch "$REMOTE" main
@@ -58,11 +62,40 @@ apply_and_push() {
     error "checkpoint: failed to push manifest update after ${max_attempts} attempts"
 }
 
-file_issue() {
+proposal_prefix() {
+    echo "bad-pin/${1}-${KERNEL_VERSION}-"
+}
+
+open_proposals() {
+    gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 100 --json number,headRefName \
+        --jq ".[] | select(.headRefName | startswith(\"$(proposal_prefix "$1")\")) | \"\(.number) \(.headRefName)\"" 2>/dev/null || true
+}
+
+close_proposals() {
+    local key="$1" comment="$2" keep_branch="${3:-}" number branch
+    while read -r number branch; do
+        [ -n "$number" ] || continue
+        [ "$branch" = "$keep_branch" ] && continue
+        gh pr close "$number" --repo "$GITHUB_REPOSITORY" --delete-branch --comment "$comment" \
+            || warn "checkpoint: couldn't close proposal #${number}"
+    done <<< "$(open_proposals "$key")"
+}
+
+prune_proposal_branches() {
+    local open_branches branch
+    open_branches="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 100 --json headRefName --jq '.[].headRefName' 2>/dev/null || true)"
+    while read -r branch; do
+        [ -n "$branch" ] || continue
+        grep -qxF "$branch" <<< "$open_branches" && continue
+        git push -q "$REMOTE" --delete "$branch" || warn "checkpoint: couldn't delete stale branch ${branch}"
+    done <<< "$(git ls-remote --heads "$REMOTE" 'refs/heads/bad-pin/*' | awk '{sub("refs/heads/", "", $2); print $2}')"
+}
+
+file_proposal() {
     local key="$1" ref="$2" others="$3"
-    local title="🔴 Upstream build failure: ${key} (${KERNEL_VERSION})"
+    local branch="$(proposal_prefix "$key")${ref:0:12}"
     local run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-    local stage existing body
+    local stage existing body tree
 
     if [ "${CHECKPOINT_VARIANT_OK:-false}" = "true" ]; then
         stage="run_build (compile)"
@@ -70,14 +103,35 @@ file_issue() {
         stage="run_variant (root solution / SuSFS)"
     fi
 
-    existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"${title}\"" --json number --jq '.[0].number' 2>/dev/null || true)
+    existing="$(open_proposals "$key")"
+    if [[ $'\n'"${existing}"$'\n' == *" ${branch}"$'\n'* ]]; then
+        log "checkpoint: proposal for ${key} ${ref:0:12} is already open"
+        return 0
+    fi
+    close_proposals "$key" "Superseded by a newer failing candidate (\`${ref:0:12}\`)." "$branch"
 
-    body="<!-- luminaire-bad key=${key} ref=${ref} kernel=${KERNEL_VERSION} -->
-Candidate \`${ref}\` for **${key}** failed during ${stage} on kernel ${KERNEL_VERSION} (run: ${run_url}).
+    init_remote
+    run_quiet git fetch "$REMOTE" main
+    tree="$(mktemp -d)"
+    git worktree add -q --detach "$tree" FETCH_HEAD
+    if ! (
+        cd "$tree" \
+        && git checkout -q -b "$branch" \
+        && jq --arg ref "$ref" ".${key}.bad |= (. + [\$ref] | unique)" "$MANIFEST_REL" > "${MANIFEST_REL}.tmp" \
+        && mv "${MANIFEST_REL}.tmp" "$MANIFEST_REL" \
+        && git add "$MANIFEST_REL" \
+        && git commit -q -m "chore: mark ${key} candidate ${ref:0:12} as known-bad for kernel ${KERNEL_VERSION} (run ${GITHUB_RUN_ID})" \
+        && git push -q --force "$REMOTE" "$branch"
+    ); then
+        warn "checkpoint: couldn't push proposal branch for ${key}"
+        git worktree remove --force "$tree"
+        return 0
+    fi
+    git worktree remove --force "$tree"
 
-It is **not** marked known-bad — the manifest is untouched and the pin stays on the last known-good commit. Trace the failure upstream first. If the break is real and cannot be fixed on our side, add the \`approve-bad\` label to this issue to blacklist this exact commit. If it looks like a false positive, leave it or close the issue.
+    body="Candidate \`${ref}\` for **${key}** failed during ${stage} on kernel ${KERNEL_VERSION} ([run](${run_url})).
 
-This issue will auto-close once a build succeeds again for ${key}."
+Merge to mark this exact commit known-bad. Close to ignore it. The pin stays on the last known-good commit either way, and this proposal closes itself once a build succeeds again for ${key}."
 
     if [ -n "$others" ]; then
         body="${body}
@@ -86,18 +140,9 @@ Other candidates in the same run (blame is not isolated, any of them may be the 
 ${others}"
     fi
 
-    if [ -n "$existing" ] && [ "$existing" != "null" ]; then
-        gh issue edit "$existing" --repo "$GITHUB_REPOSITORY" --body "$body" || warn "file_issue: couldn't update existing issue #${existing}"
-        gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "Candidate \`${ref}\` failed again (run: ${run_url}). Issue body now points at this commit." || warn "file_issue: couldn't comment on existing issue #${existing}"
-    else
-        gh label create "upstream-broken" --repo "$GITHUB_REPOSITORY" \
-            --color "d73a4a" --description "Auto-filed: an upstream pin candidate failed to build" \
-            2>/dev/null || true
-        gh label create "approve-bad" --repo "$GITHUB_REPOSITORY" \
-            --color "b60205" --description "Approve blacklisting the candidate proposed in this issue" \
-            2>/dev/null || true
-        gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body" --label "upstream-broken" || warn "file_issue: couldn't create issue for ${key}"
-    fi
+    gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$branch" \
+        --title "🚫 Mark bad: ${key} ${ref:0:12} (${KERNEL_VERSION})" --body "$body" \
+        || warn "checkpoint: couldn't open proposal for ${key}"
 }
 
 propose_bad() {
@@ -114,33 +159,8 @@ propose_bad() {
 "
     done
 
-    file_issue "$key" "$ref" "$others"
+    file_proposal "$key" "$ref" "$others"
 }
-
-close_issue_if_open() {
-    local key="$1"
-    local title="🔴 Upstream build failure: ${key} (${KERNEL_VERSION})"
-    local existing
-    existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"${title}\"" --json number --jq '.[0].number' 2>/dev/null || true)
-    [ -n "$existing" ] && [ "$existing" != "null" ] && \
-        gh issue close "$existing" --repo "$GITHUB_REPOSITORY" --comment "✅ Build succeeded again — pin promoted to a new known-good commit." 2>/dev/null || true
-}
-
-if [ "$BUILD_OUTCOME" = "approve-bad" ]; then
-    approve_key="${COMPONENTS[0]:-}"
-    approve_ref="${COMPONENTS[1]:-}"
-
-    [[ "$approve_key" =~ ^[a-z0-9_]+$ ]] || error "checkpoint: invalid component key '${approve_key}'"
-    [[ "$approve_ref" =~ ^[0-9a-f]{40}$ ]] || error "checkpoint: invalid ref '${approve_ref}'"
-    jq -e --arg k "$approve_key" 'has($k)' "$MANIFEST" > /dev/null 2>&1 \
-        || error "checkpoint: component '${approve_key}' not found in ${MANIFEST_REL}"
-    [ "$(jq -r --arg k "$approve_key" '.[$k].good // ""' "$MANIFEST")" != "$approve_ref" ] \
-        || error "checkpoint: ${approve_ref:0:12} is the current known-good pin for ${approve_key} — refusing to blacklist it"
-
-    warn "checkpoint: approved — blacklisting ${approve_key} candidate ${approve_ref:0:12} (kernel ${KERNEL_VERSION})"
-    apply_and_push ".${approve_key}.bad |= (. + [\"${approve_ref}\"] | unique)" "chore: mark ${approve_key} candidate ${approve_ref:0:12} as known-bad for kernel ${KERNEL_VERSION} (run ${GITHUB_RUN_ID})"
-    exit 0
-fi
 
 for key in "${COMPONENTS[@]}"; do
     pinned_ref="$(jq -r ".${key}.good // \"\"" "$MANIFEST" 2>/dev/null || true)"
@@ -159,6 +179,9 @@ if [ "$any_candidate_used" = "false" ]; then
     log "checkpoint: no candidate ref used this run — nothing to update"
     exit 0
 fi
+
+init_remote
+prune_proposal_branches
 
 case "$BUILD_OUTCOME" in
     success|failure) ;;
@@ -180,7 +203,7 @@ for key in "${COMPONENTS[@]}"; do
         log "checkpoint: promoting ${key} pin to ${ref:0:12} (kernel ${KERNEL_VERSION})"
         apply_and_push ".${key}.good = \"${ref}\" | .${key}.bad = ((.${key}.bad // []) - [\"${ref}\"])" "chore: bump ${key} pin to ${ref:0:12} for kernel ${KERNEL_VERSION} (verified via run ${GITHUB_RUN_ID})"
         mirror_promote "$key" "$ref" "$MIRROR_LABEL"
-        close_issue_if_open "$key"
+        close_proposals "$key" "Build succeeded again — pin promoted to a new known-good commit."
         continue
     fi
 
@@ -199,6 +222,6 @@ for key in "${COMPONENTS[@]}"; do
         continue
     fi
 
-    warn "checkpoint: ${key} candidate ${ref:0:12} failed on kernel ${KERNEL_VERSION} — not blacklisted, filing issue for approval"
+    warn "checkpoint: ${key} candidate ${ref:0:12} failed on kernel ${KERNEL_VERSION} — not blacklisted, opening proposal for approval"
     propose_bad "$key" "$ref"
 done
