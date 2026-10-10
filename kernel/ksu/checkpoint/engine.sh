@@ -3,7 +3,7 @@
 # ======================================================
 # 🚦 CHECKPOINT — Engine
 # ======================================================
-# Syncs pinned refs to their mirrors, promotes verified candidates, and opens known-bad proposals as pull requests
+# Syncs pinned refs to their mirrors, promotes verified candidates, opens known-bad proposals as pull requests, and prunes finished proposal branches
 
 set -eo pipefail
 
@@ -82,12 +82,17 @@ close_proposals() {
 }
 
 prune_proposal_branches() {
-    local open_branches branch
+    local open_branches finished_branches branch
     open_branches="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 100 --json headRefName --jq '.[].headRefName' 2>/dev/null || true)"
+    finished_branches="$(gh pr list --repo "$GITHUB_REPOSITORY" --state all --limit 200 --json headRefName,state --jq '.[] | select(.state != "OPEN") | .headRefName' 2>/dev/null || true)"
     while read -r branch; do
         [ -n "$branch" ] || continue
         grep -qxF "$branch" <<< "$open_branches" && continue
-        git push -q "$REMOTE" --delete "$branch" || warn "checkpoint: couldn't delete stale branch ${branch}"
+        grep -qxF "$branch" <<< "$finished_branches" || continue
+        if ! git push -q "$REMOTE" --delete "$branch" 2>/dev/null; then
+            git ls-remote --exit-code --heads "$REMOTE" "$branch" > /dev/null 2>&1 \
+                && warn "checkpoint: couldn't delete stale branch ${branch}"
+        fi
     done <<< "$(git ls-remote --heads "$REMOTE" 'refs/heads/bad-pin/*' | awk '{sub("refs/heads/", "", $2); print $2}')"
 }
 
@@ -168,6 +173,9 @@ for key in "${COMPONENTS[@]}"; do
     mirror_sync "$key" "$pinned_ref" "$MIRROR_LABEL"
 done
 
+init_remote
+prune_proposal_branches
+
 any_candidate_used="false"
 for key in "${COMPONENTS[@]}"; do
     prefix="${key^^}"
@@ -179,9 +187,6 @@ if [ "$any_candidate_used" = "false" ]; then
     log "checkpoint: no candidate ref used this run — nothing to update"
     exit 0
 fi
-
-init_remote
-prune_proposal_branches
 
 case "$BUILD_OUTCOME" in
     success|failure) ;;
