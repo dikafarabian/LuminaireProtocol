@@ -201,9 +201,18 @@ for key in "${COMPONENTS[@]}"; do
 
     if [ "$BUILD_OUTCOME" = "success" ]; then
         log "checkpoint: promoting ${key} pin to ${ref:0:12} (kernel ${KERNEL_VERSION})"
-        apply_and_push ".${key}.good = \"${ref}\" | .${key}.bad = ((.${key}.bad // []) - [\"${ref}\"])" "chore: bump ${key} pin to ${ref:0:12} for kernel ${KERNEL_VERSION} (verified via run ${GITHUB_RUN_ID})"
+        partner_reset=""
+        for partner_key in "${COMPONENTS[@]}"; do
+            [ "$partner_key" = "$key" ] && continue
+            partner_reset="${partner_reset} | if .${partner_key} then .${partner_key}.bad = [] else . end"
+        done
+        apply_and_push ".${key}.good = \"${ref}\" | .${key}.bad = ((.${key}.bad // []) - [\"${ref}\"])${partner_reset}" "chore: bump ${key} pin to ${ref:0:12} for kernel ${KERNEL_VERSION} (verified via run ${GITHUB_RUN_ID})"
         mirror_promote "$key" "$ref" "$MIRROR_LABEL"
         close_proposals "$key" "Build succeeded again — pin promoted to a new known-good commit."
+        for partner_key in "${COMPONENTS[@]}"; do
+            [ "$partner_key" = "$key" ] && continue
+            close_proposals "$partner_key" "Partner ${key} was promoted to ${ref:0:12} — known-bad state reset, this proposal is stale."
+        done
         continue
     fi
 
