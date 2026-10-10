@@ -21,26 +21,26 @@ PATCH_FEATURE_ORDER=(bore bbrv3 bbg wireguard le9uo kcompressd workqueue_catchup
 
 run_patches() {
     echo "::group::✨ Patches"
+    local feature supported script order_csv
+    order_csv="$(join_csv "${PATCH_FEATURE_ORDER[@]}")"
     export APPLIED_PATCHES="" SKIPPED_PATCHES=""
-    local _tfo_csv
-    IFS=, ; _tfo_csv="${PATCH_FEATURE_ORDER[*]}"; unset IFS
-    echo "PATCH_FEATURE_ORDER=${_tfo_csv}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
+    github_env PATCH_FEATURE_ORDER "$order_csv"
     for feature in "${PATCH_FEATURE_ORDER[@]}"; do
-        local supported="${PATCH_SUPPORTED_VERSIONS[$feature]:-}"
+        supported="${PATCH_SUPPORTED_VERSIONS[$feature]:-}"
         if [[ " ${supported} " != *" ${KERNEL_VERSION} "* ]]; then
             warn "Patch feature '${feature}' isn't backported for kernel ${KERNEL_VERSION} yet — skipping (always-on, not a user toggle; shows as N/A in the release caption, not a Disable)."
             SKIPPED_PATCHES="${SKIPPED_PATCHES:+${SKIPPED_PATCHES},}${feature}"
             continue
         fi
-        local script="${ROOT_DIR}/kernel/patches/${feature}/${feature}.sh"
+        script="${ROOT_DIR}/kernel/patches/${feature}/${feature}.sh"
         [ -f "$script" ] || error "Patch feature '${feature}' is marked supported for kernel ${KERNEL_VERSION} in PATCH_SUPPORTED_VERSIONS but ${script} doesn't exist — the map is out of sync with kernel/patches/."
         source "$script"
         APPLIED_PATCHES="${APPLIED_PATCHES:+${APPLIED_PATCHES},}${feature}"
     done
 
     unset PATCH_FEATURE_ORDER
-    export PATCH_FEATURE_ORDER="${_tfo_csv}"
-    echo "APPLIED_PATCHES=${APPLIED_PATCHES}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
-    echo "SKIPPED_PATCHES=${SKIPPED_PATCHES}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
+    export PATCH_FEATURE_ORDER="$order_csv"
+    github_env APPLIED_PATCHES "$APPLIED_PATCHES"
+    github_env SKIPPED_PATCHES "$SKIPPED_PATCHES"
     echo "::endgroup::"
 }

@@ -26,17 +26,24 @@ addon_supports_kernel_version() {
     [[ " ${supported} " == *" ${KERNEL_VERSION} "* ]]
 }
 
+addon_skip() {
+    warn "$1"
+    ADDON_SKIPPED=true
+}
+
 run_addons() {
-    local ordered=("${ADDON_ORDER[@]}") addon selected script
-    IFS=, ; ADDON_ORDER_STR="${ADDON_ORDER[*]}"; ADDON_MOUNTLESS_TOKENS_STR="${ADDON_MOUNTLESS_TOKENS[*]}"; unset IFS
+    local ordered=("${ADDON_ORDER[@]}") addon selected script order_csv mountless_csv
+    order_csv="$(join_csv "${ADDON_ORDER[@]}")"
+    mountless_csv="$(join_csv "${ADDON_MOUNTLESS_TOKENS[@]}")"
     unset ADDON_ORDER ADDON_MOUNTLESS_TOKENS
-    export ADDON_ORDER="${ADDON_ORDER_STR}" ADDON_MOUNTLESS_TOKENS="${ADDON_MOUNTLESS_TOKENS_STR}"
-    echo "ADDON_ORDER=${ADDON_ORDER_STR}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
-    echo "ADDON_MOUNTLESS_TOKENS=${ADDON_MOUNTLESS_TOKENS_STR}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
-    [ -z "${ADDONS:-}" ] && return 0
+    export ADDON_ORDER="$order_csv" ADDON_MOUNTLESS_TOKENS="$mountless_csv"
+    github_env ADDON_ORDER "$order_csv"
+    github_env ADDON_MOUNTLESS_TOKENS "$mountless_csv"
+
+    ADDONS="${ADDONS:-}"
     ADDONS="${ADDONS// /}"
-    ADDONS="$(echo "$ADDONS" | sed 's/^,*//;s/,*$//;s/,,*/,/g')"
-    [ -z "${ADDONS}" ] && return 0
+    ADDONS="$(sed 's/^,*//;s/,*$//;s/,,*/,/g' <<< "$ADDONS")"
+    [ -n "$ADDONS" ] || return 0
     echo "::group::⚡ Addons"
 
     export APPLIED_ADDONS="" SKIPPED_ADDONS=""
@@ -53,16 +60,21 @@ run_addons() {
             SKIPPED_ADDONS="${SKIPPED_ADDONS:+${SKIPPED_ADDONS},}${addon}"
             continue
         fi
+        ADDON_SKIPPED=false
         source "$script"
-        APPLIED_ADDONS="${APPLIED_ADDONS:+${APPLIED_ADDONS},}${addon}"
+        if [ "$ADDON_SKIPPED" = "true" ]; then
+            SKIPPED_ADDONS="${SKIPPED_ADDONS:+${SKIPPED_ADDONS},}${addon}"
+        else
+            APPLIED_ADDONS="${APPLIED_ADDONS:+${APPLIED_ADDONS},}${addon}"
+        fi
     done
 
     IFS=',' read -ra ADDON_LIST <<< "$ADDONS"
     for selected in "${ADDON_LIST[@]}"; do
-        [[ ",${ADDON_ORDER_STR}," == *",${selected},"* ]] || warn "Addon '${selected}' is not listed in ADDON_ORDER (kernel/addons/registry.sh) — ignored."
+        [[ ",${order_csv}," == *",${selected},"* ]] || warn "Addon '${selected}' is not listed in ADDON_ORDER (kernel/addons/registry.sh) — ignored."
     done
 
-    echo "APPLIED_ADDONS=${APPLIED_ADDONS}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
-    echo "SKIPPED_ADDONS=${SKIPPED_ADDONS}" >> "${GITHUB_ENV:-/dev/null}" 2>/dev/null || true
+    github_env APPLIED_ADDONS "$APPLIED_ADDONS"
+    github_env SKIPPED_ADDONS "$SKIPPED_ADDONS"
     echo "::endgroup::"
 }
