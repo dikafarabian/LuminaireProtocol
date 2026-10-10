@@ -15,6 +15,8 @@ declare -A KABI_PATCHES_BY_VERSION=(
 
 apply_kabi_patches() {
     local name patch
+    [[ -v "KABI_PATCHES_BY_VERSION[${KERNEL_VERSION}]" ]] \
+        || error "KaBI: kernel ${KERNEL_VERSION} is not registered in KABI_PATCHES_BY_VERSION (kernel/kabi/registry.sh)"
     for name in ${KABI_PATCHES_BY_VERSION[$KERNEL_VERSION]:-}; do
         patch="${ROOT_DIR}/kernel/kabi/${name}.patch"
         [ -f "$patch" ] || error "KaBI patch missing: ${name}.patch"
