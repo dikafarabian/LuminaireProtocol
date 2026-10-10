@@ -1,0 +1,27 @@
+name: "🔍 Static Check"
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: "Syntax"
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v7
+
+      - name: "Shell"
+        run: git ls-files '*.sh' | xargs -n1 bash -n
+
+      - name: "Python"
+        run: git ls-files '*.py' | xargs python3 -m py_compile
+
+      - name: "JSON"
+        run: git ls-files '*.json' | xargs -n1 jq empty
+
+      - name: "YAML"
+        run: git ls-files '*.yml' | xargs -n1 yq e '.' > /dev/null
