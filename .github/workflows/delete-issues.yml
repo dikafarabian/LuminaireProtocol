@@ -1,0 +1,31 @@
+name: "🧹 Delete Issues"
+run-name: "🧹 Delete all issues"
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  delete:
+    name: "Delete"
+    if: github.actor == github.repository_owner
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: "Delete All Issues"
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          GH_REPO:  ${{ github.repository }}
+        run: |
+          numbers="$(gh issue list --state all --limit 1000 --json number --jq '.[].number')"
+          total=0
+          for number in $numbers; do
+            node_id="$(gh api "repos/${GH_REPO}/issues/${number}" --jq .node_id)"
+            gh api graphql -f query='mutation($id: ID!) { deleteIssue(input: {issueId: $id}) { clientMutationId } }' -f id="$node_id" > /dev/null
+            echo "Deleted #${number}"
+            total=$((total + 1))
+          done
+          echo "Deleted ${total} issue(s)"
