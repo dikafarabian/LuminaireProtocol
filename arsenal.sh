@@ -10,6 +10,7 @@ set -eo pipefail
 exec 2>&1
 
 source "$(cd "$(dirname "$0")" && pwd)/functions.sh"
+enable_error_trace
 
 KERNEL_VERSION="${KERNEL_VERSION:?KERNEL_VERSION is not set}"
 

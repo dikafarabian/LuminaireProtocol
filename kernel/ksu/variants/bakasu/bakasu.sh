@@ -11,7 +11,7 @@ source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 
 log "Integrating BakaSU..."
 cd "$KERNEL_SRC"
-mirror_preseed "bakasu" "$KSU_DIR" "${BAKASU_REF:-}" "${CANDIDATE_BAKASU:-false}" "$(resolve_android_version)-${KERNEL_VERSION}"
+mirror_preseed "bakasu" "$KSU_DIR" "${BAKASU_REF:-}" "${CANDIDATE_BAKASU:-false}" "$(resolve_android_version)-${KERNEL_VERSION}" || true
 BAKASU_SETUP=$(curl -LSs --fail --retry 3 --retry-all-errors --connect-timeout 30 \
     "https://raw.githubusercontent.com/Baka-SU/BakaSU/main/kernel/setup.sh") \
     || error "BakaSU: failed to download setup.sh!"

@@ -15,7 +15,7 @@ if [ "${SUSFS_ENABLED:-false}" = "true" ]; then
     log "SUSFS enabled — using pershoot/KernelSU-Next's dev-susfs fork"
     KSUNEXT_SETUP_URL="https://raw.githubusercontent.com/pershoot/KernelSU-Next/dev-susfs/kernel/setup.sh"
     KSUNEXT_SETUP_REF="${KSUNEXT_SUSFS_FORK_REF:-dev-susfs}"
-    mirror_preseed "ksunext_susfs_fork" "$KSU_DIR" "${KSUNEXT_SUSFS_FORK_REF:-}" "${CANDIDATE_KSUNEXT_SUSFS_FORK:-false}" "$(resolve_android_version)-${KERNEL_VERSION}"
+    mirror_preseed "ksunext_susfs_fork" "$KSU_DIR" "${KSUNEXT_SUSFS_FORK_REF:-}" "${CANDIDATE_KSUNEXT_SUSFS_FORK:-false}" "$(resolve_android_version)-${KERNEL_VERSION}" || true
 else
     KSUNEXT_SETUP_URL="https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/dev/kernel/setup.sh"
     KSUNEXT_SETUP_REF="${KSUNEXT_REF:-}"

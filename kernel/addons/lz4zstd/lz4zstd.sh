@@ -138,11 +138,10 @@ apply_lz4zstd_patch() {
     fi
 
     local touched_files
-    touched_files=$(echo "$content" | grep -E '^\+\+\+ b/' | sed -E 's#^\+\+\+ b/##; s/\t.*//' | sort -u)
+    touched_files=$(echo "$content" | grep -E '^\+\+\+ b/' | sed -E 's#^\+\+\+ b/##; s/\t.*//' | sort -u) || true
 
-    local patch_log
-    patch_log=$(echo "$content" | patch -p1 --fuzz=3 --forward --no-backup-if-mismatch 2>&1)
-    local rc=$?
+    local patch_log rc=0
+    patch_log=$(echo "$content" | patch -p1 --fuzz=3 --forward --no-backup-if-mismatch 2>&1) || rc=$?
 
     if eval "$marker_check" 2>/dev/null; then
         if [ "$rc" -eq 0 ]; then
@@ -180,7 +179,7 @@ restore_lz4_export() {
     [ -f "$file" ] || return 0
     grep -q "^EXPORT_SYMBOL(${symbol});" "$file" && return 0
     grep -qE "^[a-z_ ]+[ *]${symbol}\(" "$file" || return 0
-    guard_end=$(grep -n '^#endif /\* LZ4_COMMONDEFS_ONLY \*/' "$file" | tail -1 | cut -d: -f1)
+    guard_end=$(grep -n '^#endif /\* LZ4_COMMONDEFS_ONLY \*/' "$file" | tail -1 | cut -d: -f1) || true
     if [ -n "$guard_end" ]; then
         sed -i "${guard_end}i EXPORT_SYMBOL(${symbol});" "$file"
     else

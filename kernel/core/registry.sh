@@ -13,7 +13,7 @@ run_core() {
     for feature in "${CORE_FEATURE_ORDER[@]}"; do
         script="${ROOT_DIR}/kernel/core/${feature}/${feature}.sh"
         [ -f "$script" ] || error "Core feature '${feature}' is listed in CORE_FEATURE_ORDER but ${script} doesn't exist — the list is out of sync with kernel/core/."
-        source "$script" || error "Core feature failed: ${feature}"
+        source "$script"
     done
     echo "::endgroup::"
 }

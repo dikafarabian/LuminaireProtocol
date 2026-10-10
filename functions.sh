@@ -23,11 +23,20 @@ error() {
   exit 1
 }
 
+on_err() {
+    local rc="$1" file="$2" line="$3" cmd="$4"
+    echo -e "${COLOR_RED}[ERROR]${COLOR_RESET} ${file#"${ROOT_DIR}/"}:${line} — ${cmd} (exit ${rc})" >&2
+}
+
+enable_error_trace() {
+    set -E
+    trap 'on_err $? "${BASH_SOURCE[0]}" "$LINENO" "$BASH_COMMAND"' ERR
+}
+
 run_quiet() {
-    local logfile rc
+    local logfile rc=0
     logfile="$(mktemp)"
-    "$@" > "$logfile" 2>&1
-    rc=$?
+    "$@" > "$logfile" 2>&1 || rc=$?
     if [ "$rc" -eq 0 ]; then
         rm -f "$logfile"
         return 0
@@ -41,7 +50,9 @@ run_quiet() {
 
 mark_stage_ok() {
     local marker="$1"
-    [ -n "${GITHUB_ENV:-}" ] && echo "${marker}=true" >> "$GITHUB_ENV"
+    if [ -n "${GITHUB_ENV:-}" ]; then
+        echo "${marker}=true" >> "$GITHUB_ENV"
+    fi
 }
 
 write_dry_run_image() {
@@ -89,7 +100,7 @@ verify_kernel_branch() {
 run_setup() {
     echo "::group::📦 Setup"
     for script in "${ROOT_DIR}/setup/"*.sh; do
-        source "$script" || error "Setup failed: $(basename "$script")"
+        source "$script"
     done
     echo "::endgroup::"
 }
@@ -98,7 +109,7 @@ run_step() {
     local emoji="$1" label="$2" script="$3" missing_msg="$4"
     [ -f "$script" ] || error "$missing_msg"
     echo "::group::${emoji} ${label}"
-    source "$script" || error "${label} script failed: $(basename "$script")"
+    source "$script"
     echo "::endgroup::"
 }
 
@@ -130,10 +141,10 @@ wait_for_apt() {
 
 retry() {
     local max_attempts="$1"; shift
-    local attempt=1 delay=5 rc=0
+    local attempt=1 delay=5 rc
     while true; do
-        "$@"
-        rc=$?
+        rc=0
+        "$@" || rc=$?
         if [ "$rc" -eq 0 ]; then
             return 0
         fi

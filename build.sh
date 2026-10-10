@@ -10,6 +10,7 @@ set -eo pipefail
 exec 2>&1
 
 source "$(cd "$(dirname "$0")" && pwd)/functions.sh"
+enable_error_trace
 
 KERNEL_VERSION="${KERNEL_VERSION:?KERNEL_VERSION is not set}"
 
@@ -88,7 +89,7 @@ restore_kernel_source() {
 
 run_branding() {
     echo "::group::🔖 Branding"
-    source "${ROOT_DIR}/kernel/branding/branding.sh" || error "Branding failed!"
+    source "${ROOT_DIR}/kernel/branding/branding.sh"
     echo "::endgroup::"
 }
 
@@ -127,8 +128,8 @@ run_build() {
 
 run_release() {
     echo "::group::🚀 Release"
-    source "${ROOT_DIR}/release/anykernel.sh" || error "Release failed: anykernel.sh"
-    source "${ROOT_DIR}/release/telegram/stage.sh"  || error "Release failed: stage.sh"
+    source "${ROOT_DIR}/release/anykernel.sh"
+    source "${ROOT_DIR}/release/telegram/stage.sh"
     echo "::endgroup::"
 }
 

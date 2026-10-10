@@ -11,7 +11,7 @@ source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 
 log "Integrating KernelSU (official)..."
 cd "$KERNEL_SRC"
-mirror_preseed "ksu" "$KSU_DIR" "${KSU_REF:-}" "${CANDIDATE_KSU:-false}" "$(resolve_android_version)-${KERNEL_VERSION}"
+mirror_preseed "ksu" "$KSU_DIR" "${KSU_REF:-}" "${CANDIDATE_KSU:-false}" "$(resolve_android_version)-${KERNEL_VERSION}" || true
 KSU_SETUP=$(curl -LSs --fail --retry 3 --retry-all-errors --connect-timeout 30 \
     "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh") \
     || error "KernelSU: failed to download setup.sh!"

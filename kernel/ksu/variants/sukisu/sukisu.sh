@@ -12,7 +12,7 @@ source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 log "Integrating SukiSU-Ultra..."
 cd "$KERNEL_SRC"
 if [ "${SUSFS_ENABLED:-false}" = "true" ]; then
-    mirror_preseed "sukisu_builtin" "$KSU_DIR" "${SUKISU_BUILTIN_REF:-}" "${CANDIDATE_SUKISU_BUILTIN:-false}" "$(resolve_android_version)-${KERNEL_VERSION}"
+    mirror_preseed "sukisu_builtin" "$KSU_DIR" "${SUKISU_BUILTIN_REF:-}" "${CANDIDATE_SUKISU_BUILTIN:-false}" "$(resolve_android_version)-${KERNEL_VERSION}" || true
 fi
 SUKISU_SETUP=$(curl -LSs --fail --retry 3 --retry-all-errors --connect-timeout 30 \
     "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh") \
@@ -54,7 +54,7 @@ fi
 SUKISU_GIT_COMMIT_COUNT=$(git -C "$KSU_DIR" rev-list --count main 2>/dev/null || echo "")
 SUKISU_GITHUB_COMMITS=$(curl -sI --connect-timeout 10 --max-time 15 \
     "https://api.github.com/repos/SukiSU-Ultra/SukiSU-Ultra/commits?sha=main&per_page=1" 2>/dev/null \
-    | grep -i "link:" | sed -n 's/.*page=\([0-9]*\)>; rel="last".*/\1/p')
+    | grep -i "link:" | sed -n 's/.*page=\([0-9]*\)>; rel="last".*/\1/p') || true
 SUKISU_LOCAL_COUNT="${SUKISU_GITHUB_COMMITS:-$SUKISU_GIT_COMMIT_COUNT}"
 if [ -n "$SUKISU_LOCAL_COUNT" ]; then
     KSU_VERSION_CODE=$((40000 + SUKISU_LOCAL_COUNT - 2815))
@@ -62,10 +62,10 @@ else
     KSU_VERSION_CODE=13000
 fi
 
-SUKISU_GIT_LATEST_TAG=$(git -C "$KSU_DIR" describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')
+SUKISU_GIT_LATEST_TAG=$(git -C "$KSU_DIR" describe --tags --abbrev=0 2>/dev/null | sed 's/^v//') || true
 SUKISU_GITHUB_VER=$(curl -s --connect-timeout 10 --max-time 15 \
     "https://api.github.com/repos/SukiSU-Ultra/SukiSU-Ultra/releases/latest" 2>/dev/null \
-    | grep '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/')
+    | grep '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/') || true
 if [ "${SUSFS_ENABLED:-false}" = "true" ]; then
     SUKISU_DEFAULT_TAG="4.1.2"
 else

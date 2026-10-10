@@ -53,7 +53,7 @@ run_addons() {
             SKIPPED_ADDONS="${SKIPPED_ADDONS:+${SKIPPED_ADDONS},}${addon}"
             continue
         fi
-        source "$script" || error "Addon failed: ${addon}"
+        source "$script"
         APPLIED_ADDONS="${APPLIED_ADDONS:+${APPLIED_ADDONS},}${addon}"
     done
 
