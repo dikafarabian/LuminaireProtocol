@@ -18,17 +18,19 @@ declare -gA MIRROR_SOURCE_URL=(
     [susfs_ksu]="https://gitlab.com/simonpunk/susfs4ksu.git"
 )
 
+MIRROR_OWNER="${MIRROR_OWNER:-dikafarabian}"
+
 declare -gA MIRROR_REPO=(
-    [bakasu]="dikafarabian/BakaSU"
-    [sukisu_builtin]="dikafarabian/SukiSU-Ultra"
-    [ksunext_susfs_fork]="dikafarabian/KernelSU-Next"
-    [kowsu]="dikafarabian/KernelSU"
-    [ksu]="dikafarabian/KernelSU"
-    [susfs_bakasu]="dikafarabian/susfs4ksu-mirror"
-    [susfs_sukisu]="dikafarabian/susfs4ksu-mirror"
-    [susfs_ksunext]="dikafarabian/susfs4ksu-mirror"
-    [susfs_kowsu]="dikafarabian/susfs4ksu-mirror"
-    [susfs_ksu]="dikafarabian/susfs4ksu-mirror"
+    [bakasu]="${MIRROR_OWNER}/BakaSU"
+    [sukisu_builtin]="${MIRROR_OWNER}/SukiSU-Ultra"
+    [ksunext_susfs_fork]="${MIRROR_OWNER}/KernelSU-Next"
+    [kowsu]="${MIRROR_OWNER}/KernelSU"
+    [ksu]="${MIRROR_OWNER}/KernelSU"
+    [susfs_bakasu]="${MIRROR_OWNER}/susfs4ksu-mirror"
+    [susfs_sukisu]="${MIRROR_OWNER}/susfs4ksu-mirror"
+    [susfs_ksunext]="${MIRROR_OWNER}/susfs4ksu-mirror"
+    [susfs_kowsu]="${MIRROR_OWNER}/susfs4ksu-mirror"
+    [susfs_ksu]="${MIRROR_OWNER}/susfs4ksu-mirror"
 )
 
 mirror_clone_url() {
