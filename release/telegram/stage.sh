@@ -15,22 +15,12 @@ if [ ! -f "${ZIP_PATH:-}" ]; then
     return 0
 fi
 
-case "${KERNEL_VARIANT}" in
-    KSU)      KERNEL_VARIANT_VERSION="${KSU_VERSION_DISPLAY:-}" ;;
-    KOWSU)    KERNEL_VARIANT_VERSION="${KOWSU_VERSION_DISPLAY:-}" ;;
-    KSUNEXT)  KERNEL_VARIANT_VERSION="${KSUNEXT_VERSION_DISPLAY:-}" ;;
-    SUKISU)   KERNEL_VARIANT_VERSION="${SUKISU_VERSION_DISPLAY:-}" ;;
-    BAKASU) KERNEL_VARIANT_VERSION="${BAKASU_VERSION_DISPLAY:-}" ;;
-    *)        KERNEL_VARIANT_VERSION="" ;;
-esac
-
-VARIANT_KEY="${KERNEL_VARIANT}"
-if [ "${SUSFS_ENABLED:-false}" = "true" ] && [ "$KERNEL_VARIANT" != "VANILLA" ]; then
-    VARIANT_KEY="${KERNEL_VARIANT}_SUSFS"
-fi
+KERNEL_VARIANT_VERSION_VAR="${KERNEL_VARIANT}_VERSION_DISPLAY"
+KERNEL_VARIANT_VERSION="${!KERNEL_VARIANT_VERSION_VAR:-}"
+VARIANT_KEY="$(variant_key)"
 
 SUSFS_VERSION_TAG=""
-if [ "${SUSFS_ENABLED:-false}" = "true" ] && [ "$KERNEL_VARIANT" != "VANILLA" ]; then
+if susfs_active; then
     SUSFS_VERSION_TAG="$(sed -n 's/^#define SUSFS_VERSION "\(.*\)"/\1/p' "${KERNEL_SRC:-}/include/linux/susfs.h" 2>/dev/null | head -n 1)" || true
 fi
 

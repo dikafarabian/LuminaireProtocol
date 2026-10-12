@@ -24,14 +24,6 @@ source "${ROOT_DIR}/kernel/patches/registry.sh"
 source "${ROOT_DIR}/kernel/kabi/registry.sh"
 source "${ROOT_DIR}/kernel/ksu/registry.sh"
 
-variant_label() {
-    if [ "$SUSFS_ENABLED" = "true" ] && [ "$KERNEL_VARIANT" != "VANILLA" ]; then
-        echo "${KERNEL_VARIANT}+SUSFS"
-    else
-        echo "${KERNEL_VARIANT}"
-    fi
-}
-
 print_run_complete() {
     echo "========================================"
     echo "  $(mode_emoji "$RUN_MODE") ${RUN_MODE} Complete! $(mode_emoji "$RUN_MODE")"
@@ -116,7 +108,7 @@ run_variant() {
     run_step "🍀" "Root Solution (${KERNEL_VARIANT})" "$script" \
         "Root solution '${KERNEL_VARIANT}' is marked supported for kernel ${KERNEL_VERSION} in KSU_VARIANT_SUPPORTED_VERSIONS but ${script} doesn't exist — the map is out of sync with kernel/ksu/variants/."
 
-    [ "$SUSFS_ENABLED" = "true" ] || return 0
+    susfs_active || return 0
     local susfs_script="${ROOT_DIR}/kernel/ksu/susfs/susfs.sh"
     run_step "🧬" "SuSFS" "$susfs_script" "SuSFS script not found: $(basename "$susfs_script")"
 }

@@ -11,7 +11,7 @@ source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 
 log "Integrating KernelSU-Next..."
 cd "$KERNEL_SRC"
-if [ "${SUSFS_ENABLED:-false}" = "true" ]; then
+if susfs_active; then
     log "SUSFS enabled — using pershoot/KernelSU-Next's dev-susfs fork"
     KSUNEXT_SETUP_URL="https://raw.githubusercontent.com/pershoot/KernelSU-Next/dev-susfs/kernel/setup.sh"
     KSUNEXT_SETUP_REF="${KSUNEXT_SUSFS_FORK_REF:-dev-susfs}"
@@ -24,7 +24,7 @@ run_upstream_setup "KernelSU-Next" "$KSUNEXT_SETUP_URL" "$KSUNEXT_SETUP_REF"
 [ -d "$KSU_DIR" ] || error "KernelSU-Next: KernelSU-Next dir not found after setup!"
 verify_pinned_ref "KernelSU-Next" "$KSU_DIR" "$KSUNEXT_SETUP_REF"
 
-if [ "${SUSFS_ENABLED:-false}" = "true" ]; then
+if susfs_active; then
     git -C "$KSU_DIR" fetch --force "https://github.com/pershoot/KernelSU-Next" \
         "refs/heads/dev:refs/remotes/origin/dev" 2>/dev/null || true
 else
@@ -41,7 +41,7 @@ python3 "${PATCHER_DIR}/branding.py" "${KSU_DIR}/kernel/Kbuild" \
     || error "KernelSU-Next: branding patch failed!"
 log "Branding applied ✅"
 
-if [ "${SUSFS_ENABLED:-false}" = "true" ]; then
+if susfs_active; then
     KSUNEXT_CUR_BRANCH=$(git -C "$KSU_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "HEAD")
     KSUNEXT_BASE_BRANCH="${KSUNEXT_CUR_BRANCH%%-*}"
     KSUNEXT_BASE_COMMIT=$(git -C "$KSU_DIR" merge-base HEAD "refs/remotes/origin/${KSUNEXT_BASE_BRANCH}" 2>/dev/null \

@@ -5,18 +5,8 @@
 # ======================================================
 # Repo: https://github.com/chainonyourdoor/AnyKernel3-Luminaire
 
-case "${KERNEL_VARIANT}" in
-    KSU)      ZIP_VARIANT_TAG="KSU" ;;
-    KOWSU)    ZIP_VARIANT_TAG="KOWSU" ;;
-    KSUNEXT)  ZIP_VARIANT_TAG="KSUNEXT" ;;
-    SUKISU)   ZIP_VARIANT_TAG="SUKISU" ;;
-    BAKASU) ZIP_VARIANT_TAG="BAKASU" ;;
-    VANILLA)  ZIP_VARIANT_TAG="VANILLA" ;;
-    *)        ZIP_VARIANT_TAG="${KERNEL_VARIANT}" ;;
-esac
-[ "$SUSFS_ENABLED" = "true" ] && [ "$KERNEL_VARIANT" != "VANILLA" ] && ZIP_VARIANT_TAG="${ZIP_VARIANT_TAG}+SUSFS"
 [ -n "${SUBLEVEL:-}" ] || error "SUBLEVEL is not set — branding.sh may not have run correctly!"
-ZIP_NAME="Ak3-${KERNEL_VERSION}.${SUBLEVEL}-${ZIP_VARIANT_TAG}-R${GITHUB_RUN_NUMBER:-0}.zip"
+ZIP_NAME="Ak3-${KERNEL_VERSION}.${SUBLEVEL}-$(variant_label)-R${GITHUB_RUN_NUMBER:-0}.zip"
 export ZIP_NAME
 
 if [ "${USE_AK3_CACHE}" = "true" ] && [ -d "${HOME}/ak3-cache" ]; then
@@ -33,7 +23,11 @@ fi
 [ -d "$TOOL_AK3_DIR" ] || error "AK3 directory missing after clone/cache restore — aborting packaging"
 
 KERNEL_IMG=""
-BOOT_SEARCH_DIR="$([ "$BUILD_SYSTEM" = "KLEAF" ] && echo "$KLEAF_OUT_DIR" || echo "${OUT_DIR}/arch/${ARCH}/boot")"
+if [ "$BUILD_SYSTEM" = "KLEAF" ]; then
+    BOOT_SEARCH_DIR="$KLEAF_OUT_DIR"
+else
+    BOOT_SEARCH_DIR="${OUT_DIR}/arch/${ARCH}/boot"
+fi
 
 for img in Image Image.gz Image.gz-dtb Image-dtb; do
     BOOT_PATH="${BOOT_SEARCH_DIR}/${img}"
@@ -43,7 +37,7 @@ for img in Image Image.gz Image.gz-dtb Image-dtb; do
         break
     fi
 done
-[ -z "$KERNEL_IMG" ] && error "Kernel image not found! Searched ${BOOT_SEARCH_DIR}/ for: Image, Image.gz, Image.gz-dtb, Image-dtb"
+[ -n "$KERNEL_IMG" ] || error "Kernel image not found! Searched ${BOOT_SEARCH_DIR}/ for: Image, Image.gz, Image.gz-dtb, Image-dtb"
 
 cp "$KERNEL_IMG" "${TOOL_AK3_DIR}/"
 

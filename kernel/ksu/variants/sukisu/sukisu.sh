@@ -11,7 +11,7 @@ source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 
 log "Integrating SukiSU-Ultra..."
 cd "$KERNEL_SRC"
-if [ "${SUSFS_ENABLED:-false}" = "true" ]; then
+if susfs_active; then
     mirror_preseed "sukisu_builtin" "$KSU_DIR" "${SUKISU_BUILTIN_REF:-}" "${CANDIDATE_SUKISU_BUILTIN:-false}" "$(resolve_android_version)-${KERNEL_VERSION}" || true
     SUKISU_REF="${SUKISU_BUILTIN_REF:-builtin}"
 fi
@@ -22,7 +22,7 @@ cd "$ROOT_DIR"
 log "SukiSU-Ultra integrated ✅"
 
 log "Applying Luminaire branding..."
-if [ "${SUSFS_ENABLED:-false}" = "true" ]; then
+if susfs_active; then
     BRANDING_TARGET="${KSU_DIR}/kernel/Makefile"
 else
     BRANDING_TARGET="${KSU_DIR}/kernel/Kbuild"
@@ -31,7 +31,7 @@ python3 "${PATCHER_DIR}/branding.py" "$BRANDING_TARGET" \
     || error "SukiSU-Ultra: branding patch failed!"
 log "Branding applied ✅"
 
-if [ "${SUSFS_ENABLED:-false}" = "true" ]; then
+if susfs_active; then
     log "Patching SuSFS post-execveat compat..."
     python3 "${PATCHER_DIR}/susfs_post_execveat_compat.py" \
         "${KSU_DIR}/kernel/feature/sucompat.c" \

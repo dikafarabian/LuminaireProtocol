@@ -277,6 +277,26 @@ verify_pinned_ref() {
     log "${label}: pin verified at ${actual:0:12} ✅"
 }
 
+susfs_active() {
+    [ "${SUSFS_ENABLED:-false}" = "true" ] && [ "${KERNEL_VARIANT:-}" != "VANILLA" ]
+}
+
+variant_label() {
+    if susfs_active; then
+        echo "${KERNEL_VARIANT}+SUSFS"
+    else
+        echo "${KERNEL_VARIANT}"
+    fi
+}
+
+variant_key() {
+    if susfs_active; then
+        echo "${KERNEL_VARIANT}_SUSFS"
+    else
+        echo "${KERNEL_VARIANT}"
+    fi
+}
+
 mode_emoji() {
     case "$1" in
         "Dry Run")  echo "🧪" ;;
