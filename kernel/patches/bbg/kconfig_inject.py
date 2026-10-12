@@ -8,20 +8,18 @@ def main():
         lines = f.readlines()
 
     in_lsm_block = False
-    lsm_start = None
 
     for i, line in enumerate(lines):
         if line.strip() == "config LSM":
             in_lsm_block = True
-            lsm_start = i
             continue
 
         if in_lsm_block:
-            if line.startswith("help"):
+            stripped = line.strip()
+            if stripped == "help":
                 in_lsm_block = False
                 continue
 
-            stripped = line.strip()
             if stripped.startswith("default"):
                 if "baseband_guard" in stripped:
                     print("[info] bbg_kconfig_inject: baseband_guard already present — skipping")
