@@ -9,16 +9,16 @@ telegram_api_call() {
     local err_file http_code curl_err attempt=1 sleep_secs
     err_file="$(mktemp)"
 
-    while [ "$attempt" -le "${TELEGRAM_MAX_RETRIES:-3}" ]; do
+    while [ "$attempt" -le "$TELEGRAM_MAX_RETRIES" ]; do
         http_code=$(curl -s -o "$response_file" -w "%{http_code}" \
-            --max-time "${TELEGRAM_API_TIMEOUT:-60}" \
+            --max-time "$TELEGRAM_API_TIMEOUT" \
             --retry 0 \
-            -X POST "${TELEGRAM_API_BASE:-https://api.telegram.org}/bot${TELEGRAM_BOT_TOKEN}/${method}" \
+            -X POST "${TELEGRAM_API_BASE}/bot${TELEGRAM_BOT_TOKEN}/${method}" \
             "$@" 2>"$err_file") || http_code="000"
 
         TG_RESPONSE=$(cat "$response_file" 2>/dev/null || echo "")
 
-        if [ "$http_code" = "200" ] && echo "$TG_RESPONSE" | grep -q '"ok":true'; then
+        if [ "$http_code" = "200" ] && jq -e '.ok == true' <<< "$TG_RESPONSE" > /dev/null 2>&1; then
             rm -f "$err_file"
             return 0
         fi
@@ -35,7 +35,7 @@ telegram_api_call() {
                 ;;
         esac
 
-        if [ "$attempt" -lt "${TELEGRAM_MAX_RETRIES:-3}" ]; then
+        if [ "$attempt" -lt "$TELEGRAM_MAX_RETRIES" ]; then
             sleep_secs=$(( 2 ** attempt ))
             log "⏳ Retrying in ${sleep_secs}s..."
             sleep "$sleep_secs"

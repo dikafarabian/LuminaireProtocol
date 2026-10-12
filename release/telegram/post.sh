@@ -4,14 +4,14 @@
 # 📨 TELEGRAM — Post Sender (Build / Release)
 # ======================================================
 
+set -eo pipefail
+
+ROOT_DIR="${ROOT_DIR:-${GITHUB_WORKSPACE:?post: set ROOT_DIR or GITHUB_WORKSPACE}}"
 TELEGRAM_DIR="${ROOT_DIR}/release/telegram"
 
 source "${ROOT_DIR}/functions.sh"
 source "${TELEGRAM_DIR}/config.sh"
 source "${TELEGRAM_DIR}/common.sh"
-
-TELEGRAM_API_TIMEOUT="${TELEGRAM_API_TIMEOUT:-900}"
-TELEGRAM_MAX_RETRIES="${TELEGRAM_MAX_RETRIES:-3}"
 
 STAGE_DIR="${STAGE_DIR:-/tmp/post-stage}"
 PAYLOAD_FILE="/tmp/post_payload.json"
@@ -44,6 +44,7 @@ send_post() {
     [ -n "$thread_id" ] && send_args+=(-F "message_thread_id=${thread_id}")
 
     log "📨 Sending ${label} (${RUN_MODE_UPPER}, ${#attachment_specs[@]} attachment(s))..."
+    TELEGRAM_API_TIMEOUT="$TELEGRAM_UPLOAD_TIMEOUT" \
     telegram_api_call "sendRichMessage" "$RESPONSE_FILE" "$label" "${send_args[@]}" \
         || error "${label} failed"
 
@@ -85,7 +86,9 @@ trap cleanup EXIT
 if [ "${DELIVERY_TARGET:-Community}" = "Private" ]; then
     [ -n "${TELEGRAM_PERSONAL_CHAT_ID:-}" ] || error "DELIVERY_TARGET=Private but TELEGRAM_PERSONAL_CHAT_ID not set"
     PRIVATE_BANNER=0
-    [ "$RUN_MODE_UPPER" = "RELEASE" ] && PRIVATE_BANNER=1
+    if [ "$RUN_MODE_UPPER" = "RELEASE" ]; then
+        PRIVATE_BANNER=1
+    fi
     send_post "$TELEGRAM_PERSONAL_CHAT_ID" "" "$PRIVATE_BANNER" "Private post"
     exit 0
 fi
