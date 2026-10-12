@@ -62,6 +62,16 @@ apply_and_push() {
     error "checkpoint: failed to push manifest update after ${max_attempts} attempts"
 }
 
+is_candidate() {
+    local flag="CANDIDATE_${1^^}"
+    [ "${!flag:-false}" = "true" ]
+}
+
+candidate_ref() {
+    local ref_var="${1^^}_REF"
+    echo "${!ref_var}"
+}
+
 proposal_prefix() {
     echo "bad-pin/${1}-${KERNEL_VERSION}-"
 }
@@ -96,26 +106,16 @@ prune_proposal_branches() {
     done <<< "$(git ls-remote --heads "$REMOTE" 'refs/heads/bad-pin/*' | awk '{sub("refs/heads/", "", $2); print $2}')"
 }
 
-file_proposal() {
-    local key="$1" ref="$2" others="$3"
-    local branch
-    branch="$(proposal_prefix "$key")${ref:0:12}"
-    local run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-    local stage existing body tree
-
+proposal_stage_label() {
     if [ "${CHECKPOINT_VARIANT_OK:-false}" = "true" ]; then
-        stage="run_build (compile)"
+        echo "run_build (compile)"
     else
-        stage="run_variant (root solution / SuSFS)"
+        echo "run_variant (root solution / SuSFS)"
     fi
+}
 
-    existing="$(open_proposals "$key")"
-    if [[ $'\n'"${existing}"$'\n' == *" ${branch}"$'\n'* ]]; then
-        log "checkpoint: proposal for ${key} ${ref:0:12} is already open"
-        return 0
-    fi
-    close_proposals "$key" "Superseded by a newer failing candidate (\`${ref:0:12}\`)." "$branch"
-
+push_proposal_branch() {
+    local key="$1" ref="$2" branch="$3" tree
     init_remote
     run_quiet git fetch "$REMOTE" main
     tree="$(mktemp -d)"
@@ -129,13 +129,18 @@ file_proposal() {
         && git commit -q -m "chore: mark ${key} candidate ${ref:0:12} as known-bad for kernel ${KERNEL_VERSION} (run ${GITHUB_RUN_ID})" \
         && git push -q --force "$REMOTE" "$branch"
     ); then
-        warn "checkpoint: couldn't push proposal branch for ${key}"
         git worktree remove --force "$tree"
-        return 0
+        return 1
     fi
     git worktree remove --force "$tree"
+}
 
-    body="Candidate \`${ref}\` for **${key}** failed during ${stage} on kernel ${KERNEL_VERSION} ([run](${run_url})).
+open_proposal_pr() {
+    local key="$1" ref="$2" branch="$3" others="$4"
+    local run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+    local body
+
+    body="Candidate \`${ref}\` for **${key}** failed during $(proposal_stage_label) on kernel ${KERNEL_VERSION} ([run](${run_url})).
 
 Merge to mark this exact commit known-bad. Close to ignore it. The pin stays on the last known-good commit either way, and this proposal closes itself once a build succeeds again for ${key}."
 
@@ -151,92 +156,133 @@ ${others}"
         || warn "checkpoint: couldn't open proposal for ${key}"
 }
 
+file_proposal() {
+    local key="$1" ref="$2" others="$3"
+    local branch existing
+    branch="$(proposal_prefix "$key")${ref:0:12}"
+
+    existing="$(open_proposals "$key")"
+    if [[ $'\n'"${existing}"$'\n' == *" ${branch}"$'\n'* ]]; then
+        log "checkpoint: proposal for ${key} ${ref:0:12} is already open"
+        return 0
+    fi
+    close_proposals "$key" "Superseded by a newer failing candidate (\`${ref:0:12}\`)." "$branch"
+
+    if ! push_proposal_branch "$key" "$ref" "$branch"; then
+        warn "checkpoint: couldn't push proposal branch for ${key}"
+        return 0
+    fi
+    open_proposal_pr "$key" "$ref" "$branch" "$others"
+}
+
 propose_bad() {
-    local key="$1" ref="$2"
-    local other_key other_prefix other_candidate other_ref_var others=""
+    local key="$1" ref="$2" other_key others=""
 
     for other_key in "${COMPONENTS[@]}"; do
         [ "$other_key" = "$key" ] && continue
-        other_prefix="${other_key^^}"
-        other_candidate="CANDIDATE_${other_prefix}"
-        [ "${!other_candidate:-false}" = "true" ] || continue
-        other_ref_var="${other_prefix}_REF"
-        others="${others}- \`${other_key}\` @ \`${!other_ref_var}\`
+        is_candidate "$other_key" || continue
+        others="${others}- \`${other_key}\` @ \`$(candidate_ref "$other_key")\`
 "
     done
 
     file_proposal "$key" "$ref" "$others"
 }
 
-for key in "${COMPONENTS[@]}"; do
-    pinned_ref="$(jq -r ".${key}.good // \"\"" "$MANIFEST" 2>/dev/null || true)"
-    [ -n "$pinned_ref" ] || continue
-    mirror_sync "$key" "$pinned_ref" "$MIRROR_LABEL"
-done
+sync_mirrors() {
+    local key pinned_ref
+    for key in "${COMPONENTS[@]}"; do
+        pinned_ref="$(jq -r ".${key}.good // \"\"" "$MANIFEST" 2>/dev/null || true)"
+        [ -n "$pinned_ref" ] || continue
+        mirror_sync "$key" "$pinned_ref" "$MIRROR_LABEL"
+    done
+}
 
-init_remote
-prune_proposal_branches
+any_candidate_used() {
+    local key
+    for key in "${COMPONENTS[@]}"; do
+        is_candidate "$key" && return 0
+    done
+    return 1
+}
 
-any_candidate_used="false"
-for key in "${COMPONENTS[@]}"; do
-    prefix="${key^^}"
-    candidate_var="CANDIDATE_${prefix}"
-    [ "${!candidate_var:-false}" = "true" ] && any_candidate_used="true"
-done
-
-if [ "$any_candidate_used" = "false" ]; then
-    log "checkpoint: no candidate ref used this run — nothing to update"
-    exit 0
-fi
-
-case "$BUILD_OUTCOME" in
-    success|failure) ;;
-    *)
-        log "checkpoint: build ended '${BUILD_OUTCOME}' (cancelled, timed out or skipped) — candidates left untouched"
-        exit 0
-        ;;
-esac
-
-for key in "${COMPONENTS[@]}"; do
-    prefix="${key^^}"
-    candidate_var="CANDIDATE_${prefix}"
-    [ "${!candidate_var:-false}" = "true" ] || continue
-
-    ref_var="${prefix}_REF"
-    ref="${!ref_var}"
-
-    if [ "$BUILD_OUTCOME" = "success" ]; then
-        log "checkpoint: promoting ${key} pin to ${ref:0:12} (kernel ${KERNEL_VERSION})"
-        partner_reset=""
-        for partner_key in "${COMPONENTS[@]}"; do
-            [ "$partner_key" = "$key" ] && continue
-            partner_reset="${partner_reset} | if .${partner_key} then .${partner_key}.bad = [] else . end"
-        done
-        apply_and_push ".${key}.good = \"${ref}\" | .${key}.bad = ((.${key}.bad // []) - [\"${ref}\"])${partner_reset}" "chore: bump ${key} pin to ${ref:0:12} for kernel ${KERNEL_VERSION} (verified via run ${GITHUB_RUN_ID})"
-        mirror_promote "$key" "$ref" "$MIRROR_LABEL"
-        close_proposals "$key" "Build succeeded again — pin promoted to a new known-good commit."
-        for partner_key in "${COMPONENTS[@]}"; do
-            [ "$partner_key" = "$key" ] && continue
-            close_proposals "$partner_key" "Partner ${key} was promoted to ${ref:0:12} — known-bad state reset, this proposal is stale."
-        done
-        continue
-    fi
-
+failure_stage() {
     if [ "${CHECKPOINT_PRE_VARIANT_OK:-false}" != "true" ]; then
-        log "checkpoint: ${key} candidate ${ref:0:12} left untouched — build failed before run_variant (setup/restore-source/branding), not in run_variant/run_build (kernel ${KERNEL_VERSION})"
-        continue
+        echo "setup"
+    elif [ "${CHECKPOINT_VARIANT_OK:-false}" = "true" ] && [ "${CHECKPOINT_ADDONS_OK:-false}" != "true" ]; then
+        echo "core_addons"
+    elif [ "${CHECKPOINT_ADDONS_OK:-false}" = "true" ] && [ "${CHECKPOINT_BUILD_OK:-false}" = "true" ]; then
+        echo "release"
+    else
+        echo "candidate"
+    fi
+}
+
+promote_candidate() {
+    local key="$1" ref="$2" partner_key partner_reset=""
+
+    log "checkpoint: promoting ${key} pin to ${ref:0:12} (kernel ${KERNEL_VERSION})"
+    for partner_key in "${COMPONENTS[@]}"; do
+        [ "$partner_key" = "$key" ] && continue
+        partner_reset="${partner_reset} | if .${partner_key} then .${partner_key}.bad = [] else . end"
+    done
+    apply_and_push ".${key}.good = \"${ref}\" | .${key}.bad = ((.${key}.bad // []) - [\"${ref}\"])${partner_reset}" "chore: bump ${key} pin to ${ref:0:12} for kernel ${KERNEL_VERSION} (verified via run ${GITHUB_RUN_ID})"
+    mirror_promote "$key" "$ref" "$MIRROR_LABEL"
+    close_proposals "$key" "Build succeeded again — pin promoted to a new known-good commit."
+    for partner_key in "${COMPONENTS[@]}"; do
+        [ "$partner_key" = "$key" ] && continue
+        close_proposals "$partner_key" "Partner ${key} was promoted to ${ref:0:12} — known-bad state reset, this proposal is stale."
+    done
+}
+
+handle_failed_candidate() {
+    local key="$1" ref="$2" tail="not in run_variant/run_build (kernel ${KERNEL_VERSION})"
+
+    case "$(failure_stage)" in
+        setup)
+            log "checkpoint: ${key} candidate ${ref:0:12} left untouched — build failed before run_variant (setup/restore-source/branding), ${tail}"
+            ;;
+        core_addons)
+            log "checkpoint: ${key} candidate ${ref:0:12} left untouched — build failed in an unrelated stage (run_core/run_addons), ${tail}"
+            ;;
+        release)
+            log "checkpoint: ${key} candidate ${ref:0:12} left untouched — build failed in an unrelated stage (run_release), ${tail}"
+            ;;
+        candidate)
+            warn "checkpoint: ${key} candidate ${ref:0:12} failed on kernel ${KERNEL_VERSION} — not blacklisted, opening proposal for approval"
+            propose_bad "$key" "$ref"
+            ;;
+    esac
+}
+
+main() {
+    local key ref
+
+    sync_mirrors
+    init_remote
+    prune_proposal_branches
+
+    if ! any_candidate_used; then
+        log "checkpoint: no candidate ref used this run — nothing to update"
+        return 0
     fi
 
-    if [ "${CHECKPOINT_VARIANT_OK:-false}" = "true" ] && [ "${CHECKPOINT_ADDONS_OK:-false}" != "true" ]; then
-        log "checkpoint: ${key} candidate ${ref:0:12} left untouched — build failed in an unrelated stage (run_core/run_addons), not in run_variant/run_build (kernel ${KERNEL_VERSION})"
-        continue
-    fi
+    case "$BUILD_OUTCOME" in
+        success|failure) ;;
+        *)
+            log "checkpoint: build ended '${BUILD_OUTCOME}' (cancelled, timed out or skipped) — candidates left untouched"
+            return 0
+            ;;
+    esac
 
-    if [ "${CHECKPOINT_ADDONS_OK:-false}" = "true" ] && [ "${CHECKPOINT_BUILD_OK:-false}" = "true" ]; then
-        log "checkpoint: ${key} candidate ${ref:0:12} left untouched — build failed in an unrelated stage (run_release), not in run_variant/run_build (kernel ${KERNEL_VERSION})"
-        continue
-    fi
+    for key in "${COMPONENTS[@]}"; do
+        is_candidate "$key" || continue
+        ref="$(candidate_ref "$key")"
+        if [ "$BUILD_OUTCOME" = "success" ]; then
+            promote_candidate "$key" "$ref"
+        else
+            handle_failed_candidate "$key" "$ref"
+        fi
+    done
+}
 
-    warn "checkpoint: ${key} candidate ${ref:0:12} failed on kernel ${KERNEL_VERSION} — not blacklisted, opening proposal for approval"
-    propose_bad "$key" "$ref"
-done
+main
