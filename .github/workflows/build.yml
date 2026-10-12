@@ -179,16 +179,33 @@ jobs:
       - name: "Build Variant Matrix"
         id: set
         env:
-          SUSFS_ENABLED: ${{ inputs.susfs == 'enable' }}
-          REF_NAME: ${{ github.ref_name }}
+          SUSFS_ENABLED:          ${{ inputs.susfs == 'enable' }}
+          REF_NAME:               ${{ github.ref_name }}
+          KERNEL_VERSION:         ${{ inputs.kernel_version }}
+          KERNEL_BRANCH_OVERRIDE: ${{ inputs.kernel_branch_override }}
+          SELECT_KSU:             ${{ inputs.ksu }}
+          SELECT_KOWSU:           ${{ inputs.kowsu }}
+          SELECT_KSUNEXT:         ${{ inputs.ksunext }}
+          SELECT_SUKISU:          ${{ inputs.sukisu }}
+          SELECT_BAKASU:          ${{ inputs.bakasu }}
+          SELECT_VANILLA:         ${{ inputs.vanilla }}
+          ADDON_REKERNEL:         ${{ inputs.rekernel }}
+          ADDON_DROIDSPACES:      ${{ inputs.droidspaces }}
+          ADDON_NTSYNC:           ${{ inputs.ntsync }}
+          ADDON_LZ4ZSTD:          ${{ inputs.lz4zstd }}
+          ADDON_LZ4KD:            ${{ inputs.lz4kd }}
+          ADDON_MGLRU:            ${{ inputs.mglru }}
+          MOUNTLESS_ENGINE:       ${{ inputs.mountless_engine }}
         run: |
           variants=()
-          ${{ inputs.ksu }}     && variants+=("{\"kernel_variant\":\"KSU\",\"susfs\":${SUSFS_ENABLED}}")
-          ${{ inputs.kowsu }}   && variants+=("{\"kernel_variant\":\"KOWSU\",\"susfs\":${SUSFS_ENABLED}}")
-          ${{ inputs.ksunext }} && variants+=("{\"kernel_variant\":\"KSUNEXT\",\"susfs\":${SUSFS_ENABLED}}")
-          ${{ inputs.sukisu }}   && variants+=("{\"kernel_variant\":\"SUKISU\",\"susfs\":${SUSFS_ENABLED}}")
-          ${{ inputs.bakasu }} && variants+=("{\"kernel_variant\":\"BAKASU\",\"susfs\":${SUSFS_ENABLED}}")
-          ${{ inputs.vanilla }}  && variants+=("{\"kernel_variant\":\"VANILLA\",\"susfs\":false}")
+          for variant in KSU KOWSU KSUNEXT SUKISU BAKASU; do
+            selected="SELECT_${variant}"
+            [ "${!selected}" = "true" ] || continue
+            variants+=("{\"kernel_variant\":\"${variant}\",\"susfs\":${SUSFS_ENABLED}}")
+          done
+          if [ "$SELECT_VANILLA" = "true" ]; then
+            variants+=('{"kernel_variant":"VANILLA","susfs":false}')
+          fi
 
           if [ ${#variants[@]} -eq 0 ]; then
             echo "No root solutions selected!"
@@ -196,20 +213,24 @@ jobs:
           fi
 
           matrix_json=$(printf '%s\n' "${variants[@]}" | jq -cs '{include: .}')
-          echo "matrix=${matrix_json}" >> $GITHUB_OUTPUT
+          echo "matrix=${matrix_json}" >> "$GITHUB_OUTPUT"
 
-          ADDONS="${{ inputs.rekernel && 'rekernel,' || '' }}${{ inputs.droidspaces && 'droidspaces,' || '' }}${{ inputs.ntsync && 'ntsync,' || '' }}${{ inputs.lz4zstd && 'lz4zstd,' || '' }}${{ inputs.lz4kd && 'lz4kd,' || '' }}${{ inputs.mountless_engine != 'none' && format('{0},', inputs.mountless_engine) || '' }}${{ inputs.mglru && 'mglru,' || '' }}"
-          echo "addons=${ADDONS}" >> $GITHUB_OUTPUT
+          addons=""
+          [ "$ADDON_REKERNEL" = "true" ]    && addons+="rekernel,"
+          [ "$ADDON_DROIDSPACES" = "true" ] && addons+="droidspaces,"
+          [ "$ADDON_NTSYNC" = "true" ]      && addons+="ntsync,"
+          [ "$ADDON_LZ4ZSTD" = "true" ]     && addons+="lz4zstd,"
+          [ "$ADDON_LZ4KD" = "true" ]       && addons+="lz4kd,"
+          [ "$MOUNTLESS_ENGINE" != "none" ] && addons+="${MOUNTLESS_ENGINE},"
+          [ "$ADDON_MGLRU" = "true" ]       && addons+="mglru,"
+          echo "addons=${addons}" >> "$GITHUB_OUTPUT"
 
-          SAFE_REF="${REF_NAME//\//-}"
-          echo "safe_ref=${SAFE_REF}" >> $GITHUB_OUTPUT
+          echo "safe_ref=${REF_NAME//\//-}" >> "$GITHUB_OUTPUT"
 
           source functions.sh
-          KERNEL_VERSION="${{ inputs.kernel_version }}"
-          KERNEL_BRANCH_OVERRIDE="${{ inputs.kernel_branch_override }}"
           RESOLVED_KERNEL_BRANCH="$(resolve_kernel_branch)"
           verify_kernel_branch "$RESOLVED_KERNEL_BRANCH"
-          echo "resolved_kernel_branch=${RESOLVED_KERNEL_BRANCH}" >> $GITHUB_OUTPUT
+          echo "resolved_kernel_branch=${RESOLVED_KERNEL_BRANCH}" >> "$GITHUB_OUTPUT"
 
       - name: "Setup Arsenal"
         id: setup-arsenal
@@ -346,17 +367,6 @@ jobs:
 
           bash kernel/ksu/checkpoint/engine.sh "$OUTCOME" $COMPONENTS
 
-      - name: "Save Build Caches"
-        if: always() && env.IS_MAKE == 'true'
-        timeout-minutes: 15
-        uses: ./.github/actions/save-build-caches
-        with:
-          build-system:   ${{ inputs.build_system }}
-          lto-mode:     ${{ inputs.lto_mode }}
-          lto-asset-name: lto-data-${{ needs.prepare-matrix.outputs.resolved_kernel_branch }}-${{ matrix.kernel_variant }}${{ matrix.susfs && '+SUSFS' || '' }}-${{ steps.setup-build-env.outputs.clang-variant-upper }}${{ inputs.lto_mode != 'NONE' && format('-{0}', inputs.lto_mode) || '' }}-${{ needs.prepare-matrix.outputs.safe_ref }}.tar.zst
-          ccache-filename: ccache-data-${{ needs.prepare-matrix.outputs.resolved_kernel_branch }}-${{ matrix.kernel_variant }}${{ matrix.susfs && '+SUSFS' || '' }}-${{ steps.setup-build-env.outputs.clang-variant-upper }}${{ inputs.lto_mode != 'NONE' && format('-{0}', inputs.lto_mode) || '' }}-${{ needs.prepare-matrix.outputs.safe_ref }}.tar.zst
-          gh-token:       ${{ secrets.PERSONAL_TOKEN }}
-
       - name: "Upload Zip"
         if: inputs.run_mode == 'Build' || inputs.run_mode == 'Release'
         uses: actions/upload-artifact@v7
@@ -365,6 +375,17 @@ jobs:
           archive: false
           retention-days: 1
           if-no-files-found: ignore
+
+      - name: "Save Build Caches"
+        if: always() && env.IS_MAKE == 'true'
+        timeout-minutes: 15
+        uses: ./.github/actions/save-build-caches
+        with:
+          build-system:      ${{ inputs.build_system }}
+          lto-mode:          ${{ inputs.lto_mode }}
+          lto-asset-name:    ${{ steps.setup-build-env.outputs.lto-asset-name }}
+          ccache-asset-name: ${{ steps.setup-build-env.outputs.ccache-asset-name }}
+          gh-token:          ${{ secrets.PERSONAL_TOKEN }}
 
   # ======================================================
   # NOTIFY

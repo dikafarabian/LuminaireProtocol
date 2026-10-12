@@ -24,6 +24,12 @@ outputs:
   clang-variant-upper:
     description: "Uppercased clang variant (e.g. NEUTRON) — for cache asset filenames only, not cache keys"
     value: ${{ steps.clang-key.outputs.clang_variant_upper }}
+  ccache-asset-name:
+    description: "Release asset filename for this build's ccache archive"
+    value: ${{ steps.asset-names.outputs.ccache_asset_name }}
+  lto-asset-name:
+    description: "Release asset filename for this build's LTO cache archive"
+    value: ${{ steps.asset-names.outputs.lto_asset_name }}
 
 runs:
   using: composite
@@ -32,11 +38,12 @@ runs:
       id: clang-key
       if: startsWith(inputs.build-system, 'Make')
       shell: bash
+      env:
+        BUILD_SYSTEM: ${{ inputs.build-system }}
       run: |
-        variant="${{ inputs.build-system }}"
-        variant="${variant#Make - }"
-        echo "clang_variant=${variant}" >> $GITHUB_OUTPUT
-        echo "clang_variant_upper=${variant^^}" >> $GITHUB_OUTPUT
+        variant="${BUILD_SYSTEM#Make - }"
+        echo "clang_variant=${variant}" >> "$GITHUB_OUTPUT"
+        echo "clang_variant_upper=${variant^^}" >> "$GITHUB_OUTPUT"
 
     - name: "Restore Clang Cache"
       if: startsWith(inputs.build-system, 'Make')
@@ -60,16 +67,41 @@ runs:
         path: ~/kernel-cache
         key: ${{ startsWith(inputs.build-system, 'Make') && format('kernel-{0}', inputs.kernel-branch) || format('kernel-kleaf-{0}', inputs.kernel-branch) }}
 
+    - name: "Derive Cache Asset Names"
+      id: asset-names
+      if: startsWith(inputs.build-system, 'Make')
+      shell: bash
+      env:
+        KERNEL_BRANCH: ${{ inputs.kernel-branch }}
+        KERNEL_VARIANT: ${{ inputs.kernel-variant }}
+        SUSFS: ${{ inputs.susfs }}
+        CLANG_UPPER: ${{ steps.clang-key.outputs.clang_variant_upper }}
+        LTO_MODE: ${{ inputs.lto-mode }}
+        REF_NAME: ${{ inputs.ref-name }}
+      run: |
+        suffix="${KERNEL_BRANCH}-${KERNEL_VARIANT}"
+        [ "$SUSFS" = "true" ] && suffix+="+SUSFS"
+        suffix+="-${CLANG_UPPER}"
+        [ "$LTO_MODE" != "NONE" ] && suffix+="-${LTO_MODE}"
+        suffix+="-${REF_NAME}.tar.zst"
+        echo "ccache_asset_name=ccache-data-${suffix}" >> "$GITHUB_OUTPUT"
+        echo "lto_asset_name=lto-data-${suffix}" >> "$GITHUB_OUTPUT"
+
     - name: "Restore ccache"
       if: startsWith(inputs.build-system, 'Make')
-      uses: ./.github/actions/restore-caches
+      uses: ./.github/actions/restore-release-cache
       with:
-        ccache-filename: ccache-data-${{ inputs.kernel-branch }}-${{ inputs.kernel-variant }}${{ inputs.susfs == 'true' && '+SUSFS' || '' }}-${{ steps.clang-key.outputs.clang_variant_upper }}${{ inputs.lto-mode != 'NONE' && format('-{0}', inputs.lto-mode) || '' }}-${{ inputs.ref-name }}.tar.zst
-        gh-token: ${{ inputs.gh-token }}
+        asset-name: ${{ steps.asset-names.outputs.ccache_asset_name }}
+        label:      ccache
+        base-dir:   ${{ github.workspace }}
+        gh-token:   ${{ inputs.gh-token }}
 
     - name: "Restore LTO Cache"
       if: startsWith(inputs.build-system, 'Make') && inputs.lto-mode == 'THIN'
-      uses: ./.github/actions/restore-lto-cache
+      uses: ./.github/actions/restore-release-cache
       with:
-        asset-name: lto-data-${{ inputs.kernel-branch }}-${{ inputs.kernel-variant }}${{ inputs.susfs == 'true' && '+SUSFS' || '' }}-${{ steps.clang-key.outputs.clang_variant_upper }}${{ inputs.lto-mode != 'NONE' && format('-{0}', inputs.lto-mode) || '' }}-${{ inputs.ref-name }}.tar.zst
+        asset-name: ${{ steps.asset-names.outputs.lto_asset_name }}
+        label:      LTO
+        base-dir:   /
+        use-sudo:   "true"
         gh-token:   ${{ inputs.gh-token }}

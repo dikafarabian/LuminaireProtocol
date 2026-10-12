@@ -26,25 +26,26 @@ runs:
       id: clang-key
       if: startsWith(inputs.build-system, 'Make')
       shell: bash
-      run: |
-        variant="${{ inputs.build-system }}"
-        variant="${variant#Make - }"
-        echo "clang_variant=${variant}" >> $GITHUB_OUTPUT
+      env:
+        BUILD_SYSTEM: ${{ inputs.build-system }}
+      run: echo "clang_variant=${BUILD_SYSTEM#Make - }" >> "$GITHUB_OUTPUT"
 
     - name: "Derive Cache Keys"
       id: cache-keys
       shell: bash
       working-directory: ${{ github.workspace }}
+      env:
+        BUILD_SYSTEM: ${{ inputs.build-system }}
+        KERNEL_VERSION: ${{ inputs.kernel-version }}
+        KERNEL_BRANCH_OVERRIDE: ${{ inputs.kernel-branch-override }}
       run: |
         source functions.sh
-        KERNEL_VERSION="${{ inputs.kernel-version }}"
-        KERNEL_BRANCH_OVERRIDE="${{ inputs.kernel-branch-override }}"
         KERNEL_BRANCH="$(resolve_kernel_branch)"
-        echo "arsenal_key=arsenal" >> $GITHUB_OUTPUT
-        if [ "${{ startsWith(inputs.build-system, 'Make') }}" = "true" ]; then
-          echo "kernel_key=kernel-${KERNEL_BRANCH}" >> $GITHUB_OUTPUT
+        echo "arsenal_key=arsenal" >> "$GITHUB_OUTPUT"
+        if [[ "$BUILD_SYSTEM" == Make* ]]; then
+          echo "kernel_key=kernel-${KERNEL_BRANCH}" >> "$GITHUB_OUTPUT"
         else
-          echo "kernel_key=kernel-kleaf-${KERNEL_BRANCH}" >> $GITHUB_OUTPUT
+          echo "kernel_key=kernel-kleaf-${KERNEL_BRANCH}" >> "$GITHUB_OUTPUT"
         fi
 
     - name: "Force Refresh (delete old caches)"
@@ -52,19 +53,25 @@ runs:
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.gh-token }}
+        REPO: ${{ github.repository }}
+        BUILD_SYSTEM: ${{ inputs.build-system }}
+        UPDATE_ARSENAL: ${{ inputs.update-arsenal }}
+        ARSENAL_KEY: ${{ steps.cache-keys.outputs.arsenal_key }}
+        KERNEL_KEY: ${{ steps.cache-keys.outputs.kernel_key }}
+        CLANG_VARIANT: ${{ steps.clang-key.outputs.clang_variant }}
       run: |
-        gh cache delete "${{ steps.cache-keys.outputs.arsenal_key }}" -R "${{ github.repository }}" 2>/dev/null || true
-        gh cache delete "${{ steps.cache-keys.outputs.kernel_key }}" -R "${{ github.repository }}" 2>/dev/null || true
-        if [ "${{ startsWith(inputs.build-system, 'Make') }}" = "true" ]; then
-          gh cache delete "clang-${{ steps.clang-key.outputs.clang_variant }}" -R "${{ github.repository }}" 2>/dev/null || true
+        gh cache delete "$ARSENAL_KEY" -R "$REPO" 2>/dev/null || true
+        gh cache delete "$KERNEL_KEY" -R "$REPO" 2>/dev/null || true
+        if [[ "$BUILD_SYSTEM" == Make* ]]; then
+          gh cache delete "clang-${CLANG_VARIANT}" -R "$REPO" 2>/dev/null || true
         fi
-        if [ "${{ inputs.update-arsenal }}" = "fresh" ]; then
+        if [ "$UPDATE_ARSENAL" = "fresh" ]; then
           echo "fresh mode — purging ccache + LTO release assets too"
           while IFS= read -r asset; do
             [ -n "$asset" ] || continue
-            gh release delete-asset cache "$asset" -R "${{ github.repository }}" --yes 2>/dev/null || true
+            gh release delete-asset cache "$asset" -R "$REPO" --yes 2>/dev/null || true
             echo "purged: $asset"
-          done < <(gh release view cache -R "${{ github.repository }}" --json assets -q '.assets[].name' 2>/dev/null | grep -E '^(ccache|lto)-data-' || true)
+          done < <(gh release view cache -R "$REPO" --json assets -q '.assets[].name' 2>/dev/null | grep -E '^(ccache|lto)-data-' || true)
         fi
 
     - name: "Cache Clang"

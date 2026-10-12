@@ -16,8 +16,9 @@ jobs:
         id: list
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
-          KEYS=$(gh api "/repos/${{ github.repository }}/actions/caches?per_page=100" --paginate \
+          KEYS=$(gh api "/repos/${REPO}/actions/caches?per_page=100" --paginate \
             | jq -s '[.[].actions_caches[]?.key] | map(select(startswith("arsenal") or startswith("clang-") or startswith("kernel-"))) | unique')
           echo "Found $(echo "$KEYS" | jq 'length') cache(s) to keep alive:"
           echo "$KEYS" | jq -r '.[]'

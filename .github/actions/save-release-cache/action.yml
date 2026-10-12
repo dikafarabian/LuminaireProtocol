@@ -1,0 +1,77 @@
+name: "Save Release Cache"
+description: "Archive a directory and upload it to the 'cache' GitHub Release (failures only warn, they never fail the job)"
+
+inputs:
+  asset-name:
+    description: "Release asset filename, e.g. ccache-data-android14-6.1-luminaire-KSU-NEUTRON-main.tar.zst"
+    required: true
+  label:
+    description: "Name used in log lines, e.g. ccache"
+    required: true
+  base-dir:
+    description: "Directory the archive is rooted at (tar -C)"
+    required: true
+  path:
+    description: "Path inside base-dir to archive"
+    required: true
+  use-sudo:
+    description: "Archive with sudo (for paths outside the workspace)"
+    required: false
+    default: "false"
+  max-size-mb:
+    required: false
+    default: "2000"
+  gh-token:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: "💾 Save ${{ inputs.label }} to Release"
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.gh-token }}
+        REPO: ${{ github.repository }}
+        ASSET_NAME: ${{ inputs.asset-name }}
+        LABEL: ${{ inputs.label }}
+        BASE_DIR: ${{ inputs.base-dir }}
+        ARCHIVE_PATH: ${{ inputs.path }}
+        USE_SUDO: ${{ inputs.use-sudo }}
+        MAX_SIZE_MB: ${{ inputs.max-size-mb }}
+      run: |
+        source "${GITHUB_WORKSPACE}/functions.sh"
+
+        archive="/tmp/${ASSET_NAME}"
+        SUDO=""
+        [ "$USE_SUDO" = "true" ] && SUDO="sudo"
+
+        skip_save() {
+          echo "::warning::${LABEL} cache: $1 — not saved"
+          $SUDO rm -f "$archive"
+          exit 0
+        }
+
+        ensure_cache_release() {
+          gh release view cache --repo "$REPO" > /dev/null 2>&1 \
+            || gh release create cache --repo "$REPO" \
+                 --title "Cache Storage" \
+                 --notes "Automated cache storage for Luminaire build tools" \
+                 --prerelease
+        }
+
+        [ -n "${GH_TOKEN:-}" ] || skip_save "no gh-token provided (expected on forks without PERSONAL_TOKEN)"
+        [ -d "${BASE_DIR}/${ARCHIVE_PATH}" ] || skip_save "${BASE_DIR}/${ARCHIVE_PATH} not found"
+
+        echo "Compressing ${LABEL} cache..."
+        $SUDO tar --zstd -cf "$archive" -C "$BASE_DIR" "$ARCHIVE_PATH" || skip_save "compression failed"
+
+        size_mb=$(( $(stat -c%s "$archive") / 1024 / 1024 ))
+        [ "$size_mb" -le "$MAX_SIZE_MB" ] || skip_save "archive is ${size_mb}MB, over the ${MAX_SIZE_MB}MB limit"
+        echo "${LABEL} cache size: ${size_mb}MB"
+
+        retry 3 ensure_cache_release || skip_save "couldn't create the cache release"
+        echo "Uploading ${LABEL} cache asset..."
+        retry 3 gh release upload cache "$archive" --repo "$REPO" --clobber || skip_save "upload failed"
+
+        $SUDO rm -f "$archive"
+        echo "${LABEL} cache saved ✅"
