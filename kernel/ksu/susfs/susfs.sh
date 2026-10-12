@@ -106,24 +106,9 @@ if [[ " ${SUSFS_KSU_ENABLE_VARIANTS} " == *" ${KERNEL_VARIANT} "* ]]; then
         log "SuSFS: 10_enable already applied to KernelSU, skipping."
     else
         log "Applying SuSFS 10_enable KernelSU patch (${KERNEL_VARIANT})..."
-        SELINUX_HIDE_C="${KSU_DIR}/kernel/feature/selinux_hide.c"
-        if grep -q "sync to global sidtab" "$SELINUX_HIDE_C" 2>/dev/null; then
-            log "Reverting upstream selinux_hide sidtab sync (removed by 10_enable)..."
-            patch -p1 -R --forward -d "$KSU_DIR" < "${SUSFS_LOCAL_DIR}/fixes/selinux_hide_sidtab_sync.patch" \
-                || error "SuSFS: selinux_hide sidtab revert failed on ${KERNEL_VARIANT}!"
-        fi
-        KSU_INIT_C="${KSU_DIR}/kernel/core/init.c"
-        if [ "$KERNEL_VARIANT" = "KSU" ] && [ -f "$KSU_INIT_C" ]; then
-            python3 "${SUSFS_LOCAL_DIR}/fixes/init_banner.py" strip "$KSU_INIT_C" \
-                || error "SuSFS: init.c banner strip failed!"
-        fi
         patch -p1 --fuzz=3 --forward -d "$KSU_DIR" < "$KSU_PATCH" \
             && log "SuSFS 10_enable applied ✅" \
             || error "SuSFS: mandatory 10_enable patch failed on ${KERNEL_VARIANT} (${KSU_PATCH}); reject files preserved in ${KSU_DIR}"
-        if [ "$KERNEL_VARIANT" = "KSU" ] && [ -f "$KSU_INIT_C" ]; then
-            python3 "${SUSFS_LOCAL_DIR}/fixes/init_banner.py" restore "$KSU_INIT_C" \
-                || error "SuSFS: init.c banner restore failed!"
-        fi
     fi
     susfs_after_ksu_enable
 fi
@@ -141,15 +126,12 @@ gki_defconfig_enable \
     CONFIG_KSU_SUSFS_SUS_PATH \
     CONFIG_KSU_SUSFS_SUS_MOUNT \
     CONFIG_KSU_SUSFS_SUS_KSTAT \
-    CONFIG_KSU_SUSFS_SUS_OVERLAYFS \
-    CONFIG_KSU_SUSFS_TRY_UMOUNT \
     CONFIG_KSU_SUSFS_SPOOF_UNAME \
     CONFIG_KSU_SUSFS_ENABLE_LOG \
     CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS \
     CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG \
     CONFIG_KSU_SUSFS_OPEN_REDIRECT \
-    CONFIG_KSU_SUSFS_SUS_MAP \
-    CONFIG_KSU_SUSFS_SUS_SU
+    CONFIG_KSU_SUSFS_SUS_MAP
 log "SuSFS configs enabled ✅"
 
 log "SuSFS integrated ✅"
