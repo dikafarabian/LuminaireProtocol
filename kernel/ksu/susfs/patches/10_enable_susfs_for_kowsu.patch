@@ -191,7 +191,7 @@ index c9b531ba..29d85960 100644
  #include "runtime/ksud.h"
  #include "runtime/ksud_boot.h"
  #include "feature/sulog.h"
-@@ -22,19 +21,11 @@
+@@ -22,20 +21,12 @@
  #include "ksu.h"
  #include "infra/file_wrapper.h"
  #include "selinux/selinux.h"
@@ -199,6 +199,7 @@ index c9b531ba..29d85960 100644
  #include "feature/adb_root.h"
  #include "feature/selinux_hide.h"
  #include "feature/module_blacklist.h"
+ #include "feature/shell_su_adb_only.h"
 -#include "infra/symbol_resolver.h"
 -
 -#if defined(__x86_64__) && !defined(CONFIG_KSU_X86_PATCH_SYSCALL_DISPATCHER)
@@ -266,7 +267,7 @@ index c9b531ba..29d85960 100644
      if (allow_shell) {
          pr_alert("shell is allowed at init!");
      }
-@@ -133,81 +97,43 @@ int __init kernelsu_init(void)
+@@ -133,82 +97,45 @@ int __init kernelsu_init(void)
          return -ENOSYS;
      }
  
@@ -284,6 +285,7 @@ index c9b531ba..29d85960 100644
 -    ksu_adb_root_init();
 -    ksu_lsm_hook_init();
 -    ksu_selinux_hide_init();
+-    ksu_shell_su_adb_only_init();
  
      ksu_supercalls_init();
 -    ksu_app_profile_init();
@@ -326,6 +328,8 @@ index c9b531ba..29d85960 100644
 -    } else {
 -        ksu_syscall_hook_manager_init();
 +    ksu_selinux_hide_init();
++
++    ksu_shell_su_adb_only_init();
  
 -        ksu_allowlist_init();
 +    ksu_allowlist_init();
