@@ -11,10 +11,6 @@ run_upstream_setup "BBG" "https://github.com/vc-teahouse/Baseband-guard/raw/main
 [ -L "${KERNEL_SRC}/security/baseband-guard" ] \
     || error "BBG: inject failed — security/baseband-guard symlink not found!"
 
-PATCHER="${ROOT_DIR}/kernel/patches/bbg/kconfig_inject.py"
-python3 "$PATCHER" "${KERNEL_SRC}/security/Kconfig" \
-    || error "BBG: Kconfig inject failed!"
-
 cd "${ROOT_DIR}"
 
 gki_defconfig_enable CONFIG_BBG
