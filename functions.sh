@@ -201,19 +201,34 @@ fetch() {
     curl -LSs --fail --retry 3 --retry-all-errors --connect-timeout 30 "$@"
 }
 
+patch_is_applied() {
+    local patch_file="$1" dir="$2"
+    shift 2
+    patch -p1 "$@" --dry-run --reverse -d "$dir" < "$patch_file" > /dev/null 2>&1
+}
+
 apply_patch() {
-    local label="$1" patch_file="$2" dir="$3"
+    local label="$1" patch_file="$2" dir="$3" output
     shift 3
     [ -f "$patch_file" ] || error "${label}: patch file not found: ${patch_file}"
-    if patch -p1 "$@" --dry-run --reverse -d "$dir" < "$patch_file" > /dev/null 2>&1; then
+
+    if patch_is_applied "$patch_file" "$dir" "$@"; then
         log "${label}: patch already applied, skipping."
-    elif patch -p1 "$@" --dry-run --forward -d "$dir" < "$patch_file" > /dev/null 2>&1; then
-        patch -p1 "$@" --forward -d "$dir" < "$patch_file" \
-            || error "${label}: patch apply failed!"
-        log "${label}: patch applied ✅"
-    else
-        error "${label}: patch does not apply cleanly — conflict or unsupported kernel source!"
+        return 0
     fi
+
+    if ! output="$(patch -p1 "$@" --no-backup-if-mismatch --forward --dry-run -d "$dir" < "$patch_file" 2>&1)"; then
+        tail -n 40 <<< "$output"
+        error "${label}: patch does not apply cleanly — conflict or unsupported source!"
+    fi
+
+    output="$(patch -p1 "$@" --no-backup-if-mismatch --forward -d "$dir" < "$patch_file" 2>&1)" \
+        || { echo "$output"; error "${label}: patch apply failed!"; }
+    echo "$output"
+    if grep -q "with fuzz" <<< "$output"; then
+        warn "${label}: some hunks applied with fuzz — context drifted, verify hunk placement"
+    fi
+    log "${label}: patch applied ✅"
 }
 
 apply_remote_patch() {

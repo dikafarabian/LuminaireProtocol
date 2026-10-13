@@ -22,7 +22,7 @@ apply_kabi_patches() {
         [ -f "$patch" ] || error "KaBI patch missing: ${name}.patch"
         log "Applying: $(basename "$patch")..."
         if patch -p1 --fuzz=3 --dry-run --forward -d "$KERNEL_SRC" < "$patch" > /dev/null 2>&1; then
-            patch -p1 --fuzz=3 -d "$KERNEL_SRC" < "$patch" || error "Patch failed: $(basename "$patch")"
+            patch -p1 --fuzz=3 --no-backup-if-mismatch -d "$KERNEL_SRC" < "$patch" || error "Patch failed: $(basename "$patch")"
             log "$(basename "$patch") applied ✅"
         elif patch -p1 --fuzz=3 --dry-run --reverse -d "$KERNEL_SRC" < "$patch" > /dev/null 2>&1; then
             log "$(basename "$patch") already applied, skipping."

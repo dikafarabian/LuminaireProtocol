@@ -17,7 +17,7 @@ case "${KERNEL_VERSION}" in
 esac
 
 log "🚀 Applying BBRv3 patch (${BBRV3_PATCH})..."
-apply_remote_patch "BBRv3" "${BBRV3_PATCHES_BASE}/${BBRV3_PATCH}" "$KERNEL_SRC" --no-backup-if-mismatch
+apply_remote_patch "BBRv3" "${BBRV3_PATCHES_BASE}/${BBRV3_PATCH}" "$KERNEL_SRC"
 gki_defconfig_enable CONFIG_TCP_CONG_ADVANCED CONFIG_TCP_CONG_BBR3 CONFIG_DEFAULT_BBR3
 
 cd "${KERNEL_SRC}"

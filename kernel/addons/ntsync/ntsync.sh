@@ -19,7 +19,7 @@ esac
 
 log "🪟 Applying NTSync patches (base + ${NTSYNC_COMPAT})..."
 for NTSYNC_PATCH_FILE in "ntsync_base.patch" "${NTSYNC_COMPAT}"; do
-    apply_remote_patch "NTSync (${NTSYNC_PATCH_FILE})" "${NTSYNC_PATCHES_BASE}/${NTSYNC_PATCH_FILE}" "$KERNEL_SRC" --no-backup-if-mismatch
+    apply_remote_patch "NTSync (${NTSYNC_PATCH_FILE})" "${NTSYNC_PATCHES_BASE}/${NTSYNC_PATCH_FILE}" "$KERNEL_SRC"
 done
 gki_defconfig_enable CONFIG_NTSYNC
 
