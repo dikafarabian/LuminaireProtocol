@@ -12,7 +12,7 @@
 #   susfs_after_ksu_enable      runs after the 10_enable step
 
 KSU_DIR="${KSU_DIR:-${KERNEL_SRC}/KernelSU}"
-SUSFS_DIR="/tmp/susfs4ksu"
+SUSFS_DIR="${SUSFS_DIR:-/tmp/susfs4ksu}"
 SUSFS_LOCAL_DIR="${ROOT_DIR}/kernel/ksu/susfs"
 
 SUSFS_REF_VAR="SUSFS_${KERNEL_VARIANT}_REF"
