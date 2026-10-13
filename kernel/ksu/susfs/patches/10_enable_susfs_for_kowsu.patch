@@ -1,5 +1,5 @@
 diff --git a/kernel/Kbuild b/kernel/Kbuild
-index e3e04970..df2ddbda 100644
+index 32baef82..16a26b6d 100644
 --- a/kernel/Kbuild
 +++ b/kernel/Kbuild
 @@ -5,21 +5,7 @@ kernelsu-objs += feature/module_blacklist.o
@@ -24,7 +24,7 @@ index e3e04970..df2ddbda 100644
  
  kernelsu-objs += infra/file_wrapper.o
  kernelsu-objs += infra/event_queue.o
-@@ -65,9 +51,6 @@ endif
+@@ -66,9 +52,6 @@ endif
  ifeq ($(CONFIG_KSU_DEBUG),y)
  ccflags-y += -DCONFIG_KSU_DEBUG=1
  endif
@@ -171,7 +171,7 @@ index 07fbe783..d57930be 100644
 +
  # Keep a new line here!! Because someone may append config
 diff --git a/kernel/core/init.c b/kernel/core/init.c
-index c9b531ba..29d85960 100644
+index 0ca7529f..5ab99491 100644
 --- a/kernel/core/init.c
 +++ b/kernel/core/init.c
 @@ -6,6 +6,7 @@
@@ -214,7 +214,7 @@ index c9b531ba..29d85960 100644
  
  // workaround for A12-5.10 kernel
  // Some third-party kernel (e.g. linegaeOS) uses wrong toolchain, which supports
-@@ -72,7 +63,6 @@ __attribute__((naked)) int __init kernelsu_init_early(void)
+@@ -73,7 +64,6 @@ __attribute__((naked)) int __init kernelsu_init_early(void)
  #endif
  
  struct cred *ksu_cred;
@@ -222,7 +222,7 @@ index c9b531ba..29d85960 100644
  
  #ifdef CONFIG_KSU_DEBUG
  bool allow_shell = true;
-@@ -84,36 +74,9 @@ module_param(allow_shell, bool, 0);
+@@ -85,36 +75,9 @@ module_param(allow_shell, bool, 0);
  bool ksu_no_custom_rc = false;
  module_param_named(norc, ksu_no_custom_rc, bool, 0);
  
@@ -259,7 +259,7 @@ index c9b531ba..29d85960 100644
  #ifdef CONFIG_KSU_DEBUG
      pr_alert("*************************************************************");
      pr_alert("**     NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE    **");
-@@ -123,6 +86,7 @@ int __init kernelsu_init(void)
+@@ -124,6 +87,7 @@ int __init kernelsu_init(void)
      pr_alert("**     NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE    **");
      pr_alert("*************************************************************");
  #endif
@@ -267,7 +267,7 @@ index c9b531ba..29d85960 100644
      if (allow_shell) {
          pr_alert("shell is allowed at init!");
      }
-@@ -133,82 +97,45 @@ int __init kernelsu_init(void)
+@@ -134,82 +98,45 @@ int __init kernelsu_init(void)
          return -ENOSYS;
      }
  
@@ -289,21 +289,21 @@ index c9b531ba..29d85960 100644
  
      ksu_supercalls_init();
 -    ksu_app_profile_init();
--
+ 
 -    if (ksu_late_loaded) {
 -        pr_info("late load mode, skipping kprobe hooks\n");
++    ksu_sucompat_init();
  
 -        apply_kernelsu_rules();
 -        cache_sid();
 -        setup_ksu_cred();
-+    ksu_sucompat_init();
++    ksu_setuid_hook_init();
  
 -        // Grant current process (ksud late-load) root
 -        // with KSU SELinux domain before enforcing SELinux, so it
 -        // can continue to access /data/app etc. after enforcement.
 -        escape_to_root_for_init();
-+    ksu_setuid_hook_init();
- 
+-
 -        ksu_allowlist_init();
 -        ksu_load_allow_list();
 -
@@ -315,20 +315,19 @@ index c9b531ba..29d85960 100644
 -
 -        ksu_boot_completed = true;
 -        track_throne(false);
--
--        ksu_feature_apply_forced();
 +    ksu_sulog_init();
+ 
+-        ksu_feature_apply_forced();
++    ksu_adb_root_init();
  
 -        if (!getenforce()) {
 -            pr_info("Permissive SELinux, enforcing\n");
 -            setenforce(true);
 -        }
-+    ksu_adb_root_init();
++    ksu_selinux_hide_init();
  
 -    } else {
 -        ksu_syscall_hook_manager_init();
-+    ksu_selinux_hide_init();
-+
 +    ksu_shell_su_adb_only_init();
  
 -        ksu_allowlist_init();
@@ -365,10 +364,10 @@ index c9b531ba..29d85960 100644
  
      // Wait for any in-flight RCU readers (e.g. handler traversing allow_list)
      synchronize_rcu();
-@@ -219,11 +145,15 @@ void __exit kernelsu_exit(void)
- 
+@@ -222,11 +149,15 @@ void __exit kernelsu_exit(void)
      ksu_allowlist_exit();
  
+     ksu_shell_su_adb_only_exit();
 +
      ksu_selinux_hide_exit();
 -    ksu_lsm_hook_exit();
@@ -2119,10 +2118,10 @@ index be25a826..7f2870a8 100644
  extern bool ksu_no_custom_rc;
  
 diff --git a/kernel/policy/allowlist.c b/kernel/policy/allowlist.c
-index 7dd2c2d3..b247314b 100644
+index 9bd6a278..b5722414 100644
 --- a/kernel/policy/allowlist.c
 +++ b/kernel/policy/allowlist.c
-@@ -296,10 +296,7 @@ bool ksu_uid_should_umount(uid_t uid)
+@@ -305,10 +305,7 @@ bool ksu_uid_should_umount(uid_t uid)
  {
      struct app_profile *profile;
      bool res;
@@ -2769,10 +2768,10 @@ index 768b9a26..2595940b 100644
      mutex_unlock(&selinux_state.policy_mutex);
  }
 diff --git a/kernel/selinux/selinux.c b/kernel/selinux/selinux.c
-index 7bc6d6d0..3b0fcb3d 100644
+index e5dcc4d3..01d07eeb 100644
 --- a/kernel/selinux/selinux.c
 +++ b/kernel/selinux/selinux.c
-@@ -220,3 +220,92 @@ void escape_to_root_for_adb_root(void)
+@@ -234,3 +234,92 @@ void escape_to_root_for_adb_root(void)
      }
      commit_creds(cred);
  }
@@ -2866,10 +2865,10 @@ index 7bc6d6d0..3b0fcb3d 100644
 +    susfs_set_sid(KERNEL_PRIV_APP_DOMAIN, &susfs_priv_app_sid);
 +}
 diff --git a/kernel/selinux/selinux.h b/kernel/selinux/selinux.h
-index a17ed226..c8db3cea 100644
+index 158f9455..7048d71f 100644
 --- a/kernel/selinux/selinux.h
 +++ b/kernel/selinux/selinux.h
-@@ -39,4 +39,13 @@ void escape_to_root_for_adb_root();
+@@ -42,4 +42,13 @@ void escape_to_root_for_adb_root();
  
  extern u32 ksu_file_sid;
  
@@ -3066,7 +3065,7 @@ index 635ec01c..c7b28b86 100644
  int ksu_sulog_emit_grant_root(int retval, __u32 uid, __u32 euid, gfp_t gfp);
  
 diff --git a/kernel/supercall/dispatch.c b/kernel/supercall/dispatch.c
-index 25858256..ecb16f72 100644
+index cb717e42..546b2d5e 100644
 --- a/kernel/supercall/dispatch.c
 +++ b/kernel/supercall/dispatch.c
 @@ -4,6 +4,8 @@
