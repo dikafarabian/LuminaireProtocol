@@ -33,7 +33,9 @@
   },
   "kowsu": {
     "good": "b9f852d61f91baf36b06f59a3febffd574c23085",
-    "bad": []
+    "bad": [
+      "024d5f4af08ccff7267091c2923ccfc580812d5c"
+    ]
   },
   "susfs_kowsu": {
     "good": "5192aa2d33b381b58c1051532f9e1dfa5de6e8d3",
