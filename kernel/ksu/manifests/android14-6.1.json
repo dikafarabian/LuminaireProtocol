@@ -1,7 +1,9 @@
 {
   "bakasu": {
     "good": "5b76b884c75f729a220bb317aa4a4fc78f0e0e9c",
-    "bad": []
+    "bad": [
+      "f4435f007b16f61705089ff982e3f981a6017979"
+    ]
   },
   "susfs_bakasu": {
     "good": "24743360ea08d98f6ad72b856851abed8de5854f",
