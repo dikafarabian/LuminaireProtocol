@@ -53,6 +53,7 @@ if [ -n "$SUKISU_COMMIT_COUNT" ]; then
 else
     KSU_VERSION_CODE=$SUKISU_FALLBACK_VERSION_CODE
 fi
+sed -i "s/,${SUKISU_FALLBACK_VERSION_CODE})/,${KSU_VERSION_CODE})/" "$BRANDING_TARGET"
 
 SUKISU_RELEASE_TAG="$(github_latest_release_tag "$SUKISU_REPO" || true)"
 if [ -z "$SUKISU_RELEASE_TAG" ]; then
