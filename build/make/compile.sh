@@ -30,16 +30,15 @@ declare -A KBUILD_VERSION_LABEL=(
 )
 
 correct_version_display() {
-    local label="${KBUILD_VERSION_LABEL[$KERNEL_VARIANT]:-}"
-    local version_var="${KERNEL_VARIANT}_VERSION_DISPLAY" real_code real_display
+    local label="${KBUILD_VERSION_LABEL[$KERNEL_VARIANT]:-}" real_code real_display
     [ -n "$label" ] && [ -n "${KSU_TAG_NAME:-}" ] || return 0
     real_code="$(grep -oP -- "-- ${label}: \K[0-9]+" "$KBUILD_LOG" | tail -1 || true)"
     [ -n "$real_code" ] || return 0
     real_display="$(format_ksu_version "$KSU_TAG_NAME" "$real_code" "${KSU_UAPI_VERSION:-}")"
-    [ "$real_display" = "${!version_var:-}" ] \
-        || log "Correcting ${version_var} to match real Kbuild-computed version: ${real_display} (was: ${!version_var:-unset})"
-    export "${version_var}=${real_display}"
-    github_env "$version_var" "$real_display"
+    [ "$real_display" = "${VARIANT_VERSION_DISPLAY:-}" ] \
+        || log "Correcting VARIANT_VERSION_DISPLAY to match real Kbuild-computed version: ${real_display} (was: ${VARIANT_VERSION_DISPLAY:-unset})"
+    export VARIANT_VERSION_DISPLAY="$real_display"
+    github_env VARIANT_VERSION_DISPLAY "$real_display"
 }
 
 mkdir -p "$LTO_CACHE_DIR"

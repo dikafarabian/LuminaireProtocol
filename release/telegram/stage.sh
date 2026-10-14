@@ -15,8 +15,6 @@ if [ ! -f "${ZIP_PATH:-}" ]; then
     return 0
 fi
 
-KERNEL_VARIANT_VERSION_VAR="${KERNEL_VARIANT}_VERSION_DISPLAY"
-KERNEL_VARIANT_VERSION="${!KERNEL_VARIANT_VERSION_VAR:-}"
 VARIANT_KEY="$(variant_key)"
 
 SUSFS_VERSION_TAG=""
@@ -46,7 +44,7 @@ META_FILE="$(mktemp -d)/luminaire.json"
 
 jq -n \
     --arg variant "$VARIANT_KEY" \
-    --arg variant_version "$KERNEL_VARIANT_VERSION" \
+    --arg variant_version "${VARIANT_VERSION_DISPLAY:-}" \
     --arg susfs_version "$SUSFS_VERSION_TAG" \
     --arg linux_ver "${KERNEL_VERSION}.${SUBLEVEL}" \
     --arg kernel_version "$KERNEL_VERSION" \

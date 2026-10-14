@@ -27,9 +27,9 @@ KSU_TAG_NAME=$(git -C "$KSU_DIR" describe --abbrev=0 --tags 2>/dev/null || echo 
 KSU_LOCAL_VERSION=$(git -C "$KSU_DIR" rev-list --count HEAD 2>/dev/null || echo 0)
 KSU_VERSION_CODE=$((30000 + KSU_LOCAL_VERSION + 700))
 KSU_UAPI_VERSION="$(ksu_uapi_version "$KSU_DIR")"
-BAKASU_VERSION_DISPLAY="$(format_ksu_version "$KSU_TAG_NAME" "$KSU_VERSION_CODE" "$KSU_UAPI_VERSION")"
-github_env BAKASU_VERSION_DISPLAY "${BAKASU_VERSION_DISPLAY}"
-log "Version: ${BAKASU_VERSION_DISPLAY}"
+VARIANT_VERSION_DISPLAY="$(format_ksu_version "$KSU_TAG_NAME" "$KSU_VERSION_CODE" "$KSU_UAPI_VERSION")"
+github_env VARIANT_VERSION_DISPLAY "${VARIANT_VERSION_DISPLAY}"
+log "Version: ${VARIANT_VERSION_DISPLAY}"
 
 log "Patching multi-manager support..."
 python3 "${PATCHER_DIR}/multimanager.py" \

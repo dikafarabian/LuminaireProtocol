@@ -329,8 +329,8 @@ susfs_version_tag() {
 }
 
 variant_summary() {
-    local version_var="${KERNEL_VARIANT}_VERSION_DISPLAY" susfs_tag summary
-    summary="$(variant_display_name "$KERNEL_VARIANT")${!version_var:+ ${!version_var}}"
+    local susfs_tag summary
+    summary="$(variant_display_name "$KERNEL_VARIANT")${VARIANT_VERSION_DISPLAY:+ ${VARIANT_VERSION_DISPLAY}}"
     if susfs_active; then
         susfs_tag="$(susfs_version_tag)"
         summary+=" · SuSFS${susfs_tag:+ ${susfs_tag}}"
