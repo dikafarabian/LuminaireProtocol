@@ -262,7 +262,7 @@ gki_defconfig_enable() {
 }
 
 ksu_uapi_version() {
-    grep -oP 'KERNEL_SU_UAPI_VERSION\s*=\s*\K[0-9]+' "$1/uapi/supercall.h" 2>/dev/null || true
+    grep -oP 'KERNEL_SU_UAPI_VERSION\s*[=,]\s*\K[0-9]+' "$1/uapi/supercall.h" 2>/dev/null | head -n 1 || true
 }
 
 format_ksu_version() {
