@@ -21,7 +21,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: "♻️ Restore ${{ inputs.label }} from Release"
+    - name: "Restore ${{ inputs.label }} from Release"
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.gh-token }}
@@ -32,7 +32,7 @@ runs:
         USE_SUDO: ${{ inputs.use-sudo }}
       run: |
         cold_start() {
-          echo "⚠️ ${LABEL} cache: $1 — starting cold"
+          echo "${LABEL} cache: $1 — starting cold"
           rm -f "$archive"
           exit 0
         }
@@ -52,4 +52,4 @@ runs:
         $SUDO tar --zstd -xf "$archive" -C "$BASE_DIR" || cold_start "extraction failed"
 
         rm -f "$archive"
-        echo "${LABEL} cache restored ✅"
+        echo "${LABEL} cache restored"

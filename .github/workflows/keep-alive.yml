@@ -1,4 +1,4 @@
-name: "🫀 Keep Cache Alive"
+name: "Keep Cache Alive"
 
 on:
   schedule:
@@ -34,7 +34,7 @@ jobs:
       matrix:
         key: ${{ fromJson(needs.list-caches.outputs.keys) }}
     steps:
-      - name: "♻️ Restore (touch) ${{ matrix.key }}"
+      - name: "Restore (touch) ${{ matrix.key }}"
         uses: actions/cache/restore@v6
         with:
           path: /tmp/keep-alive-dummy

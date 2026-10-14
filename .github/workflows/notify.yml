@@ -1,4 +1,4 @@
-name: "📡 Notify"
+name: "Notify"
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
 jobs:
 
   # ======================================================
-  # 📌 PUSH EVENT
+  # PUSH EVENT
   # ======================================================
   on-push:
     name: "Push"
@@ -17,7 +17,7 @@ jobs:
       - name: "Checkout"
         uses: actions/checkout@v7
 
-      - name: "📌 Notify Push"
+      - name: "Notify Push"
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -49,6 +49,6 @@ jobs:
                   -d "parse_mode=HTML" \
                   -d "disable_web_page_preview=true" \
                   --data-urlencode "text=${TEXT}"; then
-              log "Notify sent ✅"
+              log "Notify sent"
           fi
           rm -f /tmp/tg_push_response.json

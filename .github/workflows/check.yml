@@ -1,4 +1,4 @@
-name: "🔍 Static Check"
+name: "Static Check"
 
 on:
   push:

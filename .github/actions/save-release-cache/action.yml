@@ -27,7 +27,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: "💾 Save ${{ inputs.label }} to Release"
+    - name: "Save ${{ inputs.label }} to Release"
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.gh-token }}
@@ -74,4 +74,4 @@ runs:
         retry 3 gh release upload cache "$archive" --repo "$REPO" --clobber || skip_save "upload failed"
 
         $SUDO rm -f "$archive"
-        echo "${LABEL} cache saved ✅"
+        echo "${LABEL} cache saved"
