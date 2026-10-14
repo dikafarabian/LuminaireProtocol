@@ -27,7 +27,7 @@ source "${ROOT_DIR}/kernel/ksu/registry.sh"
 print_run_complete() {
     echo "========================================"
     echo "  $(mode_emoji "$RUN_MODE") ${RUN_MODE} Complete! $(mode_emoji "$RUN_MODE")"
-    echo "  🏷️ $(variant_label)"
+    echo "  🏷️ $(variant_summary)"
     echo "========================================"
 }
 

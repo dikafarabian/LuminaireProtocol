@@ -312,6 +312,32 @@ variant_key() {
     fi
 }
 
+variant_display_name() {
+    case "$1" in
+        KSU)     echo "KernelSU" ;;
+        KOWSU)   echo "KowSU" ;;
+        KSUNEXT) echo "KernelSU-Next" ;;
+        SUKISU)  echo "SukiSU-Ultra" ;;
+        BAKASU)  echo "BakaSU" ;;
+        VANILLA) echo "Vanilla" ;;
+        *)       echo "$1" ;;
+    esac
+}
+
+susfs_version_tag() {
+    sed -n 's/^#define SUSFS_VERSION "\(.*\)"/\1/p' "${KERNEL_SRC:-}/include/linux/susfs.h" 2>/dev/null | head -n 1 || true
+}
+
+variant_summary() {
+    local version_var="${KERNEL_VARIANT}_VERSION_DISPLAY" susfs_tag summary
+    summary="$(variant_display_name "$KERNEL_VARIANT")${!version_var:+ ${!version_var}}"
+    if susfs_active; then
+        susfs_tag="$(susfs_version_tag)"
+        summary+=" · SuSFS${susfs_tag:+ ${susfs_tag}}"
+    fi
+    echo "$summary"
+}
+
 mode_emoji() {
     case "$1" in
         "Dry Run")  echo "🧪" ;;
