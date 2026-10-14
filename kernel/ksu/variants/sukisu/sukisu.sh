@@ -62,7 +62,18 @@ fi
 KSU_TAG_NAME="v${SUKISU_RELEASE_TAG#v}"
 [ "$KSU_TAG_NAME" != "v" ] || KSU_TAG_NAME="unknown"
 
+SUKISU_MANAGER_UAPI="$(fetch "https://raw.githubusercontent.com/${SUKISU_REPO}/main/uapi/supercall.h" 2>/dev/null \
+    | grep -oP 'KERNEL_SU_UAPI_VERSION\s*[=,]\s*\K[0-9]+' | head -n 1 || true)"
 KSU_UAPI_VERSION="$(ksu_uapi_version "$KSU_DIR")"
+if [ -z "$SUKISU_MANAGER_UAPI" ]; then
+    warn "SukiSU-Ultra: couldn't read manager UAPI from main — keeping source value ${KSU_UAPI_VERSION:-unknown}"
+elif [ "$KSU_UAPI_VERSION" != "$SUKISU_MANAGER_UAPI" ]; then
+    sed -i -E "s/(KERNEL_SU_UAPI_VERSION[[:space:]]*[=,][[:space:]]*)[0-9]+/\1${SUKISU_MANAGER_UAPI}/" \
+        "$(readlink -f "${KSU_DIR}/uapi/supercall.h")"
+    log "SukiSU-Ultra: UAPI ${KSU_UAPI_VERSION:-unknown} -> ${SUKISU_MANAGER_UAPI} (aligned to manager on main)"
+    KSU_UAPI_VERSION="$(ksu_uapi_version "$KSU_DIR")"
+    [ "$KSU_UAPI_VERSION" = "$SUKISU_MANAGER_UAPI" ] || warn "SukiSU-Ultra: UAPI alignment did not take effect (source says ${KSU_UAPI_VERSION:-unknown})"
+fi
 VARIANT_VERSION_DISPLAY="$(format_ksu_version "$KSU_TAG_NAME" "$KSU_VERSION_CODE" "$KSU_UAPI_VERSION")"
 github_env VARIANT_VERSION_DISPLAY "${VARIANT_VERSION_DISPLAY}"
 log "Version: ${VARIANT_VERSION_DISPLAY}"
