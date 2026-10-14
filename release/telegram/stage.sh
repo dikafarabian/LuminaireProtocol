@@ -21,7 +21,7 @@ VARIANT_KEY="$(variant_key)"
 
 SUSFS_VERSION_TAG=""
 if susfs_active; then
-    SUSFS_VERSION_TAG="$(sed -n 's/^#define SUSFS_VERSION "\(.*\)"/\1/p' "${KERNEL_SRC:-}/include/linux/susfs.h" 2>/dev/null | head -n 1)" || true
+    SUSFS_VERSION_TAG="$(susfs_version_tag)"
 fi
 
 collect_versions() {
