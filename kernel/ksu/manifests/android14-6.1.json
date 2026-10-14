@@ -31,7 +31,9 @@
   },
   "susfs_ksunext": {
     "good": "735d41f7bb32c7ae80549af3e9c9be5efc94caac",
-    "bad": []
+    "bad": [
+      "915cd2ff9432806287346a4bcb988a888aecef35"
+    ]
   },
   "kowsu": {
     "good": "024d5f4af08ccff7267091c2923ccfc580812d5c",
