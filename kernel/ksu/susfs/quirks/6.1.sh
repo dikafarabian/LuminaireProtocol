@@ -6,8 +6,13 @@
 
 SUSFS_KSU_ENABLE_VARIANTS="KSU KOWSU"
 
+susfs_patch_expects_blk_include() {
+    grep -qxF ' #include <trace/hooks/blk.h>' "$KERNEL_PATCH"
+}
+
 susfs_before_kernel_patch() {
     grep -qF '#include <trace/hooks/blk.h>' "${KERNEL_SRC}/fs/namespace.c" || return 0
+    ! susfs_patch_expects_blk_include || return 0
     log "Pre-patch: removing blk.h from namespace.c for context match..."
     sed -i '/^#include <trace\/hooks\/blk\.h>$/d' "${KERNEL_SRC}/fs/namespace.c"
     SUSFS_BLK_INCLUDE_REMOVED="true"
