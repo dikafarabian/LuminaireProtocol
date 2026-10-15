@@ -37,6 +37,12 @@ if susfs_active; then
         "${KSU_DIR}/kernel/feature/sucompat.c" \
         || error "SukiSU-Ultra: SuSFS post-execveat compat patch failed!"
     log "SuSFS post-execveat compat patched ✅"
+
+    log "Patching track_throne flag compat..."
+    python3 "${PATCHER_DIR}/track_throne_compat.py" \
+        "${KSU_DIR}/kernel/manager/pkg_observer.c" \
+        || error "SukiSU-Ultra: track_throne flag compat patch failed!"
+    log "track_throne flag compat patched ✅"
 fi
 
 SUKISU_REPO="SukiSU-Ultra/SukiSU-Ultra"
