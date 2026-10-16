@@ -32,12 +32,6 @@ python3 "${PATCHER_DIR}/branding.py" "$BRANDING_TARGET" \
 log "Branding applied ✅"
 
 if susfs_active; then
-    log "Patching SuSFS post-execveat compat..."
-    python3 "${PATCHER_DIR}/susfs_post_execveat_compat.py" \
-        "${KSU_DIR}/kernel/feature/sucompat.c" \
-        || error "SukiSU-Ultra: SuSFS post-execveat compat patch failed!"
-    log "SuSFS post-execveat compat patched ✅"
-
     log "Patching track_throne flag compat..."
     python3 "${PATCHER_DIR}/track_throne_compat.py" \
         "${KSU_DIR}/kernel/manager/pkg_observer.c" \

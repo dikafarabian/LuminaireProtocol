@@ -24,7 +24,7 @@ if [ "$KERNEL_VARIANT" = "KSUNEXT" ]; then
     SUSFS_BRANCH="${SUSFS_BRANCH}-dev"
 fi
 if [ "$KERNEL_VARIANT" = "SUKISU" ] && [ -z "$SUSFS_REF" ]; then
-    warn "SuSFS+SukiSU: no pin resolved — build will likely fail (see wishlist for known-good combos)"
+    warn "SuSFS+SukiSU: no pin resolved — build will likely fail"
 fi
 
 SUSFS_KSU_ENABLE_VARIANTS=""
