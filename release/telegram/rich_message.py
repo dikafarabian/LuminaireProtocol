@@ -55,13 +55,25 @@ def variant_sort_key(key: str):
         return len(VARIANT_ORDER)
 
 
-def commits_url(env) -> str:
+def source_repo_url(env) -> str:
     owner = env.get("KERNEL_SOURCE_OWNER", "").strip()
     repo = env.get("KERNEL_SOURCE_REPO", "").strip()
-    branch = env.get("KERNEL_BRANCH", "").strip()
-    if not (owner and repo and branch):
+    if not (owner and repo):
         return ""
-    return f"https://github.com/{owner}/{repo}/commits/{branch}"
+    return f"https://github.com/{owner}/{repo}"
+
+
+def branch_url(env, view: str = "tree") -> str:
+    base = source_repo_url(env)
+    branch = env.get("KERNEL_BRANCH", "").strip()
+    if not (base and branch):
+        return ""
+    return f"{base}/{view}/{branch}"
+
+
+def commits_url(env) -> str:
+    return branch_url(env, "commits")
+
 
 def html_cell(text: str) -> str:
     return caption.html_escape(str(text)).replace("\n", " ").strip()
@@ -72,8 +84,8 @@ def build_info_table(env) -> str:
     lto_chip = chip(lto_display, caption.LTO_CHIP_STYLE.get(lto_raw, ""))
     rows = [
         ("Kernel", html_cell("Linux " + (env.get("LINUX_VER", "").strip() or "N/A"))),
-        ("Source", html_cell(env.get("KERNEL_SOURCE_REPO", "").strip() or "N/A")),
-        ("Branch", html_cell(env.get("KERNEL_BRANCH", "").strip() or "N/A")),
+        ("Source", link_chip(env.get("KERNEL_SOURCE_REPO", ""), source_repo_url(env))),
+        ("Branch", link_chip(env.get("KERNEL_BRANCH", ""), branch_url(env))),
         ("Toolchain", html_cell(env.get("COMPILER_STRING", "").strip() or "N/A")),
         ("LTO", lto_chip),
     ]
@@ -96,6 +108,13 @@ def button_row(buttons) -> str:
 def chip(text: str, style: str = "") -> str:
     style_attr = f' style="{style}"' if style else ""
     return f'<tg-button type="disabled"{style_attr}>{html_cell(text)}</tg-button>'
+
+
+def link_chip(text: str, url: str) -> str:
+    text = text.strip()
+    if not (text and url):
+        return chip(text or "N/A")
+    return f'<tg-button type="url" url="{caption.html_escape_attr(url)}">{html_cell(text)}</tg-button>'
 
 
 def release_url(key: str) -> str:
