@@ -63,16 +63,12 @@ def source_repo_url(env) -> str:
     return f"https://github.com/{owner}/{repo}"
 
 
-def branch_url(env, view: str = "tree") -> str:
+def branch_url(env) -> str:
     base = source_repo_url(env)
     branch = env.get("KERNEL_BRANCH", "").strip()
     if not (base and branch):
         return ""
-    return f"{base}/{view}/{branch}"
-
-
-def commits_url(env) -> str:
-    return branch_url(env, "commits")
+    return f"{base}/tree/{branch}"
 
 
 def html_cell(text: str) -> str:
@@ -248,8 +244,6 @@ def compose_markdown(env, variants_block, banner_ids=()) -> str:
 
     cl = changelog_block(env)
     if cl:
-        if not build_mode:
-            parts.append(button_row(("Full Changelog", commits_url(env), "success")))
         parts.append(cl)
 
     if not build_mode:
