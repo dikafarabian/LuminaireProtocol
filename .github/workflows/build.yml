@@ -141,6 +141,9 @@ on:
         type: string
         default: "chainonyourdoor@LuminaireCI"
 
+permissions:
+  contents: read
+
 env:
   DEBIAN_FRONTEND: noninteractive
   IS_MAKE: ${{ startsWith(inputs.build_system, 'Make') }}
@@ -153,6 +156,9 @@ jobs:
   prepare-matrix:
     name: "Prepare Arsenal"
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: write
     outputs:
       matrix: ${{ steps.set.outputs.matrix }}
       addons: ${{ steps.set.outputs.addons }}
@@ -162,7 +168,7 @@ jobs:
       cache_refreshed: ${{ inputs.update_arsenal != 'no' }}
 
     env:
-      PERSONAL_TOKEN:   ${{ secrets.PERSONAL_TOKEN }}
+      GH_API_TOKEN:     ${{ github.token }}
       USE_KERNEL_CACHE: ${{ inputs.update_arsenal == 'no' }}
       USE_AK3_CACHE:    ${{ inputs.update_arsenal == 'no' }}
       USE_CLANG_CACHE:  ${{ inputs.update_arsenal == 'no' }}
@@ -240,7 +246,6 @@ jobs:
           kernel-version: ${{ inputs.kernel_version }}
           kernel-branch-override: ${{ inputs.kernel_branch_override }}
           update-arsenal: ${{ inputs.update_arsenal }}
-          gh-token:       ${{ secrets.PERSONAL_TOKEN }}
 
   # ======================================================
   # BUILD VARIANT (parallel)
@@ -250,12 +255,15 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     needs: prepare-matrix
+    permissions:
+      contents: write
+      actions: write
     strategy:
       matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
       fail-fast: false
 
     env:
-      PERSONAL_TOKEN:              ${{ secrets.PERSONAL_TOKEN }}
+      GH_API_TOKEN:                ${{ github.token }}
       USE_KERNEL_CACHE:            "true"
       USE_AK3_CACHE:               "true"
       USE_CLANG_CACHE:             "true"
@@ -325,7 +333,6 @@ jobs:
           kernel-variant:  ${{ matrix.kernel_variant }}
           susfs:          ${{ matrix.susfs }}
           lto-mode:     ${{ inputs.lto_mode }}
-          gh-token:       ${{ secrets.PERSONAL_TOKEN }}
 
       - name: "Disk Usage"
         run: df -h && du -sh ~/kernel-cache/ 2>/dev/null || true
@@ -346,6 +353,7 @@ jobs:
         if: always() && matrix.kernel_variant != 'VANILLA' && inputs.run_mode != 'Dry Run'
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
           BUILD_OUTCOME: ${{ steps.build.outcome }}
         run: |
           case "$BUILD_OUTCOME" in
@@ -385,7 +393,6 @@ jobs:
           lto-mode:          ${{ inputs.lto_mode }}
           lto-asset-name:    ${{ steps.setup-build-env.outputs.lto-asset-name }}
           ccache-asset-name: ${{ steps.setup-build-env.outputs.ccache-asset-name }}
-          gh-token:          ${{ secrets.PERSONAL_TOKEN }}
 
   # ======================================================
   # NOTIFY

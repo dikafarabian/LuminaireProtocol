@@ -167,8 +167,8 @@ retry() {
 }
 
 GITHUB_AUTH_ARGS=()
-if [ -n "${PERSONAL_TOKEN:-}" ]; then
-    GITHUB_AUTH_ARGS=(-H "Authorization: Bearer ${PERSONAL_TOKEN}")
+if [ -n "${GH_API_TOKEN:-}" ]; then
+    GITHUB_AUTH_ARGS=(-H "Authorization: Bearer ${GH_API_TOKEN}")
 fi
 
 github_api() {

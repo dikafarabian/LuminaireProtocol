@@ -14,8 +14,6 @@ inputs:
     required: true
   lto-mode:
     required: true
-  gh-token:
-    required: true
 
 outputs:
   clang-variant:
@@ -94,7 +92,6 @@ runs:
         asset-name: ${{ steps.asset-names.outputs.ccache_asset_name }}
         label:      ccache
         base-dir:   ${{ github.workspace }}
-        gh-token:   ${{ inputs.gh-token }}
 
     - name: "Restore LTO Cache"
       if: startsWith(inputs.build-system, 'Make') && inputs.lto-mode == 'THIN'
@@ -104,4 +101,3 @@ runs:
         label:      LTO
         base-dir:   /
         use-sudo:   "true"
-        gh-token:   ${{ inputs.gh-token }}

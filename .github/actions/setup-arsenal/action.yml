@@ -11,8 +11,6 @@ inputs:
     default: ""
   update-arsenal:
     required: true
-  gh-token:
-    required: true
 
 outputs:
   clang-variant:
@@ -52,7 +50,7 @@ runs:
       if: inputs.update-arsenal != 'no'
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.gh-token }}
+        GH_TOKEN: ${{ github.token }}
         REPO: ${{ github.repository }}
         BUILD_SYSTEM: ${{ inputs.build-system }}
         UPDATE_ARSENAL: ${{ inputs.update-arsenal }}

@@ -15,8 +15,6 @@ inputs:
     description: "Extract with sudo (for paths outside the workspace)"
     required: false
     default: "false"
-  gh-token:
-    required: true
 
 runs:
   using: composite
@@ -24,7 +22,7 @@ runs:
     - name: "Restore ${{ inputs.label }} from Release"
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.gh-token }}
+        GH_TOKEN: ${{ github.token }}
         REPO: ${{ github.repository }}
         ASSET_NAME: ${{ inputs.asset-name }}
         LABEL: ${{ inputs.label }}

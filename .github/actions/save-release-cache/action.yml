@@ -21,8 +21,6 @@ inputs:
   max-size-mb:
     required: false
     default: "2000"
-  gh-token:
-    required: true
 
 runs:
   using: composite
@@ -30,7 +28,7 @@ runs:
     - name: "Save ${{ inputs.label }} to Release"
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.gh-token }}
+        GH_TOKEN: ${{ github.token }}
         REPO: ${{ github.repository }}
         ASSET_NAME: ${{ inputs.asset-name }}
         LABEL: ${{ inputs.label }}
@@ -59,7 +57,6 @@ runs:
                  --prerelease
         }
 
-        [ -n "${GH_TOKEN:-}" ] || skip_save "no gh-token provided (expected on forks without PERSONAL_TOKEN)"
         [ -d "${BASE_DIR}/${ARCHIVE_PATH}" ] || skip_save "${BASE_DIR}/${ARCHIVE_PATH} not found"
 
         echo "Compressing ${LABEL} cache..."
