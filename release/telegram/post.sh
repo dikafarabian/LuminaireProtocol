@@ -100,7 +100,7 @@ if [ "$RUN_MODE_UPPER" = "RELEASE" ]; then
     exit 0
 fi
 
-GROUP_THREAD_ID="${TELEGRAM_THREAD_ID_BUILD_BY_VERSION[$KERNEL_VERSION]:-}"
+GROUP_THREAD_ID="$(jq -r --arg version "$KERNEL_VERSION" '.versions[$version].telegram_thread // empty' "$FEATURES_FILE")"
 [ -n "${TELEGRAM_CHAT_ID:-}" ] || error "TELEGRAM_CHAT_ID not set"
 [ -n "$GROUP_THREAD_ID" ] || error "No thread id configured for KERNEL_VERSION=${KERNEL_VERSION:-}"
 

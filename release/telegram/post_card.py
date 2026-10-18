@@ -45,7 +45,6 @@ def shared_env(first: dict) -> dict:
             "COMPILER_STRING": first.get("compiler_string", ""),
             "LTO_MODE": first.get("lto_mode", ""),
             "ADDONS": first.get("addons", ""),
-            "ADDON_ORDER": first.get("addon_order", ""),
             "SKIPPED_ADDONS": first.get("skipped_addons", ""),
             "ADDON_VERSIONS": first.get("addon_versions", ""),
             "PATCH_VERSIONS": first.get("patch_versions", ""),

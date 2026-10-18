@@ -2,41 +2,24 @@
 # 📨 TELEGRAM — Display Names
 # ======================================================
 
-KERNEL_VERSION_TO_ANDROID = {
-    "5.10": "12",
-    "5.15": "13",
-    "6.1":  "14",
-    "6.6":  "15",
-    "6.12": "16",
-}
+import json
+import os
 
-ADDON_DISPLAY_NAMES = {
-    "rekernel":    "Re:Kernel",
-    "droidspaces": "Droidspaces",
-    "nomount":     "NoMount",
-    "ntsync":      "NTSync",
-    "lz4zstd":     "LZ4+ZSTD",
-    "lz4kd":       "LZ4KD",
-    "mglru":       "MGLRU",
-}
+FEATURES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "kernel", "features.json")
 
-def addon_order(env):
-    raw = env.get("ADDON_ORDER", "")
-    order = [t for t in raw.split(",") if t]
-    if order:
-        return order
-    applied = [t for t in env.get("APPLIED_ADDONS", "").split(",") if t]
-    skipped = [t for t in env.get("SKIPPED_ADDONS", "").split(",") if t]
-    return applied + skipped
+with open(FEATURES_FILE) as handle:
+    FEATURES = json.load(handle)
 
-def addon_mountless_tokens(env):
-    raw = env.get("ADDON_MOUNTLESS_TOKENS", "")
-    tokens = [t for t in raw.split(",") if t]
-    return tuple(tokens) if tokens else ("nomount",)
+KERNEL_VERSION_TO_ANDROID = {v: d["android_number"] for v, d in FEATURES["versions"].items()}
+ADDON_DISPLAY_NAMES = {k: d["name"] for k, d in FEATURES["addons"].items()}
+PATCH_DISPLAY_NAMES = {k: d["name"] for k, d in FEATURES["patches"].items()}
+MOUNTLESS_TOKENS = tuple(k for k, d in FEATURES["addons"].items() if d.get("mountless"))
 
-def toggle_addon_order(env):
-    mountless = set(addon_mountless_tokens(env))
-    return [t for t in addon_order(env) if t not in mountless]
+def addon_order():
+    return list(FEATURES["addons"])
+
+def toggle_addon_order():
+    return [t for t in addon_order() if t not in MOUNTLESS_TOKENS]
 
 def addon_display_name(token):
     if token in ADDON_DISPLAY_NAMES:
@@ -46,9 +29,8 @@ def addon_display_name(token):
 def resolve_mountless_token(env):
     addon_tokens = [t for t in env.get("ADDONS", "").split(",") if t]
     skipped_tokens = [t for t in env.get("SKIPPED_ADDONS", "").split(",") if t]
-    mountless_tokens = addon_mountless_tokens(env)
     for token in addon_tokens:
-        if token in mountless_tokens and token not in skipped_tokens:
+        if token in MOUNTLESS_TOKENS and token not in skipped_tokens:
             return token
     return ""
 
@@ -66,26 +48,8 @@ def lookup_version(raw, token):
 def addon_version(env, token):
     return lookup_version(env.get("ADDON_VERSIONS", ""), token)
 
-PATCH_DISPLAY_NAMES = {
-    "bore":                     "BORE",
-    "le9uo":                    "le9uo",
-    "kcompressd":               "Kcompressd",
-    "workqueue_catchup":        "Workqueue Catch-up",
-    "schedutil_catchup":        "Schedutil Catch-up",
-    "ufs_writebooster_catchup": "UFS WriteBooster Catch-up",
-    "bbrv3":                    "BBRv3",
-    "bbg":                      "BBG",
-    "wireguard":                "WireGuard",
-}
-
-def patch_order(env):
-    raw = env.get("PATCH_FEATURE_ORDER", "")
-    order = [t for t in raw.split(",") if t]
-    if order:
-        return order
-    applied = [t for t in env.get("APPLIED_PATCHES", "").split(",") if t]
-    skipped = [t for t in env.get("SKIPPED_PATCHES", "").split(",") if t]
-    return applied + skipped
+def patch_order():
+    return list(FEATURES["patches"])
 
 def patch_display_name(token):
     if token in PATCH_DISPLAY_NAMES:

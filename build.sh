@@ -103,10 +103,10 @@ run_variant() {
     fi
 
     ksu_variant_supports_kernel_version "${KERNEL_VARIANT,,}" \
-        || error "Root solution '${KERNEL_VARIANT}' is not available for kernel ${KERNEL_VERSION} — not listed in KSU_VARIANT_SUPPORTED_VERSIONS (kernel/ksu/registry.sh)."
+        || error "Root solution '${KERNEL_VARIANT}' is not available for kernel ${KERNEL_VERSION} — not listed under ksu in kernel/features.json."
     local script="${ROOT_DIR}/kernel/ksu/variants/${KERNEL_VARIANT,,}/${KERNEL_VARIANT,,}.sh"
     run_step "🍀" "Root Solution (${KERNEL_VARIANT})" "$script" \
-        "Root solution '${KERNEL_VARIANT}' is marked supported for kernel ${KERNEL_VERSION} in KSU_VARIANT_SUPPORTED_VERSIONS but ${script} doesn't exist — the map is out of sync with kernel/ksu/variants/."
+        "Root solution '${KERNEL_VARIANT}' is marked supported for kernel ${KERNEL_VERSION} in kernel/features.json but ${script} doesn't exist."
 
     susfs_active || return 0
     local susfs_script="${ROOT_DIR}/kernel/ksu/susfs/susfs.sh"

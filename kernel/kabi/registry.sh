@@ -3,21 +3,15 @@
 # ======================================================
 # 🗂️ REGISTRY — KaBI Patches
 # ======================================================
-# Required patches per kernel version and apply_kabi_patches
-
-declare -A KABI_PATCHES_BY_VERSION=(
-    [5.10]="sysvipc_below_6_12 posix_mqueue_5_10"
-    [5.15]="sysvipc_below_6_12"
-    [6.1]="sysvipc_below_6_12"
-    [6.6]="sysvipc_below_6_12"
-    [6.12]="sysvipc_6_12"
-)
+# Required patches per kernel version come from kernel/features.json
 
 apply_kabi_patches() {
     local name patch
-    [[ -v "KABI_PATCHES_BY_VERSION[${KERNEL_VERSION}]" ]] \
-        || error "KaBI: kernel ${KERNEL_VERSION} is not registered in KABI_PATCHES_BY_VERSION (kernel/kabi/registry.sh)"
-    for name in ${KABI_PATCHES_BY_VERSION[$KERNEL_VERSION]:-}; do
+    local -a names
+    jq -e --arg version "$KERNEL_VERSION" '.versions[$version].kabi' "$FEATURES_FILE" > /dev/null \
+        || error "KaBI: kernel ${KERNEL_VERSION} has no kabi entry in kernel/features.json"
+    mapfile -t names < <(jq -r --arg version "$KERNEL_VERSION" '.versions[$version].kabi[]' "$FEATURES_FILE")
+    for name in "${names[@]}"; do
         patch="${ROOT_DIR}/kernel/kabi/${name}.patch"
         [ -f "$patch" ] || error "KaBI patch missing: ${name}.patch"
         log "Applying: $(basename "$patch")..."
