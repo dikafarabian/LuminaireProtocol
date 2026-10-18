@@ -16,12 +16,18 @@ gki_defconfig_enable CONFIG_TCP_CONG_ADVANCED CONFIG_TCP_CONG_BBR3 CONFIG_DEFAUL
 
 cd "${KERNEL_SRC}"
 if [ "${KERNEL_VERSION}" = "5.10" ]; then
-    SYSCTL_PATCH=$(fetch "${BBRV3_PATCHES_BASE}/sysctl_add_proc_dou8vec_minmax.patch") || true
+    SYSCTL_PATCH=$(fetch "${BBRV3_PATCHES_BASE}/sysctl_add_proc_dou8vec_minmax.patch") \
+        || warn "BBRv3: couldn't download the sysctl proc_dou8vec_minmax patch — continuing without it"
     if [ -n "$SYSCTL_PATCH" ]; then
         if ! grep -qF 'int proc_dou8vec_minmax(' "${KERNEL_SRC}/include/linux/sysctl.h" 2>/dev/null; then
-            echo "$SYSCTL_PATCH" | patch -p1 --forward --no-backup-if-mismatch || true
-            SYSCTL_FIX=$(fetch "${BBRV3_PATCHES_BASE}/sysctl_fix_data-races_in_proc_dou8vec_minmax.patch") || true
-            [ -n "$SYSCTL_FIX" ] && echo "$SYSCTL_FIX" | patch -p1 --forward --no-backup-if-mismatch || true
+            echo "$SYSCTL_PATCH" | patch -p1 --forward --no-backup-if-mismatch \
+                || warn "BBRv3: sysctl proc_dou8vec_minmax patch did not apply cleanly — continuing"
+            SYSCTL_FIX=$(fetch "${BBRV3_PATCHES_BASE}/sysctl_fix_data-races_in_proc_dou8vec_minmax.patch") \
+                || warn "BBRv3: couldn't download the sysctl data-races fix — continuing without it"
+            if [ -n "$SYSCTL_FIX" ]; then
+                echo "$SYSCTL_FIX" | patch -p1 --forward --no-backup-if-mismatch \
+                    || warn "BBRv3: sysctl data-races fix did not apply cleanly — continuing"
+            fi
         fi
     fi
 fi
