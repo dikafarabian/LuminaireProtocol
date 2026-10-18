@@ -2,6 +2,7 @@
   "bakasu": {
     "pin": "5b76b884c75f729a220bb317aa4a4fc78f0e0e9c",
     "skip": [
+      "b2c595ddfa64b685e5a144ad37b7c95f912fb92a",
       "d7260ca1e5c128061122924d0d48754e361e135c",
       "f4435f007b16f61705089ff982e3f981a6017979"
     ]
