@@ -3,7 +3,7 @@
 # ======================================================
 # 🚦 CHECKPOINT — Engine
 # ======================================================
-# Syncs pinned refs to their mirrors, promotes verified candidates, opens known-bad proposals as pull requests, and prunes finished proposal branches
+# Syncs pinned refs to their mirrors, promotes verified candidates, opens skip proposals as pull requests, and prunes finished proposal branches
 
 set -eo pipefail
 
@@ -72,8 +72,31 @@ candidate_ref() {
     echo "${!ref_var}"
 }
 
+component_label() {
+    local key="$1" fork
+    case "$key" in
+        susfs_*)
+            fork="${key#susfs_}"
+            echo "SuSFS ($(variant_display_name "${fork^^}"))"
+            ;;
+        ksunext_susfs_fork) echo "$(variant_display_name KSUNEXT) (susfs fork)" ;;
+        sukisu_builtin)     echo "$(variant_display_name SUKISU) (builtin)" ;;
+        *)                  variant_display_name "${key^^}" ;;
+    esac
+}
+
+commit_url() {
+    local key="$1" ref="$2" base="${MIRROR_SOURCE_URL[$1]:-}"
+    [ -n "$base" ] || return 0
+    base="${base%.git}"
+    case "$base" in
+        *gitlab.com*) echo "${base}/-/commit/${ref}" ;;
+        *)            echo "${base}/commit/${ref}" ;;
+    esac
+}
+
 proposal_prefix() {
-    echo "bad-pin/${1}-${KERNEL_VERSION}-"
+    echo "skip/${1}-${KERNEL_VERSION}-"
 }
 
 open_proposals() {
@@ -103,14 +126,14 @@ prune_proposal_branches() {
             git ls-remote --exit-code --heads "$REMOTE" "$branch" > /dev/null 2>&1 \
                 && warn "checkpoint: couldn't delete stale branch ${branch}"
         fi
-    done <<< "$(git ls-remote --heads "$REMOTE" 'refs/heads/bad-pin/*' | awk '{sub("refs/heads/", "", $2); print $2}')"
+    done <<< "$(git ls-remote --heads "$REMOTE" 'refs/heads/skip/*' | awk '{sub("refs/heads/", "", $2); print $2}')"
 }
 
 proposal_stage_label() {
     if [ "${CHECKPOINT_VARIANT_OK:-false}" = "true" ]; then
-        echo "run_build (compile)"
+        echo "kernel compile"
     else
-        echo "run_variant (root solution / SuSFS)"
+        echo "root solution / SuSFS setup"
     fi
 }
 
@@ -123,10 +146,10 @@ push_proposal_branch() {
     if ! (
         cd "$tree" \
         && git checkout -q -b "$branch" \
-        && jq --arg ref "$ref" ".${key}.bad |= (. + [\$ref] | unique)" "$MANIFEST_REL" > "${MANIFEST_REL}.tmp" \
+        && jq --arg ref "$ref" ".${key}.skip |= (. + [\$ref] | unique)" "$MANIFEST_REL" > "${MANIFEST_REL}.tmp" \
         && mv "${MANIFEST_REL}.tmp" "$MANIFEST_REL" \
         && git add "$MANIFEST_REL" \
-        && git commit -q -m "chore: mark ${key} candidate ${ref:0:12} as known-bad for kernel ${KERNEL_VERSION} (run ${GITHUB_RUN_ID})" \
+        && git commit -q -m "CHECKPOINT: skip $(component_label "$key") ${ref:0:7} (${KERNEL_VERSION})" \
         && git push -q --force "$REMOTE" "$branch"
     ); then
         git worktree remove --force "$tree"
@@ -137,22 +160,38 @@ push_proposal_branch() {
 
 open_proposal_pr() {
     local key="$1" ref="$2" branch="$3" others="$4"
-    local run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-    local body
+    local label run_url commit_link pin pin_display body
 
-    body="Candidate \`${ref}\` for **${key}** failed during $(proposal_stage_label) on kernel ${KERNEL_VERSION} ([run](${run_url})).
+    label="$(component_label "$key")"
+    run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+    commit_link="$(commit_url "$key" "$ref")"
+    pin="$(jq -r ".${key}.pin // \"\"" "$MANIFEST")"
+    pin_display="none"
+    [ -z "$pin" ] || pin_display="\`${pin:0:7}\`"
 
-Merge to mark this exact commit known-bad. Close to ignore it. The pin stays on the last known-good commit either way, and this proposal closes itself once a build succeeds again for ${key}."
+    body="**${label}** \`${ref:0:7}\` failed to build on ${KERNEL_VERSION} ($(proposal_stage_label)).
+
+- Current pin: ${pin_display}"
+    [ -z "$commit_link" ] || body="${body}
+- Commit: ${commit_link}"
+    body="${body}
+- Run: [${GITHUB_RUN_ID}](${run_url})
+
+- Merge = skip this commit in future builds.
+- Close = leave it, it will be retried."
+    [ -z "$pin" ] || body="${body}
+
+The pin stays on \`${pin:0:7}\` either way."
 
     if [ -n "$others" ]; then
         body="${body}
 
-Other candidates in the same run (blame is not isolated, any of them may be the cause):
-${others}"
+Also tested in this run (cause could be any):
+${others%$'\n'}"
     fi
 
     gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$branch" \
-        --title "🚫 Mark bad: ${key} ${ref:0:12} (${KERNEL_VERSION})" --body "$body" \
+        --title "Skip ${label} ${ref:0:7} (${KERNEL_VERSION})" --body "$body" \
         || warn "checkpoint: couldn't open proposal for ${key}"
 }
 
@@ -166,7 +205,7 @@ file_proposal() {
         log "checkpoint: proposal for ${key} ${ref:0:12} is already open"
         return 0
     fi
-    close_proposals "$key" "Superseded by a newer failing candidate (\`${ref:0:12}\`)." "$branch"
+    close_proposals "$key" "Superseded by \`${ref:0:7}\`." "$branch"
 
     if ! push_proposal_branch "$key" "$ref" "$branch"; then
         warn "checkpoint: couldn't push proposal branch for ${key}"
@@ -175,13 +214,14 @@ file_proposal() {
     open_proposal_pr "$key" "$ref" "$branch" "$others"
 }
 
-propose_bad() {
-    local key="$1" ref="$2" other_key others=""
+propose_skip() {
+    local key="$1" ref="$2" other_key other_ref others=""
 
     for other_key in "${COMPONENTS[@]}"; do
         [ "$other_key" = "$key" ] && continue
         is_candidate "$other_key" || continue
-        others="${others}- \`${other_key}\` @ \`$(candidate_ref "$other_key")\`
+        other_ref="$(candidate_ref "$other_key")"
+        others="${others}- $(component_label "$other_key") \`${other_ref:0:7}\`
 "
     done
 
@@ -191,7 +231,7 @@ propose_bad() {
 sync_mirrors() {
     local key pinned_ref
     for key in "${COMPONENTS[@]}"; do
-        pinned_ref="$(jq -r ".${key}.good // \"\"" "$MANIFEST" 2>/dev/null || true)"
+        pinned_ref="$(jq -r ".${key}.pin // \"\"" "$MANIFEST" 2>/dev/null || true)"
         [ -n "$pinned_ref" ] || continue
         mirror_sync "$key" "$pinned_ref" "$MIRROR_LABEL"
     done
@@ -218,19 +258,25 @@ failure_stage() {
 }
 
 promote_candidate() {
-    local key="$1" ref="$2" partner_key partner_reset=""
+    local key="$1" ref="$2" partner_key partner_reset="" previous commit_msg
 
+    previous="$(jq -r ".${key}.pin // \"\"" "$MANIFEST")"
     log "checkpoint: promoting ${key} pin to ${ref:0:12} (kernel ${KERNEL_VERSION})"
     for partner_key in "${COMPONENTS[@]}"; do
         [ "$partner_key" = "$key" ] && continue
-        partner_reset="${partner_reset} | if .${partner_key} then .${partner_key}.bad = [] else . end"
+        partner_reset="${partner_reset} | if .${partner_key} then .${partner_key}.skip = [] else . end"
     done
-    apply_and_push ".${key}.good = \"${ref}\" | .${key}.bad = ((.${key}.bad // []) - [\"${ref}\"])${partner_reset}" "chore: bump ${key} pin to ${ref:0:12} for kernel ${KERNEL_VERSION} (verified via run ${GITHUB_RUN_ID})"
+    if [ -n "$previous" ]; then
+        commit_msg="CHECKPOINT: pin $(component_label "$key") ${previous:0:7} -> ${ref:0:7} (${KERNEL_VERSION})"
+    else
+        commit_msg="CHECKPOINT: pin $(component_label "$key") ${ref:0:7} (${KERNEL_VERSION})"
+    fi
+    apply_and_push ".${key}.pin = \"${ref}\" | .${key}.skip = ((.${key}.skip // []) - [\"${ref}\"])${partner_reset}" "$commit_msg"
     mirror_promote "$key" "$ref" "$MIRROR_LABEL"
-    close_proposals "$key" "Build succeeded again — pin promoted to a new known-good commit."
+    close_proposals "$key" "Closed: a newer build passed, pin moved to \`${ref:0:7}\`."
     for partner_key in "${COMPONENTS[@]}"; do
         [ "$partner_key" = "$key" ] && continue
-        close_proposals "$partner_key" "Partner ${key} was promoted to ${ref:0:12} — known-bad state reset, this proposal is stale."
+        close_proposals "$partner_key" "Closed: $(component_label "$key") moved to pin \`${ref:0:7}\`, skip list reset."
     done
 }
 
@@ -248,8 +294,8 @@ handle_failed_candidate() {
             log "checkpoint: ${key} candidate ${ref:0:12} left untouched — build failed in an unrelated stage (run_release), ${tail}"
             ;;
         candidate)
-            warn "checkpoint: ${key} candidate ${ref:0:12} failed on kernel ${KERNEL_VERSION} — not blacklisted, opening proposal for approval"
-            propose_bad "$key" "$ref"
+            warn "checkpoint: ${key} candidate ${ref:0:12} failed on kernel ${KERNEL_VERSION} — not skipped yet, opening proposal for approval"
+            propose_skip "$key" "$ref"
             ;;
     esac
 }

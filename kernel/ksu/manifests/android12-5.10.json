@@ -1,50 +1,50 @@
 {
   "kowsu": {
-    "good": "ac324d9327b6eab642b58cee45573ed1af289d9e",
-    "bad": []
+    "pin": "ac324d9327b6eab642b58cee45573ed1af289d9e",
+    "skip": []
   },
   "ksu": {
-    "good": "6a2f63240397ea647ede981e0669231c8bf17fee",
-    "bad": []
+    "pin": "6a2f63240397ea647ede981e0669231c8bf17fee",
+    "skip": []
   },
   "ksunext_susfs_fork": {
-    "bad": [],
-    "good": "94fab777831ee864d6ae9c520fa74ab4e643f3e0"
+    "skip": [],
+    "pin": "94fab777831ee864d6ae9c520fa74ab4e643f3e0"
   },
   "bakasu": {
-    "good": "5b76b884c75f729a220bb317aa4a4fc78f0e0e9c",
-    "bad": []
+    "pin": "5b76b884c75f729a220bb317aa4a4fc78f0e0e9c",
+    "skip": []
   },
   "sukisu_builtin": {
-    "good": "6c284e957feaa9a388a9f1c37dc4ec80d95e434b",
-    "bad": []
+    "pin": "6c284e957feaa9a388a9f1c37dc4ec80d95e434b",
+    "skip": []
   },
   "susfs_kowsu": {
-    "good": "9892175b4acec7ee844e113b8d02c0f4d12cdfac",
-    "bad": []
+    "pin": "9892175b4acec7ee844e113b8d02c0f4d12cdfac",
+    "skip": []
   },
   "susfs_ksu": {
-    "good": "9892175b4acec7ee844e113b8d02c0f4d12cdfac",
-    "bad": []
+    "pin": "9892175b4acec7ee844e113b8d02c0f4d12cdfac",
+    "skip": []
   },
   "susfs_ksunext": {
-    "bad": [],
-    "good": "4501f14db2686662d75535e78d43c33714d582ea"
+    "skip": [],
+    "pin": "4501f14db2686662d75535e78d43c33714d582ea"
   },
   "susfs_bakasu": {
-    "good": "9892175b4acec7ee844e113b8d02c0f4d12cdfac",
-    "bad": []
+    "pin": "9892175b4acec7ee844e113b8d02c0f4d12cdfac",
+    "skip": []
   },
   "susfs_sukisu": {
-    "good": "9892175b4acec7ee844e113b8d02c0f4d12cdfac",
-    "bad": []
+    "pin": "9892175b4acec7ee844e113b8d02c0f4d12cdfac",
+    "skip": []
   },
   "ksunext": {
-    "good": "",
-    "bad": []
+    "pin": "",
+    "skip": []
   },
   "sukisu": {
-    "good": "",
-    "bad": []
+    "pin": "",
+    "skip": []
   }
 }

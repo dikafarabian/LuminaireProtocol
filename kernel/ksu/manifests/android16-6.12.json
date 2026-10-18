@@ -1,50 +1,50 @@
 {
   "kowsu": {
-    "good": "",
-    "bad": []
+    "pin": "",
+    "skip": []
   },
   "ksu": {
-    "good": "",
-    "bad": []
+    "pin": "",
+    "skip": []
   },
   "ksunext": {
-    "good": "",
-    "bad": []
+    "pin": "",
+    "skip": []
   },
   "ksunext_susfs_fork": {
-    "good": "",
-    "bad": []
+    "pin": "",
+    "skip": []
   },
   "bakasu": {
-    "good": "",
-    "bad": []
+    "pin": "",
+    "skip": []
   },
   "sukisu": {
-    "good": "",
-    "bad": []
+    "pin": "",
+    "skip": []
   },
   "sukisu_builtin": {
-    "good": "",
-    "bad": []
+    "pin": "",
+    "skip": []
   },
   "susfs_kowsu": {
-    "good": "",
-    "bad": []
+    "pin": "",
+    "skip": []
   },
   "susfs_ksu": {
-    "good": "",
-    "bad": []
+    "pin": "",
+    "skip": []
   },
   "susfs_ksunext": {
-    "good": "",
-    "bad": []
+    "pin": "",
+    "skip": []
   },
   "susfs_bakasu": {
-    "good": "",
-    "bad": []
+    "pin": "",
+    "skip": []
   },
   "susfs_sukisu": {
-    "good": "",
-    "bad": []
+    "pin": "",
+    "skip": []
   }
 }

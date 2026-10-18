@@ -54,34 +54,34 @@ latest_sha_or_empty() {
 
 resolve_component() {
     local key="$1" prefix="$2" latest="$3"
-    local good bad_list is_bad ref candidate
+    local pinned skip_list is_skipped ref candidate
 
-    good=$(jq -r ".${key}.good // \"\"" "$MANIFEST")
-    bad_list=$(jq -c ".${key}.bad // []" "$MANIFEST")
+    pinned=$(jq -r ".${key}.pin // \"\"" "$MANIFEST")
+    skip_list=$(jq -c ".${key}.skip // []" "$MANIFEST")
 
     if [ "${RUN_MODE^^}" = "RELEASE" ]; then
-        [ -n "$good" ] || error "scout: RUN_MODE=Release but no known-good ${key} pin exists yet — run a Build first."
-        ref="$good"; candidate="false"
+        [ -n "$pinned" ] || error "scout: RUN_MODE=Release but no ${key} pin exists yet — run a Build first."
+        ref="$pinned"; candidate="false"
         log "${prefix}: Release mode — pinned to ${ref:0:12} (no upstream check)"
     elif [ -z "$latest" ]; then
-        ref="$good"; candidate="false"
-        log "${prefix}: no candidate available — using pinned ${good:0:12}"
-    elif [ "$latest" = "$good" ]; then
-        ref="$good"; candidate="false"
-        log "${prefix}: up to date at ${good:0:12}"
+        ref="$pinned"; candidate="false"
+        log "${prefix}: no candidate available — using pin ${pinned:0:12}"
+    elif [ "$latest" = "$pinned" ]; then
+        ref="$pinned"; candidate="false"
+        log "${prefix}: up to date at ${pinned:0:12}"
     else
-        is_bad=$(echo "$bad_list" | jq --arg sha "$latest" 'any(. == $sha)')
-        if [ "$is_bad" = "true" ]; then
-            if [ -n "$good" ]; then
-                ref="$good"; candidate="false"
-                warn "${prefix}: latest upstream ${latest:0:12} is known-bad — falling back to pinned ${good:0:12}"
+        is_skipped=$(echo "$skip_list" | jq --arg sha "$latest" 'any(. == $sha)')
+        if [ "$is_skipped" = "true" ]; then
+            if [ -n "$pinned" ]; then
+                ref="$pinned"; candidate="false"
+                warn "${prefix}: latest upstream ${latest:0:12} is on the skip list — keeping pin ${pinned:0:12}"
             else
                 ref="$latest"; candidate="true"
-                warn "${prefix}: latest upstream ${latest:0:12} is known-bad and no good pin exists — retrying it as a last-resort candidate to break the deadlock"
+                warn "${prefix}: latest upstream ${latest:0:12} is on the skip list and no pin exists — retrying it as a last-resort candidate to break the deadlock"
             fi
         else
             ref="$latest"; candidate="true"
-            log "${prefix}: new candidate ${latest:0:12} (pinned: ${good:-none}) — will verify this build"
+            log "${prefix}: new candidate ${latest:0:12} (pin: ${pinned:-none}) — will verify this build"
         fi
     fi
 

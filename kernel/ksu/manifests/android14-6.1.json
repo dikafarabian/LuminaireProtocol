@@ -1,58 +1,58 @@
 {
   "bakasu": {
-    "good": "5b76b884c75f729a220bb317aa4a4fc78f0e0e9c",
-    "bad": [
+    "pin": "5b76b884c75f729a220bb317aa4a4fc78f0e0e9c",
+    "skip": [
       "d7260ca1e5c128061122924d0d48754e361e135c",
       "f4435f007b16f61705089ff982e3f981a6017979"
     ]
   },
   "susfs_bakasu": {
-    "good": "24743360ea08d98f6ad72b856851abed8de5854f",
-    "bad": []
+    "pin": "24743360ea08d98f6ad72b856851abed8de5854f",
+    "skip": []
   },
   "sukisu": {
-    "good": "",
-    "bad": []
+    "pin": "",
+    "skip": []
   },
   "sukisu_builtin": {
-    "good": "f8283f3db047c31fa0111d969e3e259011199b05",
-    "bad": [
+    "pin": "f8283f3db047c31fa0111d969e3e259011199b05",
+    "skip": [
       "0af2cf9cef7dc2239fa7ebb3f7898830a1087e26",
       "c95d6e2c76adb11b0e438e518e32ac4e31f5b1d0"
     ]
   },
   "susfs_sukisu": {
-    "good": "5369359dbd10f6dd8cbdd59d1df7b788b29b168c",
-    "bad": []
+    "pin": "5369359dbd10f6dd8cbdd59d1df7b788b29b168c",
+    "skip": []
   },
   "ksunext": {
-    "good": "",
-    "bad": []
+    "pin": "",
+    "skip": []
   },
   "ksunext_susfs_fork": {
-    "good": "179225248b9dcecf5aa2ce133c5b274c018bac2d",
-    "bad": []
+    "pin": "179225248b9dcecf5aa2ce133c5b274c018bac2d",
+    "skip": []
   },
   "susfs_ksunext": {
-    "good": "ed372c37eb4be10ceea96f29c9ba15c11d701fd6",
-    "bad": []
+    "pin": "ed372c37eb4be10ceea96f29c9ba15c11d701fd6",
+    "skip": []
   },
   "kowsu": {
-    "good": "3a7550f5779cb379fa1500e4a631dbf6d92800e8",
-    "bad": []
+    "pin": "3a7550f5779cb379fa1500e4a631dbf6d92800e8",
+    "skip": []
   },
   "susfs_kowsu": {
-    "good": "5369359dbd10f6dd8cbdd59d1df7b788b29b168c",
-    "bad": []
+    "pin": "5369359dbd10f6dd8cbdd59d1df7b788b29b168c",
+    "skip": []
   },
   "ksu": {
-    "good": "9f5966b4d534869fd72a79b3c6ea602e5eae3022",
-    "bad": [
+    "pin": "9f5966b4d534869fd72a79b3c6ea602e5eae3022",
+    "skip": [
       "0faec0cc7b5f655170d89bf9c4d28bb5ca271fa2"
     ]
   },
   "susfs_ksu": {
-    "good": "5369359dbd10f6dd8cbdd59d1df7b788b29b168c",
-    "bad": []
+    "pin": "5369359dbd10f6dd8cbdd59d1df7b788b29b168c",
+    "skip": []
   }
 }
