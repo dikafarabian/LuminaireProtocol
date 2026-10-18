@@ -6,20 +6,14 @@
 # Repo: https://github.com/SukiSU-Ultra/SukiSU-Ultra
 
 KSU_DIR="${KERNEL_SRC}/KernelSU"
-PATCHER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 
-log "Integrating SukiSU-Ultra..."
-cd "$KERNEL_SRC"
+SUKISU_PRESEED_KEY=""
 if susfs_active; then
-    mirror_preseed "sukisu_builtin" "$KSU_DIR" "${SUKISU_BUILTIN_REF:-}" "${CANDIDATE_SUKISU_BUILTIN:-false}" "$(resolve_android_version)-${KERNEL_VERSION}" || true
     SUKISU_REF="${SUKISU_BUILTIN_REF:-builtin}"
+    SUKISU_PRESEED_KEY="sukisu_builtin"
 fi
-run_upstream_setup "SukiSU-Ultra" "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" "${SUKISU_REF:-}"
-[ -d "${KERNEL_SRC}/KernelSU" ] || error "SukiSU-Ultra: KernelSU dir not found after setup!"
-verify_pinned_ref "SukiSU-Ultra" "$KSU_DIR" "${SUKISU_REF:-}"
-cd "$ROOT_DIR"
-log "SukiSU-Ultra integrated ✅"
+
+ksu_integrate "SukiSU-Ultra" "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" "${SUKISU_REF:-}" "$SUKISU_PRESEED_KEY"
 
 log "Applying Luminaire branding..."
 if susfs_active; then
@@ -27,13 +21,13 @@ if susfs_active; then
 else
     BRANDING_TARGET="${KSU_DIR}/kernel/Kbuild"
 fi
-python3 "${PATCHER_DIR}/branding.py" "$BRANDING_TARGET" \
+ksu_patcher branding.py "$BRANDING_TARGET" \
     || error "SukiSU-Ultra: branding patch failed!"
 log "Branding applied ✅"
 
 if susfs_active; then
     log "Patching track_throne flag compat..."
-    python3 "${PATCHER_DIR}/track_throne_compat.py" \
+    ksu_patcher track_throne_compat.py \
         "${KSU_DIR}/kernel/manager/pkg_observer.c" \
         || error "SukiSU-Ultra: track_throne flag compat patch failed!"
     log "track_throne flag compat patched ✅"
@@ -74,11 +68,7 @@ elif [ "$KSU_UAPI_VERSION" != "$SUKISU_MANAGER_UAPI" ]; then
     KSU_UAPI_VERSION="$(ksu_uapi_version "$KSU_DIR")"
     [ "$KSU_UAPI_VERSION" = "$SUKISU_MANAGER_UAPI" ] || warn "SukiSU-Ultra: UAPI alignment did not take effect (source says ${KSU_UAPI_VERSION:-unknown})"
 fi
-VARIANT_VERSION_DISPLAY="$(format_ksu_version "$KSU_TAG_NAME" "$KSU_VERSION_CODE" "$KSU_UAPI_VERSION")"
-log "Version: ${VARIANT_VERSION_DISPLAY}"
-
-log "Enabling KSU configs..."
-gki_defconfig_enable CONFIG_KSU CONFIG_KPM
-log "Configs enabled ✅"
+ksu_publish_version
+ksu_enable_configs CONFIG_KSU CONFIG_KPM
 
 log "SukiSU-Ultra ready ✅"

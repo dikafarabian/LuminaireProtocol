@@ -6,38 +6,27 @@
 # Repo: https://github.com/KernelSU-Next/KernelSU-Next
 
 KSU_DIR="${KERNEL_SRC}/KernelSU-Next"
-PATCHER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 
-log "Integrating KernelSU-Next..."
-cd "$KERNEL_SRC"
 if susfs_active; then
     log "SUSFS enabled — using pershoot/KernelSU-Next's dev-susfs fork"
+    KSUNEXT_REPO_URL="https://github.com/pershoot/KernelSU-Next"
     KSUNEXT_SETUP_URL="https://raw.githubusercontent.com/pershoot/KernelSU-Next/dev-susfs/kernel/setup.sh"
     KSUNEXT_SETUP_REF="${KSUNEXT_SUSFS_FORK_REF:-dev-susfs}"
-    mirror_preseed "ksunext_susfs_fork" "$KSU_DIR" "${KSUNEXT_SUSFS_FORK_REF:-}" "${CANDIDATE_KSUNEXT_SUSFS_FORK:-false}" "$(resolve_android_version)-${KERNEL_VERSION}" || true
+    KSUNEXT_PRESEED_KEY="ksunext_susfs_fork"
 else
+    KSUNEXT_REPO_URL="https://github.com/KernelSU-Next/KernelSU-Next"
     KSUNEXT_SETUP_URL="https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/dev/kernel/setup.sh"
     KSUNEXT_SETUP_REF="${KSUNEXT_REF:-}"
+    KSUNEXT_PRESEED_KEY=""
 fi
-run_upstream_setup "KernelSU-Next" "$KSUNEXT_SETUP_URL" "$KSUNEXT_SETUP_REF"
-[ -d "$KSU_DIR" ] || error "KernelSU-Next: KernelSU-Next dir not found after setup!"
-verify_pinned_ref "KernelSU-Next" "$KSU_DIR" "$KSUNEXT_SETUP_REF"
 
-if susfs_active; then
-    git -C "$KSU_DIR" fetch --force "https://github.com/pershoot/KernelSU-Next" \
-        "refs/heads/dev:refs/remotes/origin/dev" 2>/dev/null || true
-else
-    git -C "$KSU_DIR" fetch --force "https://github.com/KernelSU-Next/KernelSU-Next" \
-        "refs/heads/dev:refs/remotes/origin/dev" 2>/dev/null || true
-fi
+ksu_integrate "KernelSU-Next" "$KSUNEXT_SETUP_URL" "$KSUNEXT_SETUP_REF" "$KSUNEXT_PRESEED_KEY"
+
+git -C "$KSU_DIR" fetch --force "$KSUNEXT_REPO_URL" "refs/heads/dev:refs/remotes/origin/dev" 2>/dev/null || true
 [ -f "$KSU_DIR/.git/shallow" ] && git -C "$KSU_DIR" fetch --unshallow 2>/dev/null || true
 
-cd "$ROOT_DIR"
-log "KernelSU-Next integrated ✅"
-
 log "Applying Luminaire branding..."
-python3 "${PATCHER_DIR}/branding.py" "${KSU_DIR}/kernel/Kbuild" \
+ksu_patcher branding.py "${KSU_DIR}/kernel/Kbuild" \
     || error "KernelSU-Next: branding patch failed!"
 log "Branding applied ✅"
 
@@ -51,15 +40,8 @@ else
     KSUNEXT_BASE_COMMIT="HEAD"
 fi
 
-KSU_LOCAL_VERSION=$(git -C "$KSU_DIR" rev-list --count "$KSUNEXT_BASE_COMMIT" 2>/dev/null || echo 0)
-KSU_VERSION_CODE=$((30000 + KSU_LOCAL_VERSION))
-KSU_TAG_NAME=$(git -C "$KSU_DIR" describe --tags --abbrev=0 "$KSUNEXT_BASE_COMMIT" 2>/dev/null || echo "v0.0.1")
-KSU_UAPI_VERSION="$(ksu_uapi_version "$KSU_DIR")"
-VARIANT_VERSION_DISPLAY="$(format_ksu_version "$KSU_TAG_NAME" "$KSU_VERSION_CODE" "$KSU_UAPI_VERSION")"
-log "Version: ${VARIANT_VERSION_DISPLAY}"
-
-log "Enabling KSU configs..."
-gki_defconfig_enable CONFIG_KSU
-log "Configs enabled ✅"
+ksu_git_version "v0.0.1" 0 "$KSUNEXT_BASE_COMMIT"
+ksu_publish_version
+ksu_enable_configs CONFIG_KSU
 
 log "KernelSU-Next ready ✅"
