@@ -72,7 +72,6 @@ else
     done
     cd "$ROOT_DIR"
 fi
-github_env BUILD_SECONDS "${BUILD_SECONDS}"
 
 log "Detecting AOSP Clang version used by Kleaf..."
 AOSP_CLANG_BIN=$(find "${KERNEL_DIR}/prebuilts/clang/host/linux-x86" \
@@ -88,7 +87,6 @@ if [ -n "$AOSP_CLANG_BIN" ]; then
         warn "Could not parse AOSP Clang version from -v output"
     fi
     export COMPILER_STRING
-    github_env COMPILER_STRING "${COMPILER_STRING}"
     log "Compiler: ${COMPILER_STRING:-N/A} ✅"
 else
     warn "AOSP Clang binary not found — COMPILER_STRING will be unset"

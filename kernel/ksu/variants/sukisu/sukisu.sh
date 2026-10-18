@@ -75,7 +75,6 @@ elif [ "$KSU_UAPI_VERSION" != "$SUKISU_MANAGER_UAPI" ]; then
     [ "$KSU_UAPI_VERSION" = "$SUKISU_MANAGER_UAPI" ] || warn "SukiSU-Ultra: UAPI alignment did not take effect (source says ${KSU_UAPI_VERSION:-unknown})"
 fi
 VARIANT_VERSION_DISPLAY="$(format_ksu_version "$KSU_TAG_NAME" "$KSU_VERSION_CODE" "$KSU_UAPI_VERSION")"
-github_env VARIANT_VERSION_DISPLAY "${VARIANT_VERSION_DISPLAY}"
 log "Version: ${VARIANT_VERSION_DISPLAY}"
 
 log "Enabling KSU configs..."

@@ -37,8 +37,6 @@ run_addons() {
     mountless_csv="$(join_csv "${ADDON_MOUNTLESS_TOKENS[@]}")"
     unset ADDON_ORDER ADDON_MOUNTLESS_TOKENS
     export ADDON_ORDER="$order_csv" ADDON_MOUNTLESS_TOKENS="$mountless_csv"
-    github_env ADDON_ORDER "$order_csv"
-    github_env ADDON_MOUNTLESS_TOKENS "$mountless_csv"
 
     ADDONS="${ADDONS:-}"
     ADDONS="${ADDONS// /}"
@@ -74,7 +72,5 @@ run_addons() {
         [[ ",${order_csv}," == *",${selected},"* ]] || warn "Addon '${selected}' is not listed in ADDON_ORDER (kernel/addons/registry.sh) — ignored."
     done
 
-    github_env APPLIED_ADDONS "$APPLIED_ADDONS"
-    github_env SKIPPED_ADDONS "$SKIPPED_ADDONS"
     echo "::endgroup::"
 }

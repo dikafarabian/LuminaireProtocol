@@ -11,6 +11,5 @@ apply_patch "BORE" "$BORE_PATCH" "$KERNEL_SRC" --fuzz=3
 gki_defconfig_enable CONFIG_SCHED_BORE
 
 BORE_VERSION="$(basename "$BORE_PATCH" .patch | sed 's/^bore-//')"
-github_env BORE_VERSION "$BORE_VERSION"
 
 log "BORE CPU scheduler integrated ✅"

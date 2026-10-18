@@ -24,7 +24,6 @@ run_patches() {
     local feature supported script order_csv
     order_csv="$(join_csv "${PATCH_FEATURE_ORDER[@]}")"
     export APPLIED_PATCHES="" SKIPPED_PATCHES=""
-    github_env PATCH_FEATURE_ORDER "$order_csv"
     for feature in "${PATCH_FEATURE_ORDER[@]}"; do
         supported="${PATCH_SUPPORTED_VERSIONS[$feature]:-}"
         if [[ " ${supported} " != *" ${KERNEL_VERSION} "* ]]; then
@@ -40,7 +39,5 @@ run_patches() {
 
     unset PATCH_FEATURE_ORDER
     export PATCH_FEATURE_ORDER="$order_csv"
-    github_env APPLIED_PATCHES "$APPLIED_PATCHES"
-    github_env SKIPPED_PATCHES "$SKIPPED_PATCHES"
     echo "::endgroup::"
 }

@@ -53,10 +53,6 @@ github_env() {
     echo "$1=$2" >> "$GITHUB_ENV"
 }
 
-github_path() {
-    [ -n "${GITHUB_PATH:-}" ] || return 0
-    echo "$1" >> "$GITHUB_PATH"
-}
 
 mark_stage_ok() {
     github_env "$1" true
