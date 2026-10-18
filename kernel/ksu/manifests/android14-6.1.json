@@ -36,7 +36,9 @@
   },
   "susfs_ksunext": {
     "pin": "ed372c37eb4be10ceea96f29c9ba15c11d701fd6",
-    "skip": []
+    "skip": [
+      "e8253afe6d830cc09ea155a9cb74a4e2f8ee807c"
+    ]
   },
   "kowsu": {
     "pin": "3a7550f5779cb379fa1500e4a631dbf6d92800e8",
