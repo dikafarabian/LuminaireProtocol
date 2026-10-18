@@ -1,11 +1,6 @@
 # ======================================================
-# 📨 TELEGRAM — Display Names & Push Caption
+# 📨 TELEGRAM — Display Names
 # ======================================================
-
-import os
-import sys
-
-PUSH_TEXT_LIMIT = 4096
 
 KERNEL_VERSION_TO_ANDROID = {
     "5.10": "12",
@@ -150,60 +145,3 @@ def html_escape(s):
 
 def html_escape_attr(s):
     return html_escape(s).replace('"', "&quot;")
-
-
-def utf16_len(s):
-    return sum(2 if ord(c) > 0xFFFF else 1 for c in s)
-
-def truncate(caption, limit, suffix="\n\u2026\n```"):
-    if utf16_len(caption) <= limit:
-        return caption
-    suffix_len = utf16_len(suffix)
-    result = []
-    current_len = 0
-    for ch in caption:
-        ch_len = 2 if ord(ch) > 0xFFFF else 1
-        if current_len + ch_len + suffix_len > limit:
-            break
-        result.append(ch)
-        current_len += ch_len
-    return "".join(result) + suffix
-
-def build_push_caption(env):
-    branch_raw = env.get("BRANCH", "")
-    author     = env.get("AUTHOR", "")
-    author_url = html_escape_attr("https://t.me/{}".format(author))
-    commit_short = env.get("COMMIT", "")[:7]
-    commit_url   = html_escape_attr(env.get("URL", ""))
-    title = env.get("TITLE", "")
-    body  = env.get("BODY", "")
-    head = "\n".join([
-        "New Commit \U0001F4CC",
-        "",
-        f"Branch : <code>{html_escape(branch_raw)}</code>",
-        f'Author : <a href="{author_url}">{html_escape(author)}</a>',
-    ])
-    title_block = f'<pre><code class="language-Title">{html_escape(title)}</code></pre>'
-    head_full = head + "\n" + title_block
-    footer = f'\nCommit : <a href="{commit_url}">{html_escape(commit_short)}</a>'
-    if not body.strip():
-        return truncate(head_full + footer, PUSH_TEXT_LIMIT)
-    wrapper = '\n<pre><code class="language-Message"></code></pre>'
-    fixed_len = utf16_len(head_full) + utf16_len(footer) + utf16_len(wrapper)
-    body_budget = PUSH_TEXT_LIMIT - fixed_len
-    body_esc = html_escape(body)
-    if utf16_len(body_esc) > body_budget:
-        body_esc = truncate(body_esc, max(body_budget, 0), suffix="\n\u2026")
-    message_block = f'<pre><code class="language-Message">{body_esc}</code></pre>'
-    return head_full + "\n" + message_block + footer
-
-def main():
-    if len(sys.argv) != 3 or sys.argv[1] != "push":
-        sys.exit("usage: caption.py push <out-file>")
-    caption = build_push_caption(os.environ)
-    with open(sys.argv[2], "w") as f:
-        f.write(caption)
-    print("[info] telegram_caption: push caption written ✅", flush=True)
-
-if __name__ == "__main__":
-    main()
