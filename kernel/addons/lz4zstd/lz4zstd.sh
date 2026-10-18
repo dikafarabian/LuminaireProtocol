@@ -159,7 +159,7 @@ replace_zstd_source() {
     staging=$(mktemp -d)
     for f in "${ZSTD_FILES[@]}"; do
         mkdir -p "${staging}/$(dirname "$f")"
-        if ! fetch \
+        if ! retry 4 fetch \
                 -o "${staging}/${f}" "${ZSTD_SRC_BASE}/${f}"; then
             warn "LZ4/ZSTD: failed to download ${f} from v6.15 — skipping ZSTD bump, keeping existing 1.4.10 source"
             rm -rf "$staging"
