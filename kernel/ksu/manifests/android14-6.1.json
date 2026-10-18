@@ -48,7 +48,8 @@
   "ksu": {
     "good": "9f5966b4d534869fd72a79b3c6ea602e5eae3022",
     "bad": [
-      "0faec0cc7b5f655170d89bf9c4d28bb5ca271fa2"
+      "0faec0cc7b5f655170d89bf9c4d28bb5ca271fa2",
+      "96770dfb807fea61e06819e4cbb438384df54b63"
     ]
   },
   "susfs_ksu": {
