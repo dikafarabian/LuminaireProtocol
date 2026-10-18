@@ -87,7 +87,6 @@ FRAGMENT_FEATURES = {
     "Debug": [
         "Full Kallsyms",
         "UBSAN Disabled",
-        "Page Owner Disabled",
         "RCU Trace Disabled",
     ],
 }
