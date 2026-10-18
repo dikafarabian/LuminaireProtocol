@@ -189,46 +189,26 @@ jobs:
           REF_NAME:               ${{ github.ref_name }}
           KERNEL_VERSION:         ${{ inputs.kernel_version }}
           KERNEL_BRANCH_OVERRIDE: ${{ inputs.kernel_branch_override }}
-          SELECT_KSU:             ${{ inputs.ksu }}
-          SELECT_KOWSU:           ${{ inputs.kowsu }}
-          SELECT_KSUNEXT:         ${{ inputs.ksunext }}
-          SELECT_SUKISU:          ${{ inputs.sukisu }}
-          SELECT_BAKASU:          ${{ inputs.bakasu }}
-          SELECT_VANILLA:         ${{ inputs.vanilla }}
-          ADDON_REKERNEL:         ${{ inputs.rekernel }}
-          ADDON_DROIDSPACES:      ${{ inputs.droidspaces }}
-          ADDON_NTSYNC:           ${{ inputs.ntsync }}
-          ADDON_LZ4ZSTD:          ${{ inputs.lz4zstd }}
-          ADDON_LZ4KD:            ${{ inputs.lz4kd }}
-          ADDON_MGLRU:            ${{ inputs.mglru }}
-          MOUNTLESS_ENGINE:       ${{ inputs.mountless_engine }}
+          INPUTS_JSON:            ${{ toJSON(inputs) }}
         run: |
-          variants=()
-          for variant in KSU KOWSU KSUNEXT SUKISU BAKASU; do
-            selected="SELECT_${variant}"
-            [ "${!selected}" = "true" ] || continue
-            variants+=("{\"kernel_variant\":\"${variant}\",\"susfs\":${SUSFS_ENABLED}}")
-          done
-          if [ "$SELECT_VANILLA" = "true" ]; then
-            variants+=('{"kernel_variant":"VANILLA","susfs":false}')
-          fi
+          matrix_json="$(jq -c --argjson susfs "$SUSFS_ENABLED" --slurpfile features kernel/features.json '
+            . as $in
+            | [$features[0].ksu | keys_unsorted[] | select($in[.] == true) | {kernel_variant: ascii_upcase, susfs: $susfs}]
+              + (if $in.vanilla == true then [{kernel_variant: "VANILLA", susfs: false}] else [] end)
+            | {include: .}' <<< "$INPUTS_JSON")"
 
-          if [ ${#variants[@]} -eq 0 ]; then
+          if [ "$(jq '.include | length' <<< "$matrix_json")" -eq 0 ]; then
             echo "No root solutions selected!"
             exit 1
           fi
-
-          matrix_json=$(printf '%s\n' "${variants[@]}" | jq -cs '{include: .}')
           echo "matrix=${matrix_json}" >> "$GITHUB_OUTPUT"
 
-          addons=""
-          [ "$ADDON_REKERNEL" = "true" ]    && addons+="rekernel,"
-          [ "$ADDON_DROIDSPACES" = "true" ] && addons+="droidspaces,"
-          [ "$ADDON_NTSYNC" = "true" ]      && addons+="ntsync,"
-          [ "$ADDON_LZ4ZSTD" = "true" ]     && addons+="lz4zstd,"
-          [ "$ADDON_LZ4KD" = "true" ]       && addons+="lz4kd,"
-          [ "$MOUNTLESS_ENGINE" != "none" ] && addons+="${MOUNTLESS_ENGINE},"
-          [ "$ADDON_MGLRU" = "true" ]       && addons+="mglru,"
+          addons="$(jq -r --slurpfile features kernel/features.json '
+            . as $in
+            | [$features[0].addons | to_entries[]
+               | select(if .value.mountless then $in.mountless_engine == .key else $in[.key] == true end)
+               | .key]
+            | join(",")' <<< "$INPUTS_JSON")"
           echo "addons=${addons}" >> "$GITHUB_OUTPUT"
 
           echo "safe_ref=${REF_NAME//\//-}" >> "$GITHUB_OUTPUT"
