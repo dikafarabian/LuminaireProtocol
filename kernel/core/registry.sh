@@ -3,16 +3,16 @@
 # ======================================================
 # 🗂️ REGISTRY — Core
 # ======================================================
-# Core feature order and run_core
-
-CORE_FEATURE_ORDER=(dirty_flag glibc protected_exports compiler_string module_bypass openssl3_compat)
+# Core features come from kernel/features.json
 
 run_core() {
     echo "::group::🔧 Core"
     local feature script
-    for feature in "${CORE_FEATURE_ORDER[@]}"; do
+    local -a features
+    mapfile -t features < <(feature_tokens core)
+    for feature in "${features[@]}"; do
         script="${ROOT_DIR}/kernel/core/${feature}/${feature}.sh"
-        [ -f "$script" ] || error "Core feature '${feature}' is listed in CORE_FEATURE_ORDER but ${script} doesn't exist — the list is out of sync with kernel/core/."
+        [ -f "$script" ] || error "Core feature '${feature}' is listed in kernel/features.json but ${script} doesn't exist."
         source "$script"
     done
     echo "::endgroup::"

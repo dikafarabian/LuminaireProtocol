@@ -8,13 +8,7 @@
 
 BBRV3_PATCHES_BASE="https://github.com/WildKernels/kernel_patches/raw/main/common/bbrv3"
 
-case "${KERNEL_VERSION}" in
-    5.10) BBRV3_PATCH="0001-net-tcp-backport-BBRv3-to-android12-5.10.patch" ;;
-    5.15) BBRV3_PATCH="0001-net-tcp-backport-BBRv3-to-android13-5.15.patch" ;;
-    6.1)  BBRV3_PATCH="0001-net-tcp-backport-BBRv3-to-android14-6.1.patch"  ;;
-    6.6)  BBRV3_PATCH="0001-net-tcp-backport-BBRv3-to-android15-6.6.patch"  ;;
-    *)    error "BBRv3: unsupported kernel version '${KERNEL_VERSION}'" ;;
-esac
+BBRV3_PATCH="0001-net-tcp-backport-BBRv3-to-${ANDROID_VERSION}-${KERNEL_VERSION}.patch"
 
 log "🚀 Applying BBRv3 patch (${BBRV3_PATCH})..."
 apply_remote_patch "BBRv3" "${BBRV3_PATCHES_BASE}/${BBRV3_PATCH}" "$KERNEL_SRC"

@@ -53,10 +53,6 @@ github_env() {
     echo "$1=$2" >> "$GITHUB_ENV"
 }
 
-github_path() {
-    [ -n "${GITHUB_PATH:-}" ] || return 0
-    echo "$1" >> "$GITHUB_PATH"
-}
 
 mark_stage_ok() {
     github_env "$1" true
@@ -74,15 +70,22 @@ write_dry_run_image() {
     log "🧪 DRY RUN — wrote placeholder image to ${path} (compile skipped)"
 }
 
+FEATURES_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/kernel/features.json"
+
+feature_tokens() {
+    jq -r --arg kind "$1" '.[$kind] | if type == "array" then .[] else keys_unsorted[] end' "$FEATURES_FILE"
+}
+
+feature_supports_kernel_version() {
+    jq -e --arg kind "$1" --arg feature "$2" --arg version "$KERNEL_VERSION" \
+        '(.[$kind][$feature].versions // []) | index($version) != null' "$FEATURES_FILE" > /dev/null
+}
+
 resolve_android_version() {
-    case "${KERNEL_VERSION}" in
-        "5.10") echo "android12" ;;
-        "5.15") echo "android13" ;;
-        "6.1")  echo "android14" ;;
-        "6.6")  echo "android15" ;;
-        "6.12") echo "android16" ;;
-        *) error "Unknown kernel version: ${KERNEL_VERSION}" ;;
-    esac
+    local android
+    android="$(jq -r --arg version "$KERNEL_VERSION" '.versions[$version].android // empty' "$FEATURES_FILE")"
+    [ -n "$android" ] || error "Unknown kernel version: ${KERNEL_VERSION}"
+    echo "$android"
 }
 
 resolve_kernel_branch() {
@@ -171,8 +174,8 @@ retry() {
 }
 
 GITHUB_AUTH_ARGS=()
-if [ -n "${PERSONAL_TOKEN:-}" ]; then
-    GITHUB_AUTH_ARGS=(-H "Authorization: Bearer ${PERSONAL_TOKEN}")
+if [ -n "${GH_API_TOKEN:-}" ]; then
+    GITHUB_AUTH_ARGS=(-H "Authorization: Bearer ${GH_API_TOKEN}")
 fi
 
 github_api() {

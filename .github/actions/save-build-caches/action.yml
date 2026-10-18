@@ -12,8 +12,6 @@ inputs:
   ccache-asset-name:
     description: "Release asset filename for the ccache archive"
     required: true
-  gh-token:
-    required: true
 
 runs:
   using: composite
@@ -27,7 +25,6 @@ runs:
         base-dir:   /
         path:       dev/shm/ldcache
         use-sudo:   "true"
-        gh-token:   ${{ inputs.gh-token }}
 
     - name: "Save ccache"
       if: always() && startsWith(inputs.build-system, 'Make')
@@ -37,4 +34,3 @@ runs:
         label:      ccache
         base-dir:   ${{ github.workspace }}
         path:       .ccache
-        gh-token:   ${{ inputs.gh-token }}

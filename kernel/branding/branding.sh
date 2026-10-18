@@ -12,7 +12,6 @@ KMI_GENERATION="$(grep '^KMI_GENERATION=' \
     "${KERNEL_SRC}/build.config.constants" 2>/dev/null | head -1 | cut -d= -f2)" || true
 [ -z "$KMI_GENERATION" ] && error "KMI_GENERATION not found!"
 export SUBLEVEL KMI_GENERATION
-github_env SUBLEVEL "${SUBLEVEL}"
 
 if [[ "$BUILD_IDENTITY_OVERRIDE" == *"@"* ]]; then
     BUILD_USER_OVERRIDE="${BUILD_IDENTITY_OVERRIDE%%@*}"

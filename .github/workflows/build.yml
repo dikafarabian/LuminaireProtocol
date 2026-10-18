@@ -141,6 +141,9 @@ on:
         type: string
         default: "chainonyourdoor@LuminaireCI"
 
+permissions:
+  contents: read
+
 env:
   DEBIAN_FRONTEND: noninteractive
   IS_MAKE: ${{ startsWith(inputs.build_system, 'Make') }}
@@ -153,6 +156,9 @@ jobs:
   prepare-matrix:
     name: "Prepare Arsenal"
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: write
     outputs:
       matrix: ${{ steps.set.outputs.matrix }}
       addons: ${{ steps.set.outputs.addons }}
@@ -162,7 +168,7 @@ jobs:
       cache_refreshed: ${{ inputs.update_arsenal != 'no' }}
 
     env:
-      PERSONAL_TOKEN:   ${{ secrets.PERSONAL_TOKEN }}
+      GH_API_TOKEN:     ${{ github.token }}
       USE_KERNEL_CACHE: ${{ inputs.update_arsenal == 'no' }}
       USE_AK3_CACHE:    ${{ inputs.update_arsenal == 'no' }}
       USE_CLANG_CACHE:  ${{ inputs.update_arsenal == 'no' }}
@@ -183,46 +189,26 @@ jobs:
           REF_NAME:               ${{ github.ref_name }}
           KERNEL_VERSION:         ${{ inputs.kernel_version }}
           KERNEL_BRANCH_OVERRIDE: ${{ inputs.kernel_branch_override }}
-          SELECT_KSU:             ${{ inputs.ksu }}
-          SELECT_KOWSU:           ${{ inputs.kowsu }}
-          SELECT_KSUNEXT:         ${{ inputs.ksunext }}
-          SELECT_SUKISU:          ${{ inputs.sukisu }}
-          SELECT_BAKASU:          ${{ inputs.bakasu }}
-          SELECT_VANILLA:         ${{ inputs.vanilla }}
-          ADDON_REKERNEL:         ${{ inputs.rekernel }}
-          ADDON_DROIDSPACES:      ${{ inputs.droidspaces }}
-          ADDON_NTSYNC:           ${{ inputs.ntsync }}
-          ADDON_LZ4ZSTD:          ${{ inputs.lz4zstd }}
-          ADDON_LZ4KD:            ${{ inputs.lz4kd }}
-          ADDON_MGLRU:            ${{ inputs.mglru }}
-          MOUNTLESS_ENGINE:       ${{ inputs.mountless_engine }}
+          INPUTS_JSON:            ${{ toJSON(inputs) }}
         run: |
-          variants=()
-          for variant in KSU KOWSU KSUNEXT SUKISU BAKASU; do
-            selected="SELECT_${variant}"
-            [ "${!selected}" = "true" ] || continue
-            variants+=("{\"kernel_variant\":\"${variant}\",\"susfs\":${SUSFS_ENABLED}}")
-          done
-          if [ "$SELECT_VANILLA" = "true" ]; then
-            variants+=('{"kernel_variant":"VANILLA","susfs":false}')
-          fi
+          matrix_json="$(jq -c --argjson susfs "$SUSFS_ENABLED" --slurpfile features kernel/features.json '
+            . as $in
+            | [$features[0].ksu | keys_unsorted[] | select($in[.] == true) | {kernel_variant: ascii_upcase, susfs: $susfs}]
+              + (if $in.vanilla == true then [{kernel_variant: "VANILLA", susfs: false}] else [] end)
+            | {include: .}' <<< "$INPUTS_JSON")"
 
-          if [ ${#variants[@]} -eq 0 ]; then
+          if [ "$(jq '.include | length' <<< "$matrix_json")" -eq 0 ]; then
             echo "No root solutions selected!"
             exit 1
           fi
-
-          matrix_json=$(printf '%s\n' "${variants[@]}" | jq -cs '{include: .}')
           echo "matrix=${matrix_json}" >> "$GITHUB_OUTPUT"
 
-          addons=""
-          [ "$ADDON_REKERNEL" = "true" ]    && addons+="rekernel,"
-          [ "$ADDON_DROIDSPACES" = "true" ] && addons+="droidspaces,"
-          [ "$ADDON_NTSYNC" = "true" ]      && addons+="ntsync,"
-          [ "$ADDON_LZ4ZSTD" = "true" ]     && addons+="lz4zstd,"
-          [ "$ADDON_LZ4KD" = "true" ]       && addons+="lz4kd,"
-          [ "$MOUNTLESS_ENGINE" != "none" ] && addons+="${MOUNTLESS_ENGINE},"
-          [ "$ADDON_MGLRU" = "true" ]       && addons+="mglru,"
+          addons="$(jq -r --slurpfile features kernel/features.json '
+            . as $in
+            | [$features[0].addons | to_entries[]
+               | select(if .value.mountless then $in.mountless_engine == .key else $in[.key] == true end)
+               | .key]
+            | join(",")' <<< "$INPUTS_JSON")"
           echo "addons=${addons}" >> "$GITHUB_OUTPUT"
 
           echo "safe_ref=${REF_NAME//\//-}" >> "$GITHUB_OUTPUT"
@@ -240,7 +226,6 @@ jobs:
           kernel-version: ${{ inputs.kernel_version }}
           kernel-branch-override: ${{ inputs.kernel_branch_override }}
           update-arsenal: ${{ inputs.update_arsenal }}
-          gh-token:       ${{ secrets.PERSONAL_TOKEN }}
 
   # ======================================================
   # BUILD VARIANT (parallel)
@@ -250,12 +235,15 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     needs: prepare-matrix
+    permissions:
+      contents: write
+      actions: write
     strategy:
       matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
       fail-fast: false
 
     env:
-      PERSONAL_TOKEN:              ${{ secrets.PERSONAL_TOKEN }}
+      GH_API_TOKEN:                ${{ github.token }}
       USE_KERNEL_CACHE:            "true"
       USE_AK3_CACHE:               "true"
       USE_CLANG_CACHE:             "true"
@@ -325,7 +313,6 @@ jobs:
           kernel-variant:  ${{ matrix.kernel_variant }}
           susfs:          ${{ matrix.susfs }}
           lto-mode:     ${{ inputs.lto_mode }}
-          gh-token:       ${{ secrets.PERSONAL_TOKEN }}
 
       - name: "Disk Usage"
         run: df -h && du -sh ~/kernel-cache/ 2>/dev/null || true
@@ -346,6 +333,7 @@ jobs:
         if: always() && matrix.kernel_variant != 'VANILLA' && inputs.run_mode != 'Dry Run'
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
           BUILD_OUTCOME: ${{ steps.build.outcome }}
         run: |
           case "$BUILD_OUTCOME" in
@@ -385,7 +373,6 @@ jobs:
           lto-mode:          ${{ inputs.lto_mode }}
           lto-asset-name:    ${{ steps.setup-build-env.outputs.lto-asset-name }}
           ccache-asset-name: ${{ steps.setup-build-env.outputs.ccache-asset-name }}
-          gh-token:          ${{ secrets.PERSONAL_TOKEN }}
 
   # ======================================================
   # NOTIFY

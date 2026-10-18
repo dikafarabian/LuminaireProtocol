@@ -1,0 +1,121 @@
+{
+  "versions": {
+    "5.10": {
+      "android": "android12",
+      "android_number": "12",
+      "telegram_thread": "605",
+      "kabi": ["sysvipc_below_6_12", "posix_mqueue_5_10"]
+    },
+    "5.15": {
+      "android": "android13",
+      "android_number": "13",
+      "telegram_thread": "606",
+      "kabi": ["sysvipc_below_6_12"]
+    },
+    "6.1": {
+      "android": "android14",
+      "android_number": "14",
+      "telegram_thread": "626",
+      "kabi": ["sysvipc_below_6_12"]
+    },
+    "6.6": {
+      "android": "android15",
+      "android_number": "15",
+      "telegram_thread": "751",
+      "kabi": ["sysvipc_below_6_12"]
+    },
+    "6.12": {
+      "android": "android16",
+      "android_number": "16",
+      "telegram_thread": "755",
+      "kabi": ["sysvipc_6_12"]
+    }
+  },
+  "core": ["dirty_flag", "glibc", "protected_exports", "compiler_string", "module_bypass", "openssl3_compat"],
+  "addons": {
+    "nomount": {
+      "name": "NoMount",
+      "mountless": true,
+      "versions": ["5.10", "5.15", "6.1", "6.6", "6.12"]
+    },
+    "droidspaces": {
+      "name": "Droidspaces",
+      "versions": ["5.10", "5.15", "6.1", "6.6", "6.12"]
+    },
+    "rekernel": {
+      "name": "Re:Kernel",
+      "versions": ["5.10", "5.15", "6.1", "6.6", "6.12"]
+    },
+    "ntsync": {
+      "name": "NTSync",
+      "versions": ["5.10", "5.15", "6.1", "6.6"]
+    },
+    "lz4zstd": {
+      "name": "LZ4+ZSTD",
+      "versions": ["6.1", "6.6"]
+    },
+    "lz4kd": {
+      "name": "LZ4KD",
+      "versions": ["5.10", "5.15", "6.1", "6.6"]
+    },
+    "mglru": {
+      "name": "MGLRU",
+      "versions": ["6.1", "6.6", "6.12"]
+    }
+  },
+  "patches": {
+    "bore": {
+      "name": "BORE",
+      "versions": ["6.1"]
+    },
+    "bbrv3": {
+      "name": "BBRv3",
+      "versions": ["5.10", "5.15", "6.1", "6.6"]
+    },
+    "bbg": {
+      "name": "BBG",
+      "versions": ["5.10", "5.15", "6.1", "6.6", "6.12"]
+    },
+    "wireguard": {
+      "name": "WireGuard",
+      "versions": ["5.10", "5.15", "6.1", "6.6", "6.12"]
+    },
+    "le9uo": {
+      "name": "le9uo",
+      "versions": ["6.1"]
+    },
+    "kcompressd": {
+      "name": "Kcompressd",
+      "versions": ["6.1"]
+    },
+    "workqueue_catchup": {
+      "name": "Workqueue Catch-up",
+      "versions": ["6.1"]
+    },
+    "schedutil_catchup": {
+      "name": "Schedutil Catch-up",
+      "versions": ["6.1"]
+    },
+    "ufs_writebooster_catchup": {
+      "name": "UFS WriteBooster Catch-up",
+      "versions": ["6.1"]
+    }
+  },
+  "ksu": {
+    "ksu": {
+      "versions": ["5.10", "5.15", "6.1", "6.6", "6.12"]
+    },
+    "kowsu": {
+      "versions": ["5.10", "5.15", "6.1", "6.6", "6.12"]
+    },
+    "ksunext": {
+      "versions": ["5.10", "5.15", "6.1", "6.6", "6.12"]
+    },
+    "sukisu": {
+      "versions": ["5.10", "5.15", "6.1", "6.6", "6.12"]
+    },
+    "bakasu": {
+      "versions": ["5.10", "5.15", "6.1", "6.6", "6.12"]
+    }
+  }
+}

@@ -33,7 +33,7 @@ collect_versions() {
     echo "$collected"
 }
 
-ADDON_VERSIONS="$(collect_versions "${ADDON_ORDER:-}")"
+ADDON_VERSIONS="$(collect_versions "$(feature_tokens addons)")"
 PATCH_VERSIONS="$(collect_versions "${APPLIED_PATCHES:-}")"
 
 STAGE_DIR="${GITHUB_WORKSPACE:-$PWD}/post-stage"
@@ -54,7 +54,6 @@ jq -n \
     --arg compiler_string "${COMPILER_STRING:-}" \
     --arg lto_mode "${LTO_MODE:-}" \
     --arg addons "${ADDONS:-}" \
-    --arg addon_order "${ADDON_ORDER:-}" \
     --arg skipped_addons "${SKIPPED_ADDONS:-}" \
     --arg addon_versions "$ADDON_VERSIONS" \
     --arg patch_versions "$PATCH_VERSIONS" \

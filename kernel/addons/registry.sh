@@ -3,28 +3,7 @@
 # ======================================================
 # 🗂️ REGISTRY — Addons
 # ======================================================
-# Supported kernel versions, order, conflict rules and run_addons
-
-declare -A ADDON_SUPPORTED_VERSIONS=(
-    [nomount]="5.10 5.15 6.1 6.6 6.12"
-    [droidspaces]="5.10 5.15 6.1 6.6 6.12"
-    [rekernel]="5.10 5.15 6.1 6.6 6.12"
-    [ntsync]="5.10 5.15 6.1 6.6"
-    [lz4zstd]="6.1 6.6"
-    [lz4kd]="5.10 5.15 6.1 6.6"
-    [mglru]="6.1 6.6 6.12"
-)
-
-ADDON_ORDER=(nomount droidspaces rekernel ntsync lz4zstd lz4kd mglru)
-
-ADDON_MOUNTLESS_TOKENS=(nomount)
-
-addon_supports_kernel_version() {
-    local addon="$1"
-    local supported="${ADDON_SUPPORTED_VERSIONS[$addon]:-}"
-    [ -z "$supported" ] && return 1
-    [[ " ${supported} " == *" ${KERNEL_VERSION} "* ]]
-}
+# Supported kernel versions, order and run_addons come from kernel/features.json
 
 addon_skip() {
     warn "$1"
@@ -32,13 +11,9 @@ addon_skip() {
 }
 
 run_addons() {
-    local ordered=("${ADDON_ORDER[@]}") addon selected script order_csv mountless_csv
-    order_csv="$(join_csv "${ADDON_ORDER[@]}")"
-    mountless_csv="$(join_csv "${ADDON_MOUNTLESS_TOKENS[@]}")"
-    unset ADDON_ORDER ADDON_MOUNTLESS_TOKENS
-    export ADDON_ORDER="$order_csv" ADDON_MOUNTLESS_TOKENS="$mountless_csv"
-    github_env ADDON_ORDER "$order_csv"
-    github_env ADDON_MOUNTLESS_TOKENS "$mountless_csv"
+    local addon selected script
+    local -a ordered
+    mapfile -t ordered < <(feature_tokens addons)
 
     ADDONS="${ADDONS:-}"
     ADDONS="${ADDONS// /}"
@@ -55,7 +30,7 @@ run_addons() {
             log "⚠️ Addon not found: ${addon}"
             continue
         fi
-        if ! addon_supports_kernel_version "$addon"; then
+        if ! feature_supports_kernel_version addons "$addon"; then
             warn "Addon '${addon}' isn't backported for kernel ${KERNEL_VERSION} yet — skipping (shows as N/A, not Disable, in the release caption)."
             SKIPPED_ADDONS="${SKIPPED_ADDONS:+${SKIPPED_ADDONS},}${addon}"
             continue
@@ -71,10 +46,8 @@ run_addons() {
 
     IFS=',' read -ra ADDON_LIST <<< "$ADDONS"
     for selected in "${ADDON_LIST[@]}"; do
-        [[ ",${order_csv}," == *",${selected},"* ]] || warn "Addon '${selected}' is not listed in ADDON_ORDER (kernel/addons/registry.sh) — ignored."
+        [[ " ${ordered[*]} " == *" ${selected} "* ]] || warn "Addon '${selected}' is not listed in kernel/features.json — ignored."
     done
 
-    github_env APPLIED_ADDONS "$APPLIED_ADDONS"
-    github_env SKIPPED_ADDONS "$SKIPPED_ADDONS"
     echo "::endgroup::"
 }

@@ -38,7 +38,6 @@ correct_version_display() {
     [ "$real_display" = "${VARIANT_VERSION_DISPLAY:-}" ] \
         || log "Correcting VARIANT_VERSION_DISPLAY to match real Kbuild-computed version: ${real_display} (was: ${VARIANT_VERSION_DISPLAY:-unset})"
     export VARIANT_VERSION_DISPLAY="$real_display"
-    github_env VARIANT_VERSION_DISPLAY "$real_display"
 }
 
 mkdir -p "$LTO_CACHE_DIR"
@@ -107,7 +106,6 @@ else
     BUILD_SECONDS=$(( $(date +%s) - START_TIME ))
     log "Build completed in ${BUILD_SECONDS}s ✅"
 fi
-github_env BUILD_SECONDS "${BUILD_SECONDS}"
 
 if [ "${DRY_RUN:-false}" != "true" ] && [ -f "${KBUILD_LOG:-}" ]; then
     correct_version_display

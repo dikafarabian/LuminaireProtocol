@@ -35,11 +35,6 @@ for f in "${LZ4KD_FILES[@]}"; do
 done
 log "LZ4KD source files staged ✅"
 
-case "${KERNEL_VERSION}" in
-    5.10|5.15|6.1|6.6) : ;;
-    *) error "LZ4KD: no known SukiSU_patch zram_patch/ for kernel ${KERNEL_VERSION} yet — this addon should have been gated out before reaching here (check registry.sh's ADDON_SUPPORTED_VERSIONS)." ;;
-esac
-
 apply_remote_patch "LZ4KD" "${LZ4KD_RAW_BASE}/zram_patch/${KERNEL_VERSION}/lz4kd.patch" "$KERNEL_SRC" --fuzz=3
 gki_defconfig_enable CONFIG_CRYPTO_LZ4HC CONFIG_CRYPTO_LZ4K CONFIG_CRYPTO_LZ4KD
 export LZ4KD_ENABLED=true

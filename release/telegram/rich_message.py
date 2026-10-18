@@ -146,7 +146,7 @@ def patch_fold(env) -> list:
     applied = [t for t in env.get("APPLIED_PATCHES", "").split(",") if t]
     rows = [
         caption.patch_active_line(env, t)
-        for t in caption.patch_order(env)
+        for t in caption.patch_order()
         if t in applied
     ]
     if not rows:
@@ -177,7 +177,7 @@ def addon_table(env, link_engine: bool = False) -> str:
     engine_cell = engine_chip(engine, link_engine, engine_version)
     rows = [("Mountless Engine", engine_cell)]
 
-    for token in caption.toggle_addon_order(env):
+    for token in caption.toggle_addon_order():
         name = caption.addon_display_name(token)
         if token in skipped_addons:
             status = chip("N/A")

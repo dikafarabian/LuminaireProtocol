@@ -56,7 +56,6 @@ KSU_VERSION_CODE=$((30000 + KSU_LOCAL_VERSION))
 KSU_TAG_NAME=$(git -C "$KSU_DIR" describe --tags --abbrev=0 "$KSUNEXT_BASE_COMMIT" 2>/dev/null || echo "v0.0.1")
 KSU_UAPI_VERSION="$(ksu_uapi_version "$KSU_DIR")"
 VARIANT_VERSION_DISPLAY="$(format_ksu_version "$KSU_TAG_NAME" "$KSU_VERSION_CODE" "$KSU_UAPI_VERSION")"
-github_env VARIANT_VERSION_DISPLAY "${VARIANT_VERSION_DISPLAY}"
 log "Version: ${VARIANT_VERSION_DISPLAY}"
 
 log "Enabling KSU configs..."

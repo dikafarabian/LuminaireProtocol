@@ -114,7 +114,6 @@ else
 fi
 
 export COMPILER_STRING
-github_env COMPILER_STRING "${COMPILER_STRING}"
 export PATH="${TOOL_CLANG_DIR}/bin:${PATH}"
 
 log "Setting up ccache wrappers..."
@@ -131,6 +130,4 @@ WRAPPER_EOF
     chmod +x "$WRAPPER"
 done
 export PATH="${TOOL_CCACHE_WRAPPERS}:${PATH}"
-github_path "${TOOL_CCACHE_WRAPPERS}"
-github_path "${TOOL_CLANG_DIR}/bin"
 log "Clang ready | ${COMPILER_STRING} ✅"

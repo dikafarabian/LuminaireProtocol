@@ -21,6 +21,5 @@ DEFEOF
 log "le9uo: defconfig forced (protection active from first boot, anon/clean min ratio 5%) ✅"
 
 LE9UO_VERSION="$(basename "$LE9UO_PATCH" .patch | sed 's/^le9uo-//')"
-github_env LE9UO_VERSION "$LE9UO_VERSION"
 
 log "le9uo Working Set Protection integrated ✅"

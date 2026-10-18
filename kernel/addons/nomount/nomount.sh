@@ -42,7 +42,6 @@ gki_defconfig_enable CONFIG_NOMOUNT
 
 NOMOUNT_VERSION="$(sed -n 's/^version=//p' "${KERNEL_SRC}/NoMount/module/module.prop" 2>/dev/null | head -n 1 | tr -d '[:space:]')" || true
 if [ -n "$NOMOUNT_VERSION" ]; then
-    github_env NOMOUNT_VERSION "${NOMOUNT_VERSION}"
     log "NoMount version: ${NOMOUNT_VERSION}"
 fi
 
