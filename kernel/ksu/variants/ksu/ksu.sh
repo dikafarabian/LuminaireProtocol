@@ -6,7 +6,6 @@
 # Repo: https://github.com/tiann/KernelSU
 
 KSU_DIR="${KERNEL_SRC}/KernelSU"
-PATCHER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 
 log "Integrating KernelSU (official)..."

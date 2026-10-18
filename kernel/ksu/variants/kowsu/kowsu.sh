@@ -10,7 +10,6 @@
 # only, no functional impact — see project decision).
 
 KSU_DIR="${KERNEL_SRC}/KernelSU"
-PATCHER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 
 log "Integrating KowSU..."

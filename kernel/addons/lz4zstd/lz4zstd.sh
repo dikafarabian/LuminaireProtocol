@@ -33,8 +33,8 @@ apply_lz4zstd_patch() {
     local touched_files
     touched_files=$(echo "$content" | grep -E '^\+\+\+ b/' | sed -E 's#^\+\+\+ b/##; s/\t.*//' | sort -u) || true
 
-    local patch_log rc=0
-    patch_log=$(echo "$content" | patch -p1 --fuzz=3 --forward --no-backup-if-mismatch 2>&1) || rc=$?
+    local rc=0
+    echo "$content" | patch -p1 --fuzz=3 --forward --no-backup-if-mismatch > /dev/null 2>&1 || rc=$?
 
     if eval "$marker_check" 2>/dev/null; then
         if [ "$rc" -eq 0 ]; then
