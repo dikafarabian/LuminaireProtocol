@@ -9,6 +9,7 @@ set -eo pipefail
 
 ROOT_DIR="${ROOT_DIR:-$GITHUB_WORKSPACE}"
 source "${ROOT_DIR}/functions.sh"
+source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 
 [ -n "${KERNEL_VERSION:-}" ] || error "scout: KERNEL_VERSION not set"
 MANIFEST="${ROOT_DIR}/kernel/ksu/manifests/$(resolve_android_version)-${KERNEL_VERSION}.json"
@@ -90,7 +91,12 @@ resolve_component() {
 }
 
 GITHUB_API="https://api.github.com/repos"
-SUSFS_API="https://gitlab.com/api/v4/projects/simonpunk%2Fsusfs4ksu/repository/commits"
+
+susfs_commits_api() {
+    local project="${MIRROR_SOURCE_URL[$1]%.git}"
+    project="${project#https://gitlab.com/}"
+    echo "https://gitlab.com/api/v4/projects/${project//\//%2F}/repository/commits"
+}
 
 track_commit() {
     local key="$1" prefix="$2" label="$3" repo="$4" branch="$5" latest
@@ -110,7 +116,7 @@ track_release() {
 track_susfs() {
     local key="$1" prefix="$2" label="$3" branch_suffix="${4:-}" branch latest
     branch="gki-$(resolve_android_version)-${KERNEL_VERSION}${branch_suffix}"
-    latest="$(latest_sha_or_empty "$label" "${SUSFS_API}/${branch}" '.id')"
+    latest="$(latest_sha_or_empty "$label" "$(susfs_commits_api "$key")/${branch}" '.id')"
     resolve_component "$key" "$prefix" "$latest"
 }
 
@@ -128,11 +134,9 @@ case "$KERNEL_VARIANT" in
         fi
         ;;
     KSUNEXT)
+        track_commit ksunext KSUNEXT "KernelSU-Next (pershoot dev-susfs)" pershoot/KernelSU-Next dev-susfs
         if susfs_active; then
-            track_commit ksunext_susfs_fork KSUNEXT_SUSFS_FORK "KernelSU-Next (pershoot dev-susfs fork)" pershoot/KernelSU-Next dev-susfs
-            track_susfs susfs_ksunext SUSFS_KSUNEXT "SuSFS (KSU-Next pairing, simonpunk)" -dev
-        else
-            track_release ksunext KSUNEXT "KernelSU-Next" KernelSU-Next/KernelSU-Next
+            track_susfs susfs_ksunext SUSFS_KSUNEXT "SuSFS (KSU-Next pairing, pershoot)" -dev
         fi
         ;;
     SUKISU)

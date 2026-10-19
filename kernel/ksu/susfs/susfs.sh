@@ -3,7 +3,7 @@
 # ======================================================
 # 🧬 SuSFS — shared apply logic (any KSU fork, any kernel)
 # ======================================================
-# Repo: https://gitlab.com/simonpunk/susfs4ksu
+# Repo: https://gitlab.com/simonpunk/susfs4ksu (KSUNEXT: https://gitlab.com/pershoot/susfs4ksu)
 #
 # Per-kernel differences live in quirks/<kernel_version>.sh (optional):
 #   SUSFS_KSU_ENABLE_VARIANTS   variants that need the 10_enable KernelSU patch
@@ -17,9 +17,10 @@ SUSFS_LOCAL_DIR="${ROOT_DIR}/kernel/ksu/susfs"
 
 SUSFS_REF_VAR="SUSFS_${KERNEL_VARIANT}_REF"
 SUSFS_REF="${!SUSFS_REF_VAR:-}"
-SUSFS_REPO="https://gitlab.com/simonpunk/susfs4ksu.git"
-SUSFS_BRANCH="gki-$(resolve_android_version)-${KERNEL_VERSION}"
+source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 SUSFS_MIRROR_KEY="susfs_${KERNEL_VARIANT,,}"
+SUSFS_REPO="${MIRROR_SOURCE_URL[$SUSFS_MIRROR_KEY]}"
+SUSFS_BRANCH="gki-$(resolve_android_version)-${KERNEL_VERSION}"
 if [ "$KERNEL_VARIANT" = "KSUNEXT" ]; then
     SUSFS_BRANCH="${SUSFS_BRANCH}-dev"
 fi
@@ -37,7 +38,6 @@ if [ -f "$SUSFS_QUIRKS" ]; then
     source "$SUSFS_QUIRKS"
 fi
 
-source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 CANDIDATE_VAR="CANDIDATE_${SUSFS_MIRROR_KEY^^}"
 SUSFS_MIRRORED="false"
 mirror_preseed "$SUSFS_MIRROR_KEY" "$SUSFS_DIR" "$SUSFS_REF" "${!CANDIDATE_VAR:-false}" "$(resolve_android_version)-${KERNEL_VERSION}" && SUSFS_MIRRORED="true"

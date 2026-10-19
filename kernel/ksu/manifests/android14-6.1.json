@@ -27,15 +27,11 @@
     "skip": []
   },
   "ksunext": {
-    "pin": "",
-    "skip": []
-  },
-  "ksunext_susfs_fork": {
     "pin": "179225248b9dcecf5aa2ce133c5b274c018bac2d",
     "skip": []
   },
   "susfs_ksunext": {
-    "pin": "ed372c37eb4be10ceea96f29c9ba15c11d701fd6",
+    "pin": "",
     "skip": []
   },
   "kowsu": {

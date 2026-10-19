@@ -7,10 +7,6 @@
     "pin": "6a2f63240397ea647ede981e0669231c8bf17fee",
     "skip": []
   },
-  "ksunext_susfs_fork": {
-    "skip": [],
-    "pin": "94fab777831ee864d6ae9c520fa74ab4e643f3e0"
-  },
   "bakasu": {
     "pin": "5b76b884c75f729a220bb317aa4a4fc78f0e0e9c",
     "skip": []
@@ -29,7 +25,7 @@
   },
   "susfs_ksunext": {
     "skip": [],
-    "pin": "4501f14db2686662d75535e78d43c33714d582ea"
+    "pin": ""
   },
   "susfs_bakasu": {
     "pin": "9892175b4acec7ee844e113b8d02c0f4d12cdfac",
@@ -40,8 +36,8 @@
     "skip": []
   },
   "ksunext": {
-    "pin": "",
-    "skip": []
+    "skip": [],
+    "pin": "94fab777831ee864d6ae9c520fa74ab4e643f3e0"
   },
   "sukisu": {
     "pin": "",

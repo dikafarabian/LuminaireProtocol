@@ -344,7 +344,6 @@ jobs:
           VARIANT_KEY="${KERNEL_VARIANT,,}"
           if [ "$SUSFS_ENABLED" = "true" ]; then
             case "$VARIANT_KEY" in
-              ksunext) FORK_KEY="ksunext_susfs_fork" ;;
               sukisu)  FORK_KEY="sukisu_builtin" ;;
               *)       FORK_KEY="$VARIANT_KEY" ;;
             esac

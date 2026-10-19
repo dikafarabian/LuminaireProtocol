@@ -79,7 +79,6 @@ component_label() {
             fork="${key#susfs_}"
             echo "SuSFS ($(variant_display_name "${fork^^}"))"
             ;;
-        ksunext_susfs_fork) echo "$(variant_display_name KSUNEXT) (susfs fork)" ;;
         sukisu_builtin)     echo "$(variant_display_name SUKISU) (builtin)" ;;
         *)                  variant_display_name "${key^^}" ;;
     esac

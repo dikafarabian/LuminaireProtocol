@@ -7,12 +7,12 @@
 declare -gA MIRROR_SOURCE_URL=(
     [bakasu]="https://github.com/Baka-SU/BakaSU"
     [sukisu_builtin]="https://github.com/SukiSU-Ultra/SukiSU-Ultra"
-    [ksunext_susfs_fork]="https://github.com/pershoot/KernelSU-Next"
+    [ksunext]="https://github.com/pershoot/KernelSU-Next"
     [kowsu]="https://github.com/KOWX712/KernelSU"
     [ksu]="https://github.com/tiann/KernelSU"
     [susfs_bakasu]="https://gitlab.com/simonpunk/susfs4ksu.git"
     [susfs_sukisu]="https://gitlab.com/simonpunk/susfs4ksu.git"
-    [susfs_ksunext]="https://gitlab.com/simonpunk/susfs4ksu.git"
+    [susfs_ksunext]="https://gitlab.com/pershoot/susfs4ksu.git"
     [susfs_kowsu]="https://gitlab.com/simonpunk/susfs4ksu.git"
     [susfs_ksu]="https://gitlab.com/simonpunk/susfs4ksu.git"
 )
@@ -22,7 +22,7 @@ MIRROR_OWNER="${MIRROR_OWNER:-dikafarabian}"
 declare -gA MIRROR_REPO=(
     [bakasu]="${MIRROR_OWNER}/BakaSU"
     [sukisu_builtin]="${MIRROR_OWNER}/SukiSU-Ultra"
-    [ksunext_susfs_fork]="${MIRROR_OWNER}/KernelSU-Next"
+    [ksunext]="${MIRROR_OWNER}/KernelSU-Next"
     [kowsu]="${MIRROR_OWNER}/KernelSU"
     [ksu]="${MIRROR_OWNER}/KernelSU"
     [susfs_bakasu]="${MIRROR_OWNER}/susfs4ksu-mirror"
