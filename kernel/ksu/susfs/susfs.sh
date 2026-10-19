@@ -19,7 +19,7 @@ SUSFS_REF_VAR="SUSFS_${KERNEL_VARIANT}_REF"
 SUSFS_REF="${!SUSFS_REF_VAR:-}"
 source "${ROOT_DIR}/kernel/ksu/checkpoint/mirrors.sh"
 SUSFS_MIRROR_KEY="susfs_${KERNEL_VARIANT,,}"
-SUSFS_REPO="${MIRROR_SOURCE_URL[$SUSFS_MIRROR_KEY]}"
+SUSFS_REPO="$(mirror_source_url "$SUSFS_MIRROR_KEY")"
 SUSFS_BRANCH="gki-$(resolve_android_version)-${KERNEL_VERSION}"
 if [ "$KERNEL_VARIANT" = "KSUNEXT" ]; then
     SUSFS_BRANCH="${SUSFS_BRANCH}-dev"

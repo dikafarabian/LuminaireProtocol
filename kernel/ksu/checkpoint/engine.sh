@@ -85,7 +85,7 @@ component_label() {
 }
 
 commit_url() {
-    local key="$1" ref="$2" base="${MIRROR_SOURCE_URL[$1]:-}"
+    local key="$1" ref="$2" base; base="$(mirror_source_url "$key")"
     [ -n "$base" ] || return 0
     base="${base%.git}"
     case "$base" in

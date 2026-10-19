@@ -12,7 +12,7 @@ declare -gA MIRROR_SOURCE_URL=(
     [ksu]="https://github.com/tiann/KernelSU"
     [susfs_bakasu]="https://gitlab.com/simonpunk/susfs4ksu.git"
     [susfs_sukisu]="https://gitlab.com/simonpunk/susfs4ksu.git"
-    [susfs_ksunext]="https://gitlab.com/pershoot/susfs4ksu.git"
+    [susfs_ksunext]="https://gitlab.com/simonpunk/susfs4ksu.git"
     [susfs_kowsu]="https://gitlab.com/simonpunk/susfs4ksu.git"
     [susfs_ksu]="https://gitlab.com/simonpunk/susfs4ksu.git"
 )
@@ -31,6 +31,17 @@ declare -gA MIRROR_REPO=(
     [susfs_kowsu]="${MIRROR_OWNER}/susfs4ksu-mirror"
     [susfs_ksu]="${MIRROR_OWNER}/susfs4ksu-mirror"
 )
+
+mirror_source_url() {
+    local key="$1" override=""
+    case "$key" in
+        susfs_*)
+            override="$(jq -r --arg variant "${key#susfs_}" --arg version "${KERNEL_VERSION:-}" \
+                '.ksu[$variant].susfs_repo[$version] // empty' "$FEATURES_FILE" 2>/dev/null)" || true
+            ;;
+    esac
+    echo "${override:-${MIRROR_SOURCE_URL[$key]:-}}"
+}
 
 mirror_clone_url() {
     local key="$1"
@@ -51,7 +62,7 @@ mirror_branch() {
 
 mirror_promote() {
     local key="$1" ref="$2" version_label="$3"
-    local src="${MIRROR_SOURCE_URL[$key]:-}"
+    local src; src="$(mirror_source_url "$key")"
     local dst; dst="$(mirror_push_url "$key" 2>/dev/null)" || true
     [ -n "$src" ] && [ -n "$dst" ] || return 0
 

@@ -93,7 +93,8 @@ resolve_component() {
 GITHUB_API="https://api.github.com/repos"
 
 susfs_commits_api() {
-    local project="${MIRROR_SOURCE_URL[$1]%.git}"
+    local project; project="$(mirror_source_url "$1")"
+    project="${project%.git}"
     project="${project#https://gitlab.com/}"
     echo "https://gitlab.com/api/v4/projects/${project//\//%2F}/repository/commits"
 }
