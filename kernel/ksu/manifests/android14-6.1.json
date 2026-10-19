@@ -51,6 +51,8 @@
   },
   "susfs_ksu": {
     "pin": "5369359dbd10f6dd8cbdd59d1df7b788b29b168c",
-    "skip": []
+    "skip": [
+      "2385dab487c3abb8c4a2990ea5c852f55fb47dc8"
+    ]
   }
 }
