@@ -16,16 +16,12 @@
     "skip": []
   },
   "sukisu_builtin": {
-    "pin": "7f1c299af463d008e66e714077eb6a8079ff722b",
+    "pin": "5ef32ad5d5eba3033f86467fd4fa094e032c5237",
     "skip": []
   },
   "susfs_sukisu": {
     "pin": "2385dab487c3abb8c4a2990ea5c852f55fb47dc8",
-    "skip": [
-      "049e7b8a2828f3e1d698c2aa9a0792024d0f2e37",
-      "f6c046775c0a14834748cc82c03f1d1b0285c206",
-      "b57ed1998b82c4e3a2a81cdbf11172a560979c40"
-    ]
+    "skip": []
   },
   "ksunext": {
     "pin": "d21e0a66c887ae4bc75b7c9f83e41761819ec09a",
