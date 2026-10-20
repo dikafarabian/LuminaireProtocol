@@ -17,7 +17,9 @@
   },
   "sukisu_builtin": {
     "pin": "7f1c299af463d008e66e714077eb6a8079ff722b",
-    "skip": []
+    "skip": [
+      "5ef32ad5d5eba3033f86467fd4fa094e032c5237"
+    ]
   },
   "susfs_sukisu": {
     "pin": "2385dab487c3abb8c4a2990ea5c852f55fb47dc8",
