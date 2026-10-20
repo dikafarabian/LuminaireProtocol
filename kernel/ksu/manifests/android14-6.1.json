@@ -41,13 +41,10 @@
   },
   "ksu": {
     "pin": "469c4282e72382388b4598fa022fe8ca91dc9ab5",
-    "skip": [
-      "0faec0cc7b5f655170d89bf9c4d28bb5ca271fa2",
-      "96770dfb807fea61e06819e4cbb438384df54b63"
-    ]
+    "skip": []
   },
   "susfs_ksu": {
-    "pin": "5369359dbd10f6dd8cbdd59d1df7b788b29b168c",
+    "pin": "b57ed1998b82c4e3a2a81cdbf11172a560979c40",
     "skip": []
   }
 }
