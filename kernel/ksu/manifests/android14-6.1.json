@@ -9,7 +9,9 @@
   },
   "susfs_bakasu": {
     "pin": "24743360ea08d98f6ad72b856851abed8de5854f",
-    "skip": []
+    "skip": [
+      "b57ed1998b82c4e3a2a81cdbf11172a560979c40"
+    ]
   },
   "sukisu": {
     "pin": "",
